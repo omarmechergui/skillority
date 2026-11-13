@@ -1,0 +1,51 @@
+[
+  {
+    "route": "/student/dashboard",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 47214,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/learn",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 43235,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/courses/course-1",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 55796,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/courses/course-1/chapters/chap-0",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 30606,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/courses/course-1/chapters/chap-0/lessons/les-0-1",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 31154,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/courses/course-1/chapters/chap-0/quiz",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 25363,
+    "status": "PASS"
+  },
+  {
+    "route": "/student/courses/course-1/assessment",
+    "httpStatus": 200,
+    "rendersHtml": true,
+    "bodySize": 25561,
+    "status": "PASS"
+  }
+]

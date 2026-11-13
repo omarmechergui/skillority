@@ -1,0 +1,41 @@
+[
+  {
+    "screenName": "21_student_career_opportunities",
+    "route": "/student/careers",
+    "stitchId": "79547790aeb94096a586ea4cda73ed21",
+    "httpStatus": 200,
+    "bodyLength": 50226,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\21_student_career_opportunities_desktop_1440x900.png",
+    "desktopSize": 160398,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\21_student_career_opportunities_mobile_390x844.png",
+    "mobileSize": 31445,
+    "status": "PASS"
+  },
+  {
+    "screenName": "22_opportunity_details_and_application",
+    "route": "/student/careers/opp-1",
+    "stitchId": "dbf83dc12f5b44dfaf8342ce32ffebf2",
+    "httpStatus": 200,
+    "bodyLength": 33473,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\22_opportunity_details_and_application_desktop_1440x900.png",
+    "desktopSize": 170111,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\22_opportunity_details_and_application_mobile_390x844.png",
+    "mobileSize": 38214,
+    "status": "PASS"
+  },
+  {
+    "screenName": "23_my_applications_and_saved_opportunities",
+    "route": "/student/careers/applications",
+    "stitchId": "3aebee52239b42cba8cdd559c94e7412",
+    "httpStatus": 200,
+    "bodyLength": 36993,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\23_my_applications_and_saved_opportunities_desktop_1440x900.png",
+    "desktopSize": 155372,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3a\\23_my_applications_and_saved_opportunities_mobile_390x844.png",
+    "mobileSize": 28528,
+    "status": "PASS"
+  }
+]

@@ -1,0 +1,278 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum Role {
+  STUDENT
+  COMPANY
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OpportunityType {
+  INTERNSHIP
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  INTERVIEW
+  OFFERED
+  REJECTED
+}
+
+enum TransactionType {
+  CREDIT_BONUS
+  CHAPTER_UNLOCK
+  QUIZ_REWARD
+  ADMIN_ADJUSTMENT
+}
+
+// -------------------------------------------------------------
+// USER & AUTHENTICATION
+// -------------------------------------------------------------
+
+model User {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  email            String          @unique
+  passwordHash     String
+  role             Role
+  isVerified       Boolean         @default(false)
+  isActive         Boolean         @default(true)
+  tokenVersion     Int             @default(0) // Enables immediate session invalidation on role revocation
+  invitedByAdminId String?         @db.ObjectId
+  profile          Profile?
+  wallet           Wallet?
+  coursesAuthored  Course[]        @relation("InstructorCourses")
+  enrollments      Enrollment[]
+  applications     Application[]
+  posts            CommunityPost[]
+  comments         Comment[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Profile {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @unique @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  avatar         String?
+  bio            String?
+  skills         String[] @default([])
+  // Student-specific fields
+  university     String?
+  major          String?
+  graduationYear Int?
+  interests      String[] @default([])
+  learningGoals  String?
+  // Company / Recruiter-specific fields
+  companyName    String?
+  companyDescription String?
+  industry       String?
+  companySize    String?
+  website        String?
+  // Instructor-specific fields
+  expertise      String[] @default([])
+  experience     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  tokenHash String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminInvitation {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  email       String   @unique
+  tokenHash   String   @unique
+  role        Role     @default(INSTRUCTOR)
+  createdById String   @db.ObjectId
+  isAccepted  Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// COURSES, CHAPTERS & LESSONS
+// -------------------------------------------------------------
+
+model Course {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  instructorId String       @db.ObjectId
+  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  title        String
+  description  String
+  thumbnail    String?
+  category     String
+  level        String
+  tags         String[]     @default([])
+  status       CourseStatus @default(DRAFT)
+  reviewNote   String?
+  chapters     Chapter[]
+  enrollments  Enrollment[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Chapter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId  String   @db.ObjectId
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int // 0 to N. Business Rule: Chapters 0-5 are free; > 5 require Coins
+  isFree    Boolean  @default(false)
+  coinsCost Int      @default(0)
+  lessons   Lesson[]
+  quiz      Json? // Structured chapter quiz JSON definition
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lesson {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  chapterId String   @db.ObjectId
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  title     String
+  content   Json // Structured hybrid block content: text, code, questions
+  order     Int
+  duration  Int? // Duration in minutes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enrollment {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String   @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId           String   @db.ObjectId
+  course             Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  completedLessonIds String[] @default([])
+  unlockedChapterIds String[] @default([]) // Tracks paid chapters unlocked with coins
+  progressPercent    Float    @default(0.0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+// -------------------------------------------------------------
+// COINS & WALLET
+// -------------------------------------------------------------
+
+model Wallet {
+  id           String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String              @unique @db.ObjectId
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance      Int                 @default(100) // Initial complimentary utility credits
+  transactions WalletTransaction[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model WalletTransaction {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  walletId    String          @db.ObjectId
+  wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount      Int // Positive for credits, negative for debits
+  type        TransactionType
+  description String
+  referenceId String? // Optional reference e.g. chapterId
+  createdAt   DateTime        @default(now())
+}
+
+// -------------------------------------------------------------
+// CAREER OPPORTUNITIES & APPLICATIONS
+// -------------------------------------------------------------
+
+model Opportunity {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  companyId    String          @db.ObjectId
+  title        String
+  description  String
+  type         OpportunityType @default(INTERNSHIP)
+  location     String
+  skills       String[]        @default([])
+  isOpen       Boolean         @default(true)
+  applications Application[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Application {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  opportunityId String            @db.ObjectId
+  opportunity   Opportunity       @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId     String            @db.ObjectId
+  student       User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([opportunityId, studentId])
+}
+
+// -------------------------------------------------------------
+// COMMUNITY & SOCIAL
+// -------------------------------------------------------------
+
+model CommunityPost {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  authorId  String    @db.ObjectId
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  tags      String[]  @default([])
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Comment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String        @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String        @db.ObjectId
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}

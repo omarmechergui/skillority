@@ -1,0 +1,15 @@
+{
+  "name": "skillority",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Skillority — Professional Learning and Career Platform",
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev": "pnpm --parallel --filter frontend --filter backend dev",
+    "build:frontend": "pnpm --filter frontend build",
+    "lint": "pnpm --filter frontend lint && pnpm --filter backend lint"
+  },
+  "packageManager": "pnpm@12.6.0"
+}
+

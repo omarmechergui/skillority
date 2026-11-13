@@ -1,0 +1,100 @@
+[
+  {
+    "screen": "01_student_dashboard",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\01_student_dashboard_desktop_1440x900.png",
+    "size": 246187,
+    "status": "PASS"
+  },
+  {
+    "screen": "01_student_dashboard",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\01_student_dashboard_mobile_390x844.png",
+    "size": 35630,
+    "status": "PASS"
+  },
+  {
+    "screen": "02_learn_hub",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\02_learn_hub_desktop_1440x900.png",
+    "size": 298630,
+    "status": "PASS"
+  },
+  {
+    "screen": "02_learn_hub",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\02_learn_hub_mobile_390x844.png",
+    "size": 29117,
+    "status": "PASS"
+  },
+  {
+    "screen": "03_course_details",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\03_course_details_desktop_1440x900.png",
+    "size": 167191,
+    "status": "PASS"
+  },
+  {
+    "screen": "03_course_details",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\03_course_details_mobile_390x844.png",
+    "size": 32698,
+    "status": "PASS"
+  },
+  {
+    "screen": "04_chapter_details",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\04_chapter_details_desktop_1440x900.png",
+    "size": 165505,
+    "status": "PASS"
+  },
+  {
+    "screen": "04_chapter_details",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\04_chapter_details_mobile_390x844.png",
+    "size": 32083,
+    "status": "PASS"
+  },
+  {
+    "screen": "05_lesson_viewer",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\05_lesson_viewer_desktop_1440x900.png",
+    "size": 106057,
+    "status": "PASS"
+  },
+  {
+    "screen": "05_lesson_viewer",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\05_lesson_viewer_mobile_390x844.png",
+    "size": 24987,
+    "status": "PASS"
+  },
+  {
+    "screen": "06_chapter_quiz",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\06_chapter_quiz_desktop_1440x900.png",
+    "size": 68725,
+    "status": "PASS"
+  },
+  {
+    "screen": "06_chapter_quiz",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\06_chapter_quiz_mobile_390x844.png",
+    "size": 30085,
+    "status": "PASS"
+  },
+  {
+    "screen": "07_final_assessment",
+    "viewport": "desktop (1440x900)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\07_final_assessment_desktop_1440x900.png",
+    "size": 95425,
+    "status": "PASS"
+  },
+  {
+    "screen": "07_final_assessment",
+    "viewport": "mobile (390x844)",
+    "path": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-2\\07_final_assessment_mobile_390x844.png",
+    "size": 29943,
+    "status": "PASS"
+  }
+]
