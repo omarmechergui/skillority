@@ -1,0 +1,155 @@
+[
+  {
+    "name": "29_company_dashboard",
+    "path": "/company/dashboard",
+    "stitchId": "fe166c4068304a08af013915bc6642aa",
+    "httpStatus": 200,
+    "desktopSize": 146687,
+    "mobileSize": 28508,
+    "status": "PASS"
+  },
+  {
+    "name": "30_company_opportunities",
+    "path": "/company/opportunities",
+    "stitchId": "9827f602301742728cc425d2af95e265",
+    "httpStatus": 200,
+    "desktopSize": 120759,
+    "mobileSize": 26746,
+    "status": "PASS"
+  },
+  {
+    "name": "31_create_opportunity",
+    "path": "/company/opportunities/create",
+    "stitchId": "ea413ccc59bd402abb391eb8dabe5984",
+    "httpStatus": 200,
+    "desktopSize": 91513,
+    "mobileSize": 24006,
+    "status": "PASS"
+  },
+  {
+    "name": "32_edit_opportunity",
+    "path": "/company/opportunities/opp-1/edit",
+    "stitchId": "58222f7b5e49475987792677ec88a620",
+    "httpStatus": 200,
+    "desktopSize": 73940,
+    "mobileSize": 21066,
+    "status": "PASS"
+  },
+  {
+    "name": "33_opportunity_details",
+    "path": "/company/opportunities/opp-1",
+    "stitchId": "ac0428d37431429dae749043dddc9b6b",
+    "httpStatus": 200,
+    "desktopSize": 144416,
+    "mobileSize": 30396,
+    "status": "PASS"
+  },
+  {
+    "name": "34_applications_inbox",
+    "path": "/company/applications",
+    "stitchId": "0414093dae7e4292a2a9a2e5c56a66f3",
+    "httpStatus": 200,
+    "desktopSize": 140591,
+    "mobileSize": 26099,
+    "status": "PASS"
+  },
+  {
+    "name": "35_application_details",
+    "path": "/company/applications/usr-student-01",
+    "stitchId": "522c04e805cb4277b4e799d929cc6207",
+    "httpStatus": 200,
+    "desktopSize": 122761,
+    "mobileSize": 31975,
+    "status": "PASS"
+  },
+  {
+    "name": "36_talent_discovery",
+    "path": "/company/talent",
+    "stitchId": "7be33203f6ca4ef59c90a2a4b86377dc",
+    "httpStatus": 200,
+    "desktopSize": 139540,
+    "mobileSize": 28351,
+    "status": "PASS"
+  },
+  {
+    "name": "37_student_talent_profile",
+    "path": "/company/talent/usr-student-01",
+    "stitchId": "992a5ee11f424fc9b3046fec36270b22",
+    "httpStatus": 200,
+    "desktopSize": 118511,
+    "mobileSize": 28517,
+    "status": "PASS"
+  },
+  {
+    "name": "38_saved_candidates",
+    "path": "/company/talent/saved",
+    "stitchId": "d6dfd36dbf5c40498eb73845b4bfaf2c",
+    "httpStatus": 200,
+    "desktopSize": 85683,
+    "mobileSize": 32699,
+    "status": "PASS"
+  },
+  {
+    "name": "39_candidate_evaluation",
+    "path": "/company/talent/usr-student-01/evaluate",
+    "stitchId": "784ba3bb31e14e1f822e11894a4aeae3",
+    "httpStatus": 200,
+    "desktopSize": 85499,
+    "mobileSize": 31139,
+    "status": "PASS"
+  },
+  {
+    "name": "40_recruitment_pipeline",
+    "path": "/company/pipeline",
+    "stitchId": "6b9c97b83f3e4bc6a35002ecdf885e78",
+    "httpStatus": 200,
+    "desktopSize": 80606,
+    "mobileSize": 22519,
+    "status": "PASS"
+  },
+  {
+    "name": "41_candidate_chat",
+    "path": "/company/messages",
+    "stitchId": "10f274cb33bc4076a917e7617b8f9e67",
+    "httpStatus": 200,
+    "desktopSize": 115377,
+    "mobileSize": 41740,
+    "status": "PASS"
+  },
+  {
+    "name": "42_company_profile",
+    "path": "/company/profile",
+    "stitchId": "9d554a99370b42f1a66a7f05809bb45d",
+    "httpStatus": 200,
+    "desktopSize": 504918,
+    "mobileSize": 138871,
+    "status": "PASS"
+  },
+  {
+    "name": "43_recruiter_profile",
+    "path": "/company/profile/personal",
+    "stitchId": "773229b4e8e04043b22cf3fe576082c5",
+    "httpStatus": 200,
+    "desktopSize": 80211,
+    "mobileSize": 25508,
+    "status": "PASS"
+  },
+  {
+    "name": "44_recruiter_settings",
+    "path": "/company/settings",
+    "stitchId": "26ff641322f241a3bc8c9629b3ae3ef7",
+    "httpStatus": 200,
+    "desktopSize": 66768,
+    "mobileSize": 24281,
+    "status": "PASS"
+  },
+  {
+    "name": "45_recruiter_notifications",
+    "path": "/company/notifications",
+    "stitchId": "bf873fdf08cf4fdbaf6a72ecdd61cb85",
+    "httpStatus": 200,
+    "desktopSize": 89573,
+    "mobileSize": 29899,
+    "status": "PASS"
+  }
+]

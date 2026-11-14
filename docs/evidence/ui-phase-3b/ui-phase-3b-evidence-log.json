@@ -1,0 +1,28 @@
+[
+  {
+    "screenName": "24_community_feed",
+    "route": "/student/community",
+    "stitchId": "596c2d5d16204f83ae42479b36b5b1e4",
+    "httpStatus": 200,
+    "bodyLength": 53694,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3b\\24_community_feed_desktop_1440x900.png",
+    "desktopSize": 184898,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3b\\24_community_feed_mobile_390x844.png",
+    "mobileSize": 27471,
+    "status": "PASS"
+  },
+  {
+    "screenName": "25_create_community_post",
+    "route": "/student/community/create",
+    "stitchId": "52e654bfcc5b4ff5bd3d017cf04108eb",
+    "httpStatus": 200,
+    "bodyLength": 33960,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3b\\25_create_community_post_desktop_1440x900.png",
+    "desktopSize": 109268,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-3b\\25_create_community_post_mobile_390x844.png",
+    "mobileSize": 28904,
+    "status": "PASS"
+  }
+]

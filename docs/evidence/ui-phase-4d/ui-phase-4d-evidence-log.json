@@ -1,0 +1,119 @@
+[
+  {
+    "name": "66_admin_dashboard",
+    "path": "/admin/dashboard",
+    "stitchId": "270034a7479743a493a7972ba7352f1e",
+    "httpStatus": 200,
+    "desktopSize": 132101,
+    "mobileSize": 32735,
+    "status": "PASS"
+  },
+  {
+    "name": "67_user_management",
+    "path": "/admin/users",
+    "stitchId": "e4ad9b36b5b1e4596c2d5d16204f83ae",
+    "httpStatus": 200,
+    "desktopSize": 103952,
+    "mobileSize": 36406,
+    "status": "PASS"
+  },
+  {
+    "name": "68_user_details",
+    "path": "/admin/users/usr-student-01",
+    "stitchId": "cba8cdd559c94e74123aebee52239b42",
+    "httpStatus": 200,
+    "desktopSize": 53061,
+    "mobileSize": 26892,
+    "status": "PASS"
+  },
+  {
+    "name": "69_user_actions",
+    "path": "/admin/users/usr-student-01/manage",
+    "stitchId": "1b174a7cb08f427778b9e696902c3836",
+    "httpStatus": 200,
+    "desktopSize": 53843,
+    "mobileSize": 23339,
+    "status": "PASS"
+  },
+  {
+    "name": "70_course_review_dashboard",
+    "path": "/admin/courses/reviews",
+    "stitchId": "2e437dcbb5bf41cea9eba1dfcd8a6851",
+    "httpStatus": 200,
+    "desktopSize": 86850,
+    "mobileSize": 38390,
+    "status": "PASS"
+  },
+  {
+    "name": "71_course_review_details",
+    "path": "/admin/courses/reviews/rev-1",
+    "stitchId": "9b50e2ddc9943efb387052637738f61a",
+    "httpStatus": 200,
+    "desktopSize": 87785,
+    "mobileSize": 38425,
+    "status": "PASS"
+  },
+  {
+    "name": "72_approval_rejection_decision",
+    "path": "/admin/courses/reviews/rev-1/decide",
+    "stitchId": "a9573a08ec384d3ea3b969e0879404dd",
+    "httpStatus": 200,
+    "desktopSize": 59309,
+    "mobileSize": 28682,
+    "status": "PASS"
+  },
+  {
+    "name": "73_platform_activity_dashboard",
+    "path": "/admin/activity",
+    "stitchId": "7be33203f6ca4ef59c90a2a4b86377dc",
+    "httpStatus": 200,
+    "desktopSize": 92790,
+    "mobileSize": 40993,
+    "status": "PASS"
+  },
+  {
+    "name": "74_activity_log_details",
+    "path": "/admin/activity/log",
+    "stitchId": "0414093dae7e4292a2a9a2e5c56a66f3",
+    "httpStatus": 200,
+    "desktopSize": 59831,
+    "mobileSize": 34507,
+    "status": "PASS"
+  },
+  {
+    "name": "75_reports_analytics",
+    "path": "/admin/reports",
+    "stitchId": "3747ecdd3ecf45bb96fae8538258b6c4",
+    "httpStatus": 200,
+    "desktopSize": 68107,
+    "mobileSize": 26148,
+    "status": "PASS"
+  },
+  {
+    "name": "76_admin_notifications",
+    "path": "/admin/notifications",
+    "stitchId": "c94b340d66fb430b9cd77b5593c228d6",
+    "httpStatus": 200,
+    "desktopSize": 74889,
+    "mobileSize": 35570,
+    "status": "PASS"
+  },
+  {
+    "name": "77_admin_settings",
+    "path": "/admin/settings",
+    "stitchId": "26ff641322f241a3bc8c9629b3ae3ef7",
+    "httpStatus": 200,
+    "desktopSize": 54744,
+    "mobileSize": 27551,
+    "status": "PASS"
+  },
+  {
+    "name": "78_admin_profile",
+    "path": "/admin/profile",
+    "stitchId": "902c38361b174a7cb08f427778b9e696",
+    "httpStatus": 200,
+    "desktopSize": 64589,
+    "mobileSize": 38385,
+    "status": "PASS"
+  }
+]

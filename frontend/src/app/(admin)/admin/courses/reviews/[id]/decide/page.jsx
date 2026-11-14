@@ -1,0 +1,89 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import DashboardShell from '@/components/layout/DashboardShell';
+import { adminNav } from '@/components/layout/navigationConfig';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
+import { mockCourseReviews } from '@/lib/mockAdminData';
+import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+
+export default function CourseApprovalDecisionPage({ params }) {
+  const router = useRouter();
+  const review = mockCourseReviews.find((r) => r.id === params.id) || mockCourseReviews[0];
+  const [decisionNotes, setDecisionNotes] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleDecision = (outcome) => {
+    setSubmitted(outcome);
+    setTimeout(() => {
+      router.push('/admin/courses/reviews');
+    }, 1500);
+  };
+
+  return (
+    <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="flex items-center gap-3">
+          <Link href={`/admin/courses/reviews/${params.id}`}>
+            <Button variant="ghost" className="p-2 text-slate-500 hover:text-slate-900">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div>
+            <Badge variant="primary" className="text-[10px]">Accreditation Panel</Badge>
+            <h1 className="text-2xl font-bold text-slate-900">Approve / Reject Decision</h1>
+          </div>
+        </div>
+
+        {submitted && (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-emerald-600" />
+            Decision recorded: Course has been marked {submitted}!
+          </div>
+        )}
+
+        <Card className="p-6 sm:p-8 space-y-4">
+          <div className="p-4 bg-slate-50 border border-border rounded-xl space-y-1">
+            <h2 className="text-base font-bold text-slate-900">{review.title}</h2>
+            <p className="text-xs text-slate-500">Instructor: {review.instructor} · Total Chapters: {review.totalChapters}</p>
+          </div>
+
+          <div className="space-y-1.5 pt-2">
+            <label className="text-xs font-semibold text-slate-700">Official Decision Comments & Feedback</label>
+            <textarea
+              rows={4}
+              placeholder="Provide constructive feedback or compliance confirmation..."
+              value={decisionNotes}
+              onChange={(e) => setDecisionNotes(e.target.value)}
+              required
+              className="w-full rounded-lg border border-border p-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+            <Button
+              onClick={() => handleDecision('REJECTED')}
+              variant="outline"
+              className="text-xs text-rose-600 border-rose-300 hover:bg-rose-50 flex items-center gap-1.5"
+            >
+              <XCircle className="w-4 h-4" />
+              Reject Course Submission
+            </Button>
+            <Button
+              onClick={() => handleDecision('APPROVED')}
+              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Approve for Publication
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </DashboardShell>
+  );
+}
+

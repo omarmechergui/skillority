@@ -57,16 +57,16 @@ None directly — this phase provides infrastructure.
 
 | # | Task | Screens |
 |---|------|---------|
-| 1.1 | Landing page | Public Landing Page |
-| 1.2 | Sign Up flow | Sign Up |
-| 1.3 | Email verification | Email Verification |
-| 1.4 | Sign In flow | Sign In |
-| 1.5 | Forgot password | Forgot Password |
-| 1.6 | Password reset | Password Reset |
-| 1.7 | Role selection | Role Selection |
-| 1.8 | Student onboarding | Student Onboarding |
-| 1.9 | Company onboarding | Company Onboarding |
-| 1.10 | Instructor onboarding | Instructor Onboarding |
+| 1.1 | Landing page | Public Landing Page | ✅ Implemented (Phase UI-4E) |
+| 1.2 | Sign Up flow | Sign Up | ✅ Implemented (Phase UI-1) |
+| 1.3 | Email verification | Email Verification | ✅ Implemented (Phase UI-1) |
+| 1.4 | Sign In flow | Sign In | ✅ Implemented (Phase UI-1) |
+| 1.5 | Forgot password | Forgot Password | ✅ Implemented (Phase UI-1) |
+| 1.6 | Password reset | Password Reset | ✅ Implemented (Phase UI-1) |
+| 1.7 | Role selection | Role Selection | ✅ Implemented (Phase UI-1) |
+| 1.8 | Student onboarding | Student Onboarding | ✅ Implemented (Phase UI-1) |
+| 1.9 | Company onboarding | Company Onboarding | ✅ Implemented (Phase UI-1) |
+| 1.10 | Instructor onboarding | Instructor Onboarding | ✅ Implemented (Phase UI-4C) |
 
 ### Backend APIs
 - `POST /api/auth/signup`
@@ -109,9 +109,9 @@ None directly — this phase provides infrastructure.
 | 2.5 | Lesson viewer | Student Lesson Viewer | ✅ |
 | 2.6 | Chapter quiz | Chapter Quiz | ✅ |
 | 2.7 | Final assessment | Final Assessment | ✅ |
-| 2.8 | Learning progress tracker | Learning Progress |
-| 2.9 | Student profile | Student Profile |
-| 2.10 | Student settings | Student Settings |
+| 2.8 | Learning progress tracker | Learning Progress | ✅ |
+| 2.9 | Student profile | Student Profile | ✅ |
+| 2.10 | Student settings | Student Settings | ✅ |
 
 ### Backend APIs
 - `GET /api/courses` (catalog with filters)
@@ -289,10 +289,10 @@ None directly — this phase provides infrastructure.
 
 | # | Task | Screens | Status |
 |---|------|---------|:------:|
-| 6.1 | Community feed | Community Feed | ⬜ Not Implemented |
-| 6.2 | Create community post | Create Community Post | ⬜ Not Implemented |
-| 6.3 | One-to-one student chat | One-to-One Student Chat | ⬜ Not Implemented |
-| 6.4 | Student notifications | Notifications (Student) | ⬜ Not Implemented |
+| 6.1 | Community feed | Community Feed | ✅ Implemented (Phase UI-3B) |
+| 6.2 | Create community post | Create Community Post | ✅ Implemented (Phase UI-3B) |
+| 6.3 | One-to-one student chat | One-to-One Student Chat | ✅ Implemented (Phase UI-4A) |
+| 6.4 | Student notifications | Notifications (Student) | ✅ Implemented (Phase UI-4A) |
 | 6.5 | Student career opportunities | Student Career Opportunities | ✅ Implemented (Phase UI-3A) |
 | 6.6 | Opportunity details & application | Opportunity Details & Application | ✅ Implemented (Phase UI-3A) |
 | 6.7 | My applications & saved | My Applications & Saved Opportunities | ✅ Implemented (Phase UI-3A) |
@@ -313,11 +313,11 @@ None directly — this phase provides infrastructure.
 
 ### Deliverables
 
-| # | Task | Screens |
-|---|------|---------|
-| 7.1 | Coins wallet | Coins Wallet |
-| 7.2 | Transaction history | _(within wallet screen)_ |
-| 7.3 | Chapter unlock with coins | _(integration with Chapter Details)_ |
+| # | Task | Screens | Status |
+|---|------|---------|:------:|
+| 7.1 | Coins wallet | Coins Wallet | ✅ Implemented (Phase UI-4A) |
+| 7.2 | Transaction history | _(within wallet screen)_ | ✅ Implemented (Phase UI-4A) |
+| 7.3 | Chapter unlock with coins | _(integration with Chapter Details)_ | ✅ Implemented (Phase UI-2) |
 
 ### Prisma Models (new)
 - `Wallet`

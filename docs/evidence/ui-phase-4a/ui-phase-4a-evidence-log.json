@@ -1,0 +1,80 @@
+[
+  {
+    "screenName": "18_learning_progress",
+    "route": "/student/progress",
+    "stitchId": "0c75bd344d1741b9b8de6395dabccc78",
+    "httpStatus": 200,
+    "bodyLength": 44213,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\18_learning_progress_desktop_1440x900.png",
+    "desktopSize": 118251,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\18_learning_progress_mobile_390x844.png",
+    "mobileSize": 31116,
+    "status": "PASS"
+  },
+  {
+    "screenName": "19_student_profile",
+    "route": "/student/profile",
+    "stitchId": "302749e9b0dd4f38bacfa4a7aa52843e",
+    "httpStatus": 0,
+    "bodyLength": 0,
+    "hasValidHtml": false,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\19_student_profile_desktop_1440x900.png",
+    "desktopSize": 329099,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\19_student_profile_mobile_390x844.png",
+    "mobileSize": 89597,
+    "status": "FAIL"
+  },
+  {
+    "screenName": "20_student_settings",
+    "route": "/student/settings",
+    "stitchId": "d06887c3079442ef86d1d986be8856ab",
+    "httpStatus": 200,
+    "bodyLength": 30383,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\20_student_settings_desktop_1440x900.png",
+    "desktopSize": 104957,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\20_student_settings_mobile_390x844.png",
+    "mobileSize": 26960,
+    "status": "PASS"
+  },
+  {
+    "screenName": "26_student_chat_messages",
+    "route": "/student/messages",
+    "stitchId": "002888e279a54f00b81f651888127dc6",
+    "httpStatus": 200,
+    "bodyLength": 31641,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\26_student_chat_messages_desktop_1440x900.png",
+    "desktopSize": 123940,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\26_student_chat_messages_mobile_390x844.png",
+    "mobileSize": 34847,
+    "status": "PASS"
+  },
+  {
+    "screenName": "27_student_notifications",
+    "route": "/student/notifications",
+    "stitchId": "c94b340d66fb430b9cd77b5593c228d6",
+    "httpStatus": 200,
+    "bodyLength": 34182,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\27_student_notifications_desktop_1440x900.png",
+    "desktopSize": 104500,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\27_student_notifications_mobile_390x844.png",
+    "mobileSize": 26113,
+    "status": "PASS"
+  },
+  {
+    "screenName": "28_coins_wallet",
+    "route": "/student/wallet",
+    "stitchId": "06485739c3304a5e84434f9bfd208eb7",
+    "httpStatus": 200,
+    "bodyLength": 36192,
+    "hasValidHtml": true,
+    "desktopScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\28_coins_wallet_desktop_1440x900.png",
+    "desktopSize": 245550,
+    "mobileScreenshot": "C:\\Users\\USER\\Desktop\\skillority\\docs\\evidence\\ui-phase-4a\\28_coins_wallet_mobile_390x844.png",
+    "mobileSize": 68936,
+    "status": "PASS"
+  }
+]
