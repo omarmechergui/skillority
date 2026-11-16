@@ -324,15 +324,56 @@ export async function refresh(req, res, next) {
       where: { tokenHash: hashed },
     });
 
-    if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {
+    if (!storedToken || storedToken.expiresAt < new Date()) {
       return res.status(401).json({
         success: false,
         error: {
-          code: 'TOKEN_REVOKED',
-          message: 'Refresh token has been revoked or expired',
+          code: 'INVALID_REFRESH_TOKEN',
+          message: 'Refresh token has expired or is invalid',
         },
       });
     }
+
+    // Refresh token reuse detection: If already revoked, invalidate entire user session!
+    if (storedToken.revoked) {
+      await prisma.refreshToken.updateMany({
+        where: { userId: payload.id },
+        data: { revoked: true },
+      });
+      await prisma.user.update({
+        where: { id: payload.id },
+        data: { tokenVersion: { increment: 1 } },
+      });
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'SECURITY_ALERT_TOKEN_REUSE',
+          message: 'Security breach detected: Revoked token was reused. All active sessions invalidated.',
+        },
+      });
+    }
+
+    // Rotate refresh token atomically
+    const newRefreshToken = signRefreshToken({
+      id: payload.id,
+      tokenVersion: payload.tokenVersion,
+    });
+    const newHashed = hashCryptoToken(newRefreshToken);
+
+    await prisma.refreshToken.update({
+      where: { id: storedToken.id },
+      data: { revoked: true },
+    });
+
+    await prisma.refreshToken.create({
+      data: {
+        userId: payload.id,
+        tokenHash: newHashed,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
 
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
@@ -356,6 +397,7 @@ export async function refresh(req, res, next) {
       tokenVersion: user.tokenVersion,
     });
 
+    res.cookie('refreshToken', newRefreshToken, COOKIE_OPTIONS);
     res.cookie('accessToken', newAccessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
 
     res.status(200).json({

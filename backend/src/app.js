@@ -3,7 +3,17 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+
 import authRoutes from './routes/auth.routes.js';
+import profileRoutes from './routes/profile.routes.js';
+import courseRoutes from './routes/course.routes.js';
+import learningRoutes from './routes/learning.routes.js';
+import assessmentRoutes from './routes/assessment.routes.js';
+import walletRoutes from './routes/wallet.routes.js';
+import careerRoutes from './routes/career.routes.js';
+import communityRoutes from './routes/community.routes.js';
+import messagingRoutes from './routes/messaging.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -21,8 +31,8 @@ app.use(
 
 // Rate limiter for general API routes
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // limit each IP to 300 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -44,8 +54,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Authentication & RBAC Routes
+// Domain Routes Registration
 app.use('/api/auth', authRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/learning', learningRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/careers', careerRoutes);
+app.use('/api/community', communityRoutes);
+app.use('/api/messages', messagingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Handler
 app.use((req, res) => {
@@ -60,7 +79,6 @@ app.use((req, res) => {
 
 // Global Error Handler
 app.use((err, req, res, _next) => {
-  console.error('[EXPRESS ERROR]:', err);
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,
@@ -72,4 +90,3 @@ app.use((err, req, res, _next) => {
 });
 
 export default app;
-

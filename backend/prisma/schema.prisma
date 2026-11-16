@@ -46,7 +46,15 @@ enum TransactionType {
   CREDIT_BONUS
   CHAPTER_UNLOCK
   QUIZ_REWARD
+  DAILY_LOGIN
+  DAILY_MISSION
+  AD_REWARD
   ADMIN_ADJUSTMENT
+}
+
+enum CertificateType {
+  COURSE_COMPLETION
+  FINAL_ASSESSMENT
 }
 
 // -------------------------------------------------------------
@@ -60,7 +68,7 @@ model User {
   role             Role
   isVerified       Boolean         @default(false)
   isActive         Boolean         @default(true)
-  tokenVersion     Int             @default(0) // Enables immediate session invalidation on role revocation
+  tokenVersion     Int             @default(0) // Enables immediate session invalidation
   invitedByAdminId String?         @db.ObjectId
   profile          Profile?
   wallet           Wallet?
@@ -69,36 +77,41 @@ model User {
   applications     Application[]
   posts            CommunityPost[]
   comments         Comment[]
+  quizAttempts     QuizAttempt[]
+  assessmentAttempts AssessmentAttempt[]
+  certificates     Certificate[]
+  notifications    Notification[]
+  sentMessages     Message[]       @relation("SenderMessages")
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
 
 model Profile {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId         String   @unique @db.ObjectId
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  firstName      String
-  lastName       String
-  avatar         String?
-  bio            String?
-  skills         String[] @default([])
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String   @unique @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName          String
+  lastName           String
+  avatar             String?
+  bio                String?
+  skills             String[] @default([])
   // Student-specific fields
-  university     String?
-  major          String?
-  graduationYear Int?
-  interests      String[] @default([])
-  learningGoals  String?
+  university         String?
+  major              String?
+  graduationYear     Int?
+  interests          String[] @default([])
+  learningGoals      String?
   // Company / Recruiter-specific fields
-  companyName    String?
+  companyName        String?
   companyDescription String?
-  industry       String?
-  companySize    String?
-  website        String?
+  industry           String?
+  companySize        String?
+  website            String?
   // Instructor-specific fields
-  expertise      String[] @default([])
-  experience     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  expertise          String[] @default([])
+  experience         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model PasswordResetToken {
@@ -135,35 +148,38 @@ model AdminInvitation {
 // -------------------------------------------------------------
 
 model Course {
-  id           String       @id @default(auto()) @map("_id") @db.ObjectId
-  instructorId String       @db.ObjectId
-  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
-  title        String
-  description  String
-  thumbnail    String?
-  category     String
-  level        String
-  tags         String[]     @default([])
-  status       CourseStatus @default(DRAFT)
-  reviewNote   String?
-  chapters     Chapter[]
-  enrollments  Enrollment[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  instructorId    String          @db.ObjectId
+  instructor      User            @relation("InstructorCourses", fields: [instructorId], references: [id])
+  title           String
+  description     String
+  thumbnail       String?
+  category        String
+  level           String
+  tags            String[]        @default([])
+  status          CourseStatus    @default(DRAFT)
+  reviewNote      String?
+  chapters        Chapter[]
+  enrollments     Enrollment[]
+  certificates    Certificate[]
+  finalAssessment Json?           // Final assessment definitions & questions
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model Chapter {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  courseId  String   @db.ObjectId
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  courseId  String        @db.ObjectId
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title     String
-  order     Int // 0 to N. Business Rule: Chapters 0-5 are free; > 5 require Coins
-  isFree    Boolean  @default(false)
-  coinsCost Int      @default(0)
+  order     Int           // Chapters 0-5 free; Chapter 6+ requires coins
+  isFree    Boolean       @default(false)
+  coinsCost Int           @default(0)
   lessons   Lesson[]
-  quiz      Json? // Structured chapter quiz JSON definition
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  quiz      Json?         // Structured chapter quiz JSON definition
+  attempts  QuizAttempt[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 model Lesson {
@@ -171,9 +187,9 @@ model Lesson {
   chapterId String   @db.ObjectId
   chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   title     String
-  content   Json // Structured hybrid block content: text, code, questions
+  content   Json     // Hybrid rich blocks: text, code, video, callout
   order     Int
-  duration  Int? // Duration in minutes
+  duration  Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -185,8 +201,10 @@ model Enrollment {
   courseId           String   @db.ObjectId
   course             Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   completedLessonIds String[] @default([])
-  unlockedChapterIds String[] @default([]) // Tracks paid chapters unlocked with coins
+  unlockedChapterIds String[] @default([])
   progressPercent    Float    @default(0.0)
+  isCompleted        Boolean  @default(false)
+  completedAt        DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -194,32 +212,72 @@ model Enrollment {
 }
 
 // -------------------------------------------------------------
+// QUIZZES, ASSESSMENTS & CERTIFICATES
+// -------------------------------------------------------------
+
+model QuizAttempt {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId    String   @db.ObjectId
+  chapter      Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  score        Int      // Percentage
+  passed       Boolean
+  coinsAwarded Int      @default(0)
+  answers      Json     // Answer map
+  createdAt    DateTime @default(now())
+}
+
+model AssessmentAttempt {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId          String   @db.ObjectId
+  score             Int
+  passed            Boolean
+  certificateIssued Boolean  @default(false)
+  createdAt         DateTime @default(now())
+}
+
+model Certificate {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  recipientId  String          @db.ObjectId
+  recipient    User            @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  courseId     String          @db.ObjectId
+  course       Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  type         CertificateType // COURSE_COMPLETION vs FINAL_ASSESSMENT
+  credentialId String          @unique
+  issuedAt     DateTime        @default(now())
+}
+
+// -------------------------------------------------------------
 // COINS & WALLET
 // -------------------------------------------------------------
 
 model Wallet {
-  id           String              @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String              @unique @db.ObjectId
-  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balance      Int                 @default(100) // Initial complimentary utility credits
-  transactions WalletTransaction[]
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String              @unique @db.ObjectId
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance        Int                 @default(100)
+  transactions   WalletTransaction[]
+  lastLoginBonus DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 }
 
 model WalletTransaction {
   id          String          @id @default(auto()) @map("_id") @db.ObjectId
   walletId    String          @db.ObjectId
   wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  amount      Int // Positive for credits, negative for debits
+  amount      Int
   type        TransactionType
   description String
-  referenceId String? // Optional reference e.g. chapterId
+  referenceId String?
   createdAt   DateTime        @default(now())
 }
 
 // -------------------------------------------------------------
-// CAREER OPPORTUNITIES & APPLICATIONS
+// CAREERS, OPPORTUNITIES & RECRUITMENT
 // -------------------------------------------------------------
 
 model Opportunity {
@@ -251,19 +309,21 @@ model Application {
 }
 
 // -------------------------------------------------------------
-// COMMUNITY & SOCIAL
+// COMMUNITY, MESSAGING & NOTIFICATIONS
 // -------------------------------------------------------------
 
 model CommunityPost {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  authorId  String    @db.ObjectId
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title     String
-  content   String
-  tags      String[]  @default([])
-  comments  Comment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  authorId   String    @db.ObjectId
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title      String
+  content    String
+  tags       String[]  @default([])
+  likesCount Int       @default(0)
+  likedByIds String[]  @default([])
+  comments   Comment[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Comment {
@@ -275,4 +335,27 @@ model Comment {
   content   String
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+model Message {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String   @db.ObjectId
+  senderId       String   @db.ObjectId
+  sender         User     @relation("SenderMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId    String   @db.ObjectId
+  content        String
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

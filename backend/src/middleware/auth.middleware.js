@@ -4,6 +4,7 @@ import { verifyAccessToken } from '../utils/jwt.js';
 /**
  * Authentication Middleware
  * Validates JWT access token and ensures session tokenVersion matches DB.
+ * Fails closed in production or if database lookup confirms account invalidation.
  */
 export async function requireAuth(req, res, next) {
   try {
@@ -39,8 +40,7 @@ export async function requireAuth(req, res, next) {
       });
     }
 
-    // Verify tokenVersion against DB to guarantee immediate revocation
-    // If DB is reachable and user exists, check tokenVersion
+    // Database lookup: verify user existence, active status, and tokenVersion
     if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder_user')) {
       try {
         const currentUser = await prisma.user.findUnique({
@@ -55,60 +55,83 @@ export async function requireAuth(req, res, next) {
           },
         });
 
-        if (currentUser) {
-          if (!currentUser.isActive) {
-            return res.status(403).json({
-              success: false,
-              error: {
-                code: 'ACCOUNT_DISABLED',
-                message: 'Your account has been deactivated or suspended',
-              },
-            });
-          }
-
-          if (currentUser.tokenVersion !== payload.tokenVersion) {
-            return res.status(401).json({
-              success: false,
-              error: {
-                code: 'SESSION_REVOKED',
-                message: 'Session has been invalidated. Please log in again.',
-              },
-            });
-          }
-
-          req.user = currentUser;
-          return next();
+        if (!currentUser) {
+          return res.status(401).json({
+            success: false,
+            error: {
+              code: 'USER_NOT_FOUND',
+              message: 'The user account associated with this token no longer exists',
+            },
+          });
         }
-      } catch (_dbErr) {
-        // Fall back to verified JWT payload
+
+        if (!currentUser.isActive) {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'ACCOUNT_DISABLED',
+              message: 'Your account has been deactivated or suspended',
+            },
+          });
+        }
+
+        if (currentUser.tokenVersion !== payload.tokenVersion) {
+          return res.status(401).json({
+            success: false,
+            error: {
+              code: 'SESSION_REVOKED',
+              message: 'Session has been invalidated. Please log in again.',
+            },
+          });
+        }
+
+        req.user = currentUser;
+        return next();
+      } catch (dbErr) {
+        if (process.env.NODE_ENV === 'production') {
+          return res.status(503).json({
+            success: false,
+            error: {
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'Authentication service temporarily unavailable',
+            },
+          });
+        }
       }
     }
 
+    // In isolated test/offline simulation environments:
     req.user = {
       id: payload.id,
       email: payload.email,
       role: payload.role,
-      tokenVersion: payload.tokenVersion,
+      tokenVersion: payload.tokenVersion ?? 0,
+      isActive: true,
     };
-
-    next();
+    return next();
   } catch (err) {
-    next(err);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Authentication validation encountered an internal error',
+      },
+    });
   }
 }
 
 /**
- * RBAC Role Authorization Middleware
- * Enforces allowed roles for the given route.
+ * Role-Based Access Control (RBAC) Guard
+ * Ensures req.user possesses at least one of the allowed roles.
  */
-export function requireRole(allowedRoles = []) {
+export function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'Authentication required',
+          message: 'Authentication required before checking role permissions',
         },
       });
     }
@@ -118,20 +141,20 @@ export function requireRole(allowedRoles = []) {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: `Access denied. Requires one of [${allowedRoles.join(', ')}] role(s).`,
+          message: `Access denied. Requires one of roles: [${allowedRoles.join(', ')}]`,
         },
       });
     }
 
-    next();
+    return next();
   };
 }
 
 /**
- * Resource Ownership Validation Middleware
- * Ensures req.user.id matches req.params[paramName] or user is an ADMIN.
+ * Resource Ownership or Admin Override Guard
+ * Accepts a parameter name string (e.g. 'userId') or a resolver function (req => req.params.id)
  */
-export function requireOwnershipOrAdmin(paramName = 'userId') {
+export function requireOwnershipOrAdmin(ownerParamOrFn) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -143,17 +166,24 @@ export function requireOwnershipOrAdmin(paramName = 'userId') {
       });
     }
 
-    const targetId = req.params[paramName];
-    if (req.user.role !== 'ADMIN' && req.user.id !== targetId) {
+    if (req.user.role === 'ADMIN') {
+      return next();
+    }
+
+    const ownerId = typeof ownerParamOrFn === 'function'
+      ? ownerParamOrFn(req)
+      : req.params[ownerParamOrFn] || req.body[ownerParamOrFn];
+
+    if (!ownerId || ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'You do not have permission to access or modify this resource.',
+          message: 'You are not authorized to access or modify this resource',
         },
       });
     }
 
-    next();
+    return next();
   };
 }
