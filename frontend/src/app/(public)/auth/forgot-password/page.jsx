@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { api } from '@/lib/apiClient';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -18,15 +19,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || 'Request failed');
+      const res = await api.post('/auth/forgot-password', { email }, { requiresAuth: false });
+      if (res.error) throw new Error(res.error.message || 'Request failed');
 
-      setMessage(data.message || 'Password reset link sent if account exists.');
+      setMessage(res.data?.message || 'Password reset link sent if account exists.');
     } catch (err) {
       setError(err.message);
     } finally {

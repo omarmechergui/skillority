@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockWalletData } from '@/lib/mockStudentData';
+import { walletApi } from '@/lib/api';
 import {
   Coins,
   ArrowDownLeft,
@@ -27,7 +28,84 @@ import {
 
 export default function StudentWalletPage() {
   const [filter, setFilter] = useState('ALL');
-  const { balance, totalEarned, totalSpent, rules, transactions } = mockWalletData;
+  const [wallet, setWallet] = useState(mockWalletData);
+  const [claimingDaily, setClaimingDaily] = useState(false);
+  const [claimingAd, setClaimingAd] = useState(false);
+  const [claimFeedback, setClaimFeedback] = useState(null);
+
+  useEffect(() => {
+    async function loadWallet() {
+      try {
+        const res = await walletApi.getWallet();
+        if (res.data?.wallet) {
+          const liveW = res.data.wallet;
+          setWallet(prev => ({
+            ...prev,
+            balance: liveW.balance,
+            totalEarned: liveW.totalEarned ?? prev.totalEarned,
+            totalSpent: liveW.totalSpent ?? prev.totalSpent,
+            transactions: liveW.transactions && liveW.transactions.length > 0 ? liveW.transactions.map(t => ({
+              id: t.id,
+              type: t.amount > 0 ? 'EARNED' : 'SPENT',
+              amount: t.amount > 0 ? `+${t.amount}` : `${t.amount}`,
+              description: t.description,
+              date: new Date(t.createdAt).toLocaleDateString(),
+              category: t.type
+            })) : prev.transactions
+          }));
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+    loadWallet();
+  }, []);
+
+  const handleClaimDaily = async () => {
+    setClaimingDaily(true);
+    setClaimFeedback(null);
+    try {
+      const res = await walletApi.claimDailyLogin();
+      if (res.data?.awardedCoins) {
+        setWallet(prev => ({
+          ...prev,
+          balance: res.data.newBalance,
+          totalEarned: prev.totalEarned + res.data.awardedCoins
+        }));
+        setClaimFeedback(`Success: Claimed ${res.data.awardedCoins} Coins for daily check-in!`);
+      } else {
+        setClaimFeedback(res.error?.message || 'Daily reward already claimed today.');
+      }
+    } catch (err) {
+      setClaimFeedback(err.message || 'Could not claim daily reward.');
+    } finally {
+      setClaimingDaily(false);
+    }
+  };
+
+  const handleClaimAd = async () => {
+    setClaimingAd(true);
+    setClaimFeedback(null);
+    try {
+      const res = await walletApi.claimAdReward();
+      if (res.data?.awardedCoins) {
+        setWallet(prev => ({
+          ...prev,
+          balance: res.data.newBalance,
+          totalEarned: prev.totalEarned + res.data.awardedCoins
+        }));
+        setClaimFeedback(`Success: Claimed ${res.data.awardedCoins} Coins from rewarded video!`);
+      } else {
+        setClaimFeedback(res.error?.message || 'Could not claim ad reward.');
+      }
+    } catch (err) {
+      setClaimFeedback(err.message || 'Error claiming ad reward.');
+    } finally {
+      setClaimingAd(false);
+    }
+  };
+
+  const { balance, totalEarned, totalSpent, rules, transactions } = wallet;
 
   const filteredTransactions = transactions.filter((tx) => {
     if (filter === 'EARNED') return tx.type === 'EARNED';

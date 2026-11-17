@@ -16,7 +16,9 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
-backend/.env
+.env.*
+!.env.example
+
 
 # Debug logs
 npm-debug.log*
@@ -32,3 +34,14 @@ backend/prisma/*.db-journal
 .DS_Store
 Thumbs.db
 
+# Playwright generated reports and test artifacts
+/playwright-report/
+/test-results/
+/playwright/.cache/
+/docs/playwright-report/
+
+# Local database diagnostic scripts
+/diagnose-db.js
+/test-atlas-tcp.js
+/test-prisma-live.js
+/test-real-crud.js

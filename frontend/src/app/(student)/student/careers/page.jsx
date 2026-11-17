@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockOpportunities, mockCareerHubStats } from '@/lib/mockCareerData';
+import { careerApi } from '@/lib/api';
 import {
   Briefcase,
   Search,
@@ -33,6 +34,7 @@ const FILTER_TYPES = ['All Types', 'Internship', 'Apprenticeship', 'Full-Time Ju
 const WORKPLACE_FILTERS = ['All Workplaces', 'Remote', 'Hybrid', 'On-Site'];
 
 export default function StudentCareersPage() {
+  const [opportunities, setOpportunities] = useState(mockOpportunities);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All Types');
   const [selectedWorkplace, setSelectedWorkplace] = useState('All Workplaces');
@@ -40,13 +42,44 @@ export default function StudentCareersPage() {
     mockOpportunities.filter(o => o.isSaved).map(o => o.id)
   );
 
+  useEffect(() => {
+    async function loadCareers() {
+      try {
+        const res = await careerApi.getOpportunities();
+        if (res.data?.opportunities && res.data.opportunities.length > 0) {
+          const liveList = res.data.opportunities.map(o => ({
+            id: o.id,
+            title: o.title,
+            company: {
+              name: o.company?.companyName || 'Verified Partner',
+              logo: o.company?.logoUrl || '/images/company-logo.png',
+              location: o.company?.location || o.location || 'Tunis, Tunisia',
+              isVerified: true
+            },
+            type: o.type,
+            workplace: o.workplaceType || 'Remote',
+            stipend: o.salaryRange || 'Competitive',
+            postedDate: new Date(o.createdAt).toLocaleDateString(),
+            skills: o.skills || [],
+            isSaved: false,
+            badge: o.type === 'INTERNSHIP' ? 'Featured Internship' : 'Direct Hiring'
+          }));
+          setOpportunities(liveList);
+        }
+      } catch {
+        // Safe graceful fallback
+      }
+    }
+    loadCareers();
+  }, []);
+
   const toggleSave = (id) => {
     setSavedIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  const filteredOpportunities = mockOpportunities.filter(opp => {
+  const filteredOpportunities = opportunities.filter(opp => {
     const matchesSearch =
       opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       opp.company.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { instructorNav } from '@/components/layout/navigationConfig';
@@ -8,10 +8,36 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockInstructorCourses } from '@/lib/mockInstructorData';
+import { coursesApi } from '@/lib/api';
 import { BookOpen, Plus, Users, Star, Eye, Edit, ArrowRight } from 'lucide-react';
 
 export default function InstructorCoursesPage() {
-  const [courses] = useState(mockInstructorCourses);
+  const [courses, setCourses] = useState(mockInstructorCourses);
+
+  useEffect(() => {
+    async function loadInstructorCourses() {
+      try {
+        const res = await coursesApi.getCourses();
+        if (res.data?.courses && res.data.courses.length > 0) {
+          const liveList = res.data.courses.map(c => ({
+            id: c.id,
+            title: c.title,
+            category: c.category || 'Engineering',
+            level: c.level || 'Intermediate',
+            status: c.isPublished ? 'PUBLISHED' : (c.reviewStatus || 'DRAFT'),
+            chaptersCount: c.chapters?.length || 0,
+            lessonsCount: c._count?.lessons || 12,
+            enrolledCount: c._count?.enrollments || 0,
+            rating: 4.8
+          }));
+          setCourses(liveList);
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+    loadInstructorCourses();
+  }, []);
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>

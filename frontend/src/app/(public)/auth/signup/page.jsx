@@ -6,6 +6,7 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/apiClient';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -28,22 +29,17 @@ export default function SignUpPage() {
 
     const endpoint =
       role === 'STUDENT'
-        ? 'http://localhost:5000/api/auth/signup/student'
-        : 'http://localhost:5000/api/auth/signup/company';
+        ? '/auth/signup/student'
+        : '/auth/signup/company';
 
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
+      const res = await api.post(endpoint, formData, { requiresAuth: false });
 
-      if (!res.ok) {
-        throw new Error(data?.error?.message || 'Registration failed');
+      if (res.error) {
+        throw new Error(res.error.message || 'Registration failed');
       }
 
-      loginUser(data.data.user, data.data.accessToken);
+      loginUser(res.data.user, res.data.accessToken);
 
       if (role === 'STUDENT') {
         router.push('/onboarding/student');

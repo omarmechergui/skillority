@@ -10,6 +10,8 @@
     "build:frontend": "pnpm --filter frontend build",
     "lint": "pnpm --filter frontend lint && pnpm --filter backend lint"
   },
-  "packageManager": "pnpm@12.6.0"
+  "packageManager": "pnpm@12.6.0",
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
 }
-

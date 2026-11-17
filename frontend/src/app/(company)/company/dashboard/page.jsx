@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -14,6 +14,8 @@ import {
   mockCompanyOpportunities,
   mockCandidates,
 } from '@/lib/mockCompanyData';
+import { useAuth } from '@/lib/auth';
+import { profileApi, careerApi } from '@/lib/api';
 import {
   Briefcase,
   Users,
@@ -28,10 +30,56 @@ import {
 } from 'lucide-react';
 
 export default function CompanyDashboardPage() {
-  const [profile] = useState(mockCompanyProfile);
-  const [recruiter] = useState(mockRecruiterUser);
-  const opportunities = mockCompanyOpportunities;
-  const recentApplicants = mockCandidates.slice(0, 3);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(mockCompanyProfile);
+  const [recruiter, setRecruiter] = useState(mockRecruiterUser);
+  const [opportunities, setOpportunities] = useState(mockCompanyOpportunities);
+  const [recentApplicants, setRecentApplicants] = useState(mockCandidates.slice(0, 3));
+
+  useEffect(() => {
+    async function loadCompanyData() {
+      try {
+        const [profRes, appsRes] = await Promise.allSettled([
+          profileApi.getMyProfile(),
+          careerApi.getCompanyApplications()
+        ]);
+
+        if (profRes.status === 'fulfilled' && profRes.value?.data?.profile) {
+          const live = profRes.value.data.profile;
+          setProfile(prev => ({
+            ...prev,
+            name: live.companyName || prev.name,
+            industry: live.industry || prev.industry,
+            location: live.location || prev.location
+          }));
+        }
+
+        if (user) {
+          setRecruiter(prev => ({
+            ...prev,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || prev.name,
+            role: user.role === 'COMPANY' ? 'Lead Technical Recruiter' : prev.role
+          }));
+        }
+
+        if (appsRes.status === 'fulfilled' && appsRes.value?.data?.applications?.length > 0) {
+          const liveApps = appsRes.value.data.applications.map(a => ({
+            id: a.id,
+            name: `${a.applicant?.firstName || 'Candidate'} ${a.applicant?.lastName || ''}`.trim(),
+            role: a.opportunity?.title || 'Applicant',
+            matchScore: 92,
+            avatar: a.applicant?.avatarUrl || '/images/avatar-default.png',
+            status: a.status,
+            appliedDate: new Date(a.createdAt).toLocaleDateString()
+          }));
+          setRecentApplicants(liveApps.slice(0, 3));
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+    loadCompanyData();
+  }, [user]);
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>

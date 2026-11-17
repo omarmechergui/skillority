@@ -7,6 +7,7 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/apiClient';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -21,21 +22,16 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
+      const res = await api.post('/auth/login', formData, { requiresAuth: false });
 
-      if (!res.ok) {
-        throw new Error(data?.error?.message || 'Failed to sign in');
+      if (res.error) {
+        throw new Error(res.error.message || 'Failed to sign in');
       }
 
-      loginUser(data.data.user, data.data.accessToken);
+      loginUser(res.data.user, res.data.accessToken);
 
       // Redirect by role
-      const role = data.data.user.role;
+      const role = res.data.user.role;
       if (role === 'STUDENT') router.push('/onboarding/student');
       else if (role === 'COMPANY') router.push('/onboarding/company');
       else if (role === 'INSTRUCTOR') router.push('/instructor/dashboard');

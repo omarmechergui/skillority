@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,6 +9,8 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockStudentProfile, mockCourses } from '@/lib/mockLearningData';
+import { useAuth } from '@/lib/auth';
+import { profileApi, walletApi, coursesApi } from '@/lib/api';
 import {
   Coins,
   Flame,
@@ -27,9 +29,74 @@ import {
 } from 'lucide-react';
 
 export default function StudentDashboardPage() {
-  const [profile] = useState(mockStudentProfile);
-  const enrolledCourses = mockCourses.filter(c => c.isEnrolled);
-  const activeCourse = enrolledCourses[0] || mockCourses[0];
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(mockStudentProfile);
+  const [coursesList, setCoursesList] = useState(mockCourses);
+  const [walletInfo, setWalletInfo] = useState({ balance: 480 });
+
+  useEffect(() => {
+    async function loadLiveData() {
+      try {
+        const [profRes, wallRes, crsRes] = await Promise.allSettled([
+          profileApi.getMyProfile(),
+          walletApi.getWallet(),
+          coursesApi.getCourses({ published: 'true' })
+        ]);
+
+        if (profRes.status === 'fulfilled' && profRes.value?.data?.profile) {
+          const live = profRes.value.data.profile;
+          setProfile(prev => ({
+            ...prev,
+            name: `${live.firstName || ''} ${live.lastName || ''}`.trim() || prev.name,
+            currentStreakDays: live.currentStreakDays ?? prev.currentStreakDays,
+          }));
+        } else if (user) {
+          setProfile(prev => ({
+            ...prev,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || prev.name,
+          }));
+        }
+
+        if (wallRes.status === 'fulfilled' && wallRes.value?.data?.wallet) {
+          const w = wallRes.value.data.wallet;
+          setWalletInfo({ balance: w.balance });
+          setProfile(prev => ({ ...prev, coinBalance: w.balance }));
+        }
+
+        if (crsRes.status === 'fulfilled' && crsRes.value?.data?.courses?.length > 0) {
+          // Merge live courses or fallback to structured mock courses
+          const liveList = crsRes.value.data.courses;
+          if (Array.isArray(liveList) && liveList.length > 0) {
+            setCoursesList(prev => {
+              const mapped = liveList.map(c => ({
+                id: c.id,
+                title: c.title,
+                category: c.category || 'Development',
+                level: c.level || 'Intermediate',
+                description: c.description,
+                image: c.thumbnailUrl || '/images/course-card.png',
+                instructor: {
+                  name: c.instructor ? `${c.instructor.user?.firstName || 'Instructor'} ${c.instructor.user?.lastName || ''}` : 'Skillority Faculty',
+                  role: 'Course Author',
+                  avatar: '/images/avatar-default.png'
+                },
+                progressPercent: 0,
+                isEnrolled: false,
+                chapters: c.chapters || []
+              }));
+              return mapped.length ? mapped : prev;
+            });
+          }
+        }
+      } catch {
+        // Safe graceful fallback to initial mock profile
+      }
+    }
+    loadLiveData();
+  }, [user]);
+
+  const enrolledCourses = coursesList.filter(c => c.isEnrolled);
+  const activeCourse = enrolledCourses[0] || coursesList[0] || mockCourses[0];
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>

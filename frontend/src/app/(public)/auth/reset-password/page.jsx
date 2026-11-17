@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { api } from '@/lib/apiClient';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -25,16 +26,15 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post(
+        '/auth/reset-password',
+        {
           token: formData.token,
           newPassword: formData.newPassword,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || 'Password reset failed');
+        },
+        { requiresAuth: false }
+      );
+      if (res.error) throw new Error(res.error.message || 'Password reset failed');
 
       setSuccess(true);
       setTimeout(() => router.push('/auth/signin'), 3000);

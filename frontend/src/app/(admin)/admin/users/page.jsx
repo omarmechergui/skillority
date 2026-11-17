@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { adminNav } from '@/components/layout/navigationConfig';
@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockAdminUsers } from '@/lib/mockAdminData';
+import { adminApi } from '@/lib/api';
 import {
   Users,
   Search,
@@ -22,6 +23,30 @@ export default function UserManagementDirectoryPage() {
   const [users, setUsers] = useState(mockAdminUsers);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await adminApi.getUsers();
+        if (res.data?.users && res.data.users.length > 0) {
+          const liveUsers = res.data.users.map(u => ({
+            id: u.id,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+            email: u.email,
+            role: u.role,
+            status: u.isActive ? 'ACTIVE' : 'SUSPENDED',
+            joinedDate: new Date(u.createdAt).toLocaleDateString(),
+            lastActive: 'Recently',
+            profileCompleted: true
+          }));
+          setUsers(liveUsers);
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+    loadUsers();
+  }, []);
 
   const filtered = users.filter((u) => {
     const matchesSearch =
