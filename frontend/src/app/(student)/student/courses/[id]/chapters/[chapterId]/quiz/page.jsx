@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -8,7 +8,8 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourses, mockStudentProfile } from '@/lib/mockLearningData';
+import { mockCourses } from '@/lib/mockLearningData';
+import { assessmentApi, coursesApi } from '@/lib/api';
 import {
   HelpCircle,
   Coins,
@@ -18,7 +19,9 @@ import {
   ArrowLeft,
   Trophy,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function ChapterQuizPage() {
@@ -26,13 +29,19 @@ export default function ChapterQuizPage() {
   const courseId = params?.id || 'course-1';
   const chapterId = params?.chapterId || 'chap-0';
 
-  const course = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
-  const chapter = course.chapters.find((ch) => ch.id === chapterId) || course.chapters[0];
-  const quiz = chapter.quiz || {
+  const [course, setCourse] = useState(null);
+  const [chapter, setChapter] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fallbackCourse = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
+  const fallbackChapter = fallbackCourse.chapters.find((ch) => ch.id === chapterId) || fallbackCourse.chapters[0];
+  const fallbackQuiz = fallbackChapter.quiz || {
     id: 'quiz-fallback',
-    title: `Chapter ${chapter.chapterNumber} Assessment`,
+    title: `Chapter ${fallbackChapter.chapterNumber} Assessment`,
     passingScore: 80,
-    rewardCoins: 50,
+    rewardCoins: 20,
     questions: [
       {
         id: 'q1',
@@ -40,20 +49,48 @@ export default function ChapterQuizPage() {
         prompt: 'Which package manager is strictly used in this architecture?',
         options: ['npm', 'pnpm', 'yarn', 'bun'],
         correctAnswer: 'pnpm',
-        explanation: 'pnpm is strictly required for workspace dependency isolation.'
-      }
-    ]
+        explanation: 'pnpm is strictly required for workspace dependency isolation.',
+      },
+    ],
   };
 
+  const [quiz, setQuiz] = useState(fallbackQuiz);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [backendResult, setBackendResult] = useState(null);
   const [coinsAwarded, setCoinsAwarded] = useState(false);
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
+  useEffect(() => {
+    async function loadQuizData() {
+      setLoading(true);
+      try {
+        const res = await coursesApi.getCourse(courseId);
+        if (res.data) {
+          setCourse(res.data);
+          const foundChapter = res.data.chapters?.find((ch) => ch.id === chapterId);
+          if (foundChapter) {
+            setChapter(foundChapter);
+            if (foundChapter.quiz?.questions?.length > 0) {
+              setQuiz(foundChapter.quiz);
+            }
+          }
+        }
+      } catch (err) {
+        // Fallback to structured mock chapter data
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadQuizData();
+  }, [courseId, chapterId]);
+
+  const activeCourse = course || fallbackCourse;
+  const activeChapter = chapter || fallbackChapter;
+  const currentQuestion = quiz.questions[currentQuestionIndex] || quiz.questions[0];
 
   const handleSelectOption = (option) => {
-    if (isSubmitted) return;
+    if (isSubmitted || submitting) return;
     if (currentQuestion.type === 'multiple') {
       const currentList = selectedAnswers[currentQuestion.id] || [];
       const updated = currentList.includes(option)
@@ -65,13 +102,13 @@ export default function ChapterQuizPage() {
     }
   };
 
-  const calculateScore = () => {
+  const calculateClientScore = () => {
     let correctCount = 0;
     quiz.questions.forEach((q) => {
       const userAns = selectedAnswers[q.id];
       if (q.type === 'multiple') {
         const sortedUser = Array.isArray(userAns) ? [...userAns].sort() : [];
-        const sortedCorrect = [...q.correctAnswer].sort();
+        const sortedCorrect = Array.isArray(q.correctAnswer) ? [...q.correctAnswer].sort() : [];
         if (JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect)) {
           correctCount++;
         }
@@ -84,22 +121,47 @@ export default function ChapterQuizPage() {
     return Math.round((correctCount / quiz.questions.length) * 100);
   };
 
-  const finalScore = isSubmitted ? calculateScore() : 0;
-  const isPassed = finalScore >= quiz.passingScore;
-
-  const handleSubmitQuiz = () => {
-    setIsSubmitted(true);
-    if (calculateScore() >= quiz.passingScore) {
-      setCoinsAwarded(true);
+  const handleSubmitQuiz = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await assessmentApi.submitQuiz(chapterId, selectedAnswers);
+      if (res.data) {
+        setBackendResult(res.data);
+        setIsSubmitted(true);
+        if (res.data.passed && res.data.coinsAwarded > 0) {
+          setCoinsAwarded(true);
+        }
+      } else {
+        // Fallback for mock chapters
+        const clientScore = calculateClientScore();
+        const clientPassed = clientScore >= (quiz.passingScore || 70);
+        setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });
+        setIsSubmitted(true);
+        if (clientPassed) setCoinsAwarded(true);
+      }
+    } catch (err) {
+      // Graceful fallback for mock chapters that don't exist in live MongoDB
+      const clientScore = calculateClientScore();
+      const clientPassed = clientScore >= (quiz.passingScore || 70);
+      setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });
+      setIsSubmitted(true);
+      if (clientPassed) setCoinsAwarded(true);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleRetake = () => {
     setSelectedAnswers({});
     setIsSubmitted(false);
+    setBackendResult(null);
     setCurrentQuestionIndex(0);
     setCoinsAwarded(false);
   };
+
+  const displayScore = backendResult?.score ?? (isSubmitted ? calculateClientScore() : 0);
+  const isPassed = backendResult?.passed ?? (displayScore >= (quiz.passingScore || 70));
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>
@@ -107,25 +169,32 @@ export default function ChapterQuizPage() {
         {/* Breadcrumb Bar */}
         <div>
           <Link
-            href={`/student/courses/${course.id}/chapters/${chapter.id}`}
+            href={`/student/courses/${activeCourse.id}/chapters/${activeChapter.id}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-primary transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Chapter {chapter.chapterNumber}
+            <ArrowLeft className="w-4 h-4" /> Back to Chapter {activeChapter.chapterNumber || activeChapter.order || 0}
           </Link>
         </div>
+
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* Quiz Header */}
         <div className="bg-white p-6 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="warning" className="bg-amber-50 text-amber-800 border-amber-200 text-xs">
-                <Coins className="w-3.5 h-3.5 mr-1 text-amber-600 inline" /> +{quiz.rewardCoins} Coins Reward
+                <Coins className="w-3.5 h-3.5 mr-1 text-amber-600 inline" /> +{quiz.rewardCoins || 20} Coins Reward
               </Badge>
               <span className="text-xs text-slate-400">Chapter Knowledge Check</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{quiz.title}</h1>
             <p className="text-xs text-slate-500">
-              Passing requirement: <strong>{quiz.passingScore}%</strong> · {quiz.questions.length} questions
+              Passing requirement: <strong>{quiz.passingScore || 70}%</strong> · {quiz.questions.length} questions
             </p>
           </div>
 
@@ -161,6 +230,7 @@ export default function ChapterQuizPage() {
                   <button
                     key={idx}
                     type="button"
+                    disabled={submitting}
                     onClick={() => handleSelectOption(option)}
                     className={`w-full text-left p-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-between ${
                       isSelected
@@ -188,7 +258,7 @@ export default function ChapterQuizPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={currentQuestionIndex === 0}
+                disabled={currentQuestionIndex === 0 || submitting}
                 onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
               >
                 Previous
@@ -198,6 +268,7 @@ export default function ChapterQuizPage() {
                 <Button
                   variant="primary"
                   size="sm"
+                  disabled={submitting}
                   onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
                 >
                   Next Question <ArrowRight className="w-4 h-4 ml-1" />
@@ -206,10 +277,18 @@ export default function ChapterQuizPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={submitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
                   onClick={handleSubmitQuiz}
                 >
-                  Submit Quiz
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Evaluating Answers...
+                    </>
+                  ) : (
+                    'Submit Quiz'
+                  )}
                 </Button>
               )}
             </div>
@@ -230,7 +309,7 @@ export default function ChapterQuizPage() {
                 {isPassed ? 'Congratulations! Quiz Passed' : 'Keep Practicing!'}
               </h2>
               <p className="text-sm text-slate-500">
-                You scored <strong className="text-slate-900 font-bold">{finalScore}%</strong> (Passing threshold: {quiz.passingScore}%)
+                You scored <strong className="text-slate-900 font-bold">{displayScore}%</strong> (Passing threshold: {quiz.passingScore || 70}%)
               </p>
             </div>
 
@@ -242,7 +321,7 @@ export default function ChapterQuizPage() {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-amber-800 uppercase tracking-wider">Reward Earned</div>
-                  <div className="text-base font-extrabold text-amber-950">+{quiz.rewardCoins} Skillority Coins Added!</div>
+                  <div className="text-base font-extrabold text-amber-950">+{backendResult?.coinsAwarded || 20} Skillority Coins Added!</div>
                 </div>
               </div>
             )}
@@ -270,7 +349,7 @@ export default function ChapterQuizPage() {
                   <RotateCcw className="w-4 h-4 mr-1.5" /> Retake Quiz
                 </Button>
               )}
-              <Link href={`/student/courses/${course.id}`}>
+              <Link href={`/student/courses/${activeCourse.id}`}>
                 <Button variant="primary" size="md">
                   Continue Curriculum <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>

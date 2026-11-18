@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { mockCourses } from '@/lib/mockLearningData';
+import { assessmentApi } from '@/lib/api';
 import {
   Award,
   Clock,
@@ -21,7 +22,8 @@ import {
   ShieldCheck,
   RotateCcw,
   Download,
-  Share2
+  Share2,
+  Loader2,
 } from 'lucide-react';
 
 export default function FinalAssessmentPage() {
@@ -60,15 +62,17 @@ export default function FinalAssessmentPage() {
   const [answers, setAnswers] = useState({});
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [backendResult, setBackendResult] = useState(null);
 
   const currentQ = assessment.questions[currentIdx];
 
   const handleSelect = (option) => {
-    if (isCompleted) return;
+    if (isCompleted || submitting) return;
     setAnswers({ ...answers, [currentQ.id]: option });
   };
 
-  const calculateScore = () => {
+  const calculateClientScore = () => {
     let correct = 0;
     assessment.questions.forEach((q) => {
       if (answers[q.id] === q.correctAnswer) {
@@ -78,13 +82,41 @@ export default function FinalAssessmentPage() {
     return Math.round((correct / assessment.questions.length) * 100);
   };
 
-  const finalScore = isCompleted ? calculateScore() : 0;
-  const isCertified = finalScore >= assessment.passingPercentage;
-
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     setIsSubmitDialogOpen(false);
-    setIsCompleted(true);
+    setSubmitting(true);
+    try {
+      const res = await assessmentApi.submitAssessment(courseId, answers);
+      if (res.data) {
+        setBackendResult(res.data);
+        setIsCompleted(true);
+      } else {
+        const clientScore = calculateClientScore();
+        const clientPassed = clientScore >= assessment.passingPercentage;
+        setBackendResult({
+          score: clientScore,
+          passed: clientPassed,
+          certificate: clientPassed ? { credentialId: 'SKL-ASSESS-PROTOTYPE', type: 'FINAL_ASSESSMENT' } : null,
+        });
+        setIsCompleted(true);
+      }
+    } catch {
+      const clientScore = calculateClientScore();
+      const clientPassed = clientScore >= assessment.passingPercentage;
+      setBackendResult({
+        score: clientScore,
+        passed: clientPassed,
+        certificate: clientPassed ? { credentialId: 'SKL-ASSESS-PROTOTYPE', type: 'FINAL_ASSESSMENT' } : null,
+      });
+      setIsCompleted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const finalScore = backendResult?.score ?? (isCompleted ? calculateClientScore() : 0);
+  const isCertified = backendResult?.passed ?? (finalScore >= assessment.passingPercentage);
+  const certificateData = backendResult?.certificate;
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>

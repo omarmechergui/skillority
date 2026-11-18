@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockCandidates } from '@/lib/mockCompanyData';
+import { careerApi } from '@/lib/api';
 import {
   FileCheck,
   ChevronRight,
@@ -23,10 +24,48 @@ const STAGES = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED'];
 export default function RecruitmentPipelinePage() {
   const [candidates, setCandidates] = useState(mockCandidates);
 
-  const moveCandidate = (id, newStage) => {
+  useEffect(() => {
+    async function loadPipeline() {
+      try {
+        const res = await careerApi.getCompanyApplications();
+        if (res.data?.data && res.data.data.length > 0) {
+          const liveApps = res.data.data.map(app => ({
+            id: app.id,
+            name: [app.student?.profile?.firstName, app.student?.profile?.lastName].filter(Boolean).join(' ') || 'Candidate',
+            avatar: app.student?.profile?.avatar || '/images/default-avatar.png',
+            appliedRole: app.opportunity?.title || 'Position',
+            stage: app.status === 'PENDING' ? 'APPLIED' : app.status,
+            matchScore: 85,
+          }));
+          setCandidates(liveApps);
+        }
+      } catch {
+        // Keep mock data
+      }
+    }
+    loadPipeline();
+  }, []);
+
+  const moveCandidate = async (id, newStage) => {
+    // Optimistic update
     setCandidates((prev) =>
       prev.map((c) => (c.id === id ? { ...c, stage: newStage } : c))
     );
+
+    // Map pipeline stages to backend status enum
+    const stageToStatus = {
+      APPLIED: 'PENDING',
+      SCREENING: 'REVIEWING',
+      INTERVIEW: 'INTERVIEW',
+      OFFER: 'OFFERED',
+      HIRED: 'OFFERED',
+    };
+
+    try {
+      await careerApi.updateApplicationStatus(id, stageToStatus[newStage] || newStage);
+    } catch {
+      // Keep optimistic update — user can retry
+    }
   };
 
   return (

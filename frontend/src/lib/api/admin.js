@@ -12,8 +12,8 @@ export const adminApi = {
     const query = new URLSearchParams(params).toString();
     return api.get(`/admin/courses/reviews${query ? `?${query}` : ''}`);
   },
-  decideCourseReview: (courseId, status, feedback) =>
-    api.post(`/admin/courses/${courseId}/review-decision`, { status, feedback }),
+  decideCourseReview: (courseId, status, reviewNote) =>
+    api.post(`/courses/${courseId}/review-decision`, { status, reviewNote }),
 };
 
 export default adminApi;

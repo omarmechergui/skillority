@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import { mockOpportunities } from '@/lib/mockCareerData';
+import { careerApi } from '@/lib/api';
 import {
   Briefcase,
   MapPin,
@@ -35,8 +36,9 @@ export default function OpportunityDetailsPage() {
   const router = useRouter();
   const opportunityId = params?.id || 'opp-1';
 
-  const opportunity =
-    mockOpportunities.find(o => o.id === opportunityId) || mockOpportunities[0];
+  const [opportunity, setOpportunity] = useState(
+    mockOpportunities.find(o => o.id === opportunityId) || mockOpportunities[0]
+  );
 
   const [isSaved, setIsSaved] = useState(opportunity.isSaved || false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -44,9 +46,46 @@ export default function OpportunityDetailsPage() {
   const [coverNote, setCoverNote] = useState('');
   const [portfolioLink, setPortfolioLink] = useState('https://github.com/alexrivera');
 
-  const handleConfirmApplication = () => {
-    setHasApplied(true);
-    setIsApplyModalOpen(false);
+  useEffect(() => {
+    async function loadOpportunity() {
+      try {
+        const res = await careerApi.getOpportunity(opportunityId);
+        if (res.data?.data) {
+          const o = res.data.data;
+          setOpportunity(prev => ({
+            ...prev,
+            ...o,
+            company: o.company?.companyName || prev.company,
+            companyLogo: o.company?.logoUrl || prev.companyLogo,
+            location: o.location || prev.location,
+            stipend: o.salaryRange || prev.stipend,
+            type: o.type || prev.type,
+            matchedSkills: o.skills || prev.matchedSkills || [],
+            skillsMatchPercentage: prev.skillsMatchPercentage || 85,
+            workplaceType: o.workplaceType || prev.workplaceType || 'Remote',
+            duration: o.duration || prev.duration || '3-6 months',
+            deadline: o.deadline || prev.deadline || 'Open',
+            responsibilities: o.responsibilities || prev.responsibilities || [],
+            requirements: o.requirements || prev.requirements || [],
+            aboutCompany: o.aboutCompany || prev.aboutCompany || '',
+            mentorshipDetails: prev.mentorshipDetails,
+          }));
+        }
+      } catch {
+        // Keep mock/default data
+      }
+    }
+    loadOpportunity();
+  }, [opportunityId]);
+
+  const handleConfirmApplication = async () => {
+    try {
+      await careerApi.applyToOpportunity(opportunityId, coverNote || '');
+      setHasApplied(true);
+      setIsApplyModalOpen(false);
+    } catch (err) {
+      alert(err.message || 'Failed to submit application.');
+    }
   };
 
   return (

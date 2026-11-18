@@ -9,6 +9,7 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { communityApi } from '@/lib/api';
 import {
   ArrowLeft,
   PenSquare,
@@ -77,7 +78,7 @@ export default function CreateCommunityPostPage() {
     setTimeout(() => setDraftToast(false), 2500);
   };
 
-  const handlePublish = (e) => {
+  const handlePublish = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -97,10 +98,17 @@ export default function CreateCommunityPostPage() {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await communityApi.createPost({
+        title: title.trim(),
+        content: content.trim(),
+        tags: [selectedType],
+      });
       router.push('/student/community');
-    }, 400);
+    } catch (err) {
+      setErrors({ content: err.message || 'Failed to publish post. Please try again.' });
+      setIsSubmitting(false);
+    }
   };
 
   return (

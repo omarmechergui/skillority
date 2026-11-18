@@ -2,11 +2,13 @@ import * as courseService from '../services/course.service.js';
 
 export async function listCourses(req, res, next) {
   try {
-    const { category, level, search, page, limit } = req.query;
+    const { category, level, search, status, instructorId, page, limit } = req.query;
     const result = await courseService.listCourses({
       category,
       level,
       search,
+      status: status || 'PUBLISHED',
+      instructorId,
       page: Number(page) || 1,
       limit: Number(limit) || 10,
     });

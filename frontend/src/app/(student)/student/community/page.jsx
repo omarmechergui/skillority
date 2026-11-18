@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -15,6 +15,7 @@ import {
   mockActivePeers,
   mockCommunityGuidelines
 } from '@/lib/mockCommunityData';
+import { communityApi } from '@/lib/api';
 import {
   MessagesSquare,
   HelpCircle,
@@ -57,8 +58,41 @@ export default function CommunityFeedPage() {
   const [newCommentText, setNewCommentText] = useState('');
   const [shareToast, setShareToast] = useState(false);
 
+  useEffect(() => {
+    async function loadPosts() {
+      try {
+        const res = await communityApi.getPosts();
+        if (res.data?.data && res.data.data.length > 0) {
+          const livePosts = res.data.data.map(p => ({
+            id: p.id,
+            title: p.title,
+            content: p.content,
+            category: p.tags?.[0] || 'all',
+            author: {
+              name: [p.author?.profile?.firstName, p.author?.profile?.lastName].filter(Boolean).join(' ') || 'Community Member',
+              role: p.author?.role || 'STUDENT',
+              avatar: p.author?.profile?.avatar || '/images/default-avatar.png',
+            },
+            tags: p.tags || [],
+            likesCount: p.likesCount || 0,
+            commentsCount: p._count?.comments || 0,
+            isLiked: false,
+            isSaved: false,
+            comments: p.comments || [],
+            timestamp: new Date(p.createdAt).toLocaleDateString(),
+          }));
+          setPosts(livePosts);
+        }
+      } catch {
+        // Keep mock data as fallback
+      }
+    }
+    loadPosts();
+  }, []);
+
   // Like interaction
-  const handleLike = (postId) => {
+  const handleLike = async (postId) => {
+    // Optimistic update
     setPosts(prev =>
       prev.map(post => {
         if (post.id === postId) {
@@ -72,6 +106,24 @@ export default function CommunityFeedPage() {
         return post;
       })
     );
+    try {
+      await communityApi.toggleLike(postId);
+    } catch {
+      // Revert on failure
+      setPosts(prev =>
+        prev.map(post => {
+          if (post.id === postId) {
+            const isLiked = !post.isLiked;
+            return {
+              ...post,
+              isLiked,
+              likesCount: isLiked ? post.likesCount + 1 : post.likesCount - 1
+            };
+          }
+          return post;
+        })
+      );
+    }
   };
 
   // Save interaction
@@ -84,29 +136,34 @@ export default function CommunityFeedPage() {
   };
 
   // Comment submission
-  const handleAddComment = (postId) => {
+  const handleAddComment = async (postId) => {
     if (!newCommentText.trim()) return;
-    setPosts(prev =>
-      prev.map(post => {
-        if (post.id === postId) {
-          const newComment = {
-            id: 'c-' + Date.now(),
-            author: 'Alex Rivera',
-            role: 'Student (You)',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-            content: newCommentText.trim(),
-            timestamp: 'Just now'
-          };
-          return {
-            ...post,
-            commentsCount: post.commentsCount + 1,
-            comments: [...(post.comments || []), newComment]
-          };
-        }
-        return post;
-      })
-    );
+    const commentContent = newCommentText.trim();
     setNewCommentText('');
+    try {
+      const res = await communityApi.addComment(postId, commentContent);
+      setPosts(prev =>
+        prev.map(post => {
+          if (post.id === postId) {
+            const newComment = res.data?.data || {
+              id: 'c-' + Date.now(),
+              author: 'You',
+              content: commentContent,
+              timestamp: 'Just now'
+            };
+            return {
+              ...post,
+              commentsCount: post.commentsCount + 1,
+              comments: [...(post.comments || []), newComment]
+            };
+          }
+          return post;
+        })
+      );
+    } catch {
+      // Restore input on failure
+      setNewCommentText(commentContent);
+    }
   };
 
   const handleShare = (postTitle) => {

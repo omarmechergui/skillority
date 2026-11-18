@@ -6,10 +6,10 @@ export const assessmentApi = {
   submitAssessment: (courseId, answers) =>
     api.post(`/assessments/courses/${courseId}/submit`, { answers }),
   claimCompletionCertificate: (courseId) =>
-    api.post(`/assessments/certificates/completion/${courseId}`, {}),
-  getMyCertificates: () => api.get('/assessments/certificates/my'),
+    api.post(`/assessments/courses/${courseId}/claim-completion`, {}),
+  getMyCertificates: () => api.get('/assessments/my-certificates'),
   verifyCertificate: (credentialId) =>
-    api.get(`/assessments/certificates/verify/${credentialId}`, { requiresAuth: false }),
+    api.get(`/assessments/verify/${credentialId}`, { requiresAuth: false }),
 };
 
 export default assessmentApi;

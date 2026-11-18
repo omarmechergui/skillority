@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { mockStudentApplications, mockOpportunities } from '@/lib/mockCareerData';
+import { careerApi } from '@/lib/api';
 import {
   FileCheck,
   Bookmark,
@@ -34,6 +35,39 @@ export default function StudentApplicationsPage() {
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
 
   const savedOpportunities = mockOpportunities.filter(o => o.isSaved);
+
+  useEffect(() => {
+    async function loadApplications() {
+      try {
+        const res = await careerApi.getMyApplications();
+        if (res.data?.data && res.data.data.length > 0) {
+          const liveApps = res.data.data.map(app => ({
+            id: app.id,
+            opportunityId: app.opportunityId,
+            company: app.opportunity?.company?.companyName || 'Company',
+            role: app.opportunity?.title || 'Position',
+            status: app.status === 'REVIEWING' ? 'Under Review'
+                  : app.status === 'INTERVIEW' ? 'Interview Scheduled'
+                  : app.status === 'OFFERED' ? 'Offer Received'
+                  : app.status,
+            stage: app.status,
+            appliedDate: new Date(app.createdAt).toLocaleDateString(),
+            notes: app.notes || 'Application submitted',
+            timeline: [
+              { step: 'Applied', completed: true, date: new Date(app.createdAt).toLocaleDateString() },
+              { step: 'Review', completed: ['REVIEWING','INTERVIEW','OFFERED'].includes(app.status), current: app.status === 'REVIEWING', date: '' },
+              { step: 'Interview', completed: ['INTERVIEW','OFFERED'].includes(app.status), current: app.status === 'INTERVIEW', date: '' },
+              { step: 'Decision', completed: app.status === 'OFFERED' || app.status === 'REJECTED', current: false, date: '' },
+            ],
+          }));
+          setApplications(liveApps);
+        }
+      } catch {
+        // Keep mock data
+      }
+    }
+    loadApplications();
+  }, []);
 
   const handleWithdrawClick = (appId) => {
     setWithdrawAppId(appId);

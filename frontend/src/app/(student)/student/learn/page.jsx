@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -10,6 +10,8 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import { mockCourses } from '@/lib/mockLearningData';
+import { coursesApi, learningApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import {
   Search,
   BookOpen,
@@ -20,32 +22,84 @@ import {
   Filter,
   Sparkles,
   ArrowRight,
-  PlayCircle
+  PlayCircle,
+  Loader2,
 } from 'lucide-react';
 
 const CATEGORIES = [
   'All Tracks',
   'Web Development',
+  'Software Engineering',
   'Data & Analytics',
   'UI/UX Design',
   'AI & Machine Learning',
 ];
 
 export default function LearnHubPage() {
+  const { user } = useAuth();
+  const [courses, setCourses] = useState(mockCourses);
+  const [enrolledMap, setEnrolledMap] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('All Tracks');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const filteredCourses = mockCourses.filter((course) => {
+  useEffect(() => {
+    async function loadCatalog() {
+      setLoading(true);
+      try {
+        const [catalogRes, enrollmentsRes] = await Promise.allSettled([
+          coursesApi.getCourses({ status: 'PUBLISHED' }),
+          user ? learningApi.getMyEnrollments() : Promise.resolve({ data: [] }),
+        ]);
+
+        if (enrollmentsRes.status === 'fulfilled' && enrollmentsRes.value?.data) {
+          const map = {};
+          enrollmentsRes.value.data.forEach((e) => {
+            map[e.courseId] = e;
+          });
+          setEnrolledMap(map);
+        }
+
+        if (catalogRes.status === 'fulfilled' && catalogRes.value?.data?.courses && catalogRes.value.data.courses.length > 0) {
+          const liveCourses = catalogRes.value.data.courses.map((c) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description || 'Comprehensive curriculum with practical exercises.',
+            category: c.category || 'Web Development',
+            level: c.level || 'Intermediate',
+            duration: '12 Hours',
+            rating: 4.8,
+            enrolledCount: c._count?.enrollments || 0,
+            totalChapters: c.chapters?.length || c._count?.chapters || 6,
+            thumbnail: c.thumbnail || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80',
+            instructor: {
+              name: c.instructor?.profile ? `${c.instructor.profile.firstName} ${c.instructor.profile.lastName || ''}`.trim() : c.instructor?.email || 'Lead Architect',
+              title: 'Verified Instructor',
+              avatar: c.instructor?.profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+            },
+          }));
+          setCourses(liveCourses);
+        }
+      } catch (err) {
+        // Safe fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCatalog();
+  }, [user]);
+
+  const filteredCourses = courses.filter((course) => {
     const matchesCategory =
       selectedCategory === 'All Tracks' || course.category === selectedCategory;
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.name.toLowerCase().includes(searchQuery.toLowerCase());
+      course.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.instructor?.name?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const enrolledCourses = mockCourses.filter(c => c.isEnrolled);
+  const enrolledCourses = courses.filter((c) => Boolean(enrolledMap[c.id]) || c.isEnrolled);
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>

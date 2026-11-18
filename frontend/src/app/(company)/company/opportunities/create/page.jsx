@@ -8,22 +8,24 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Briefcase, ArrowLeft, Save, Sparkles } from 'lucide-react';
+import { careerApi } from '@/lib/api';
+import { Briefcase, ArrowLeft, Save, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CreateOpportunityPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     department: '',
     location: '',
-    type: 'Internship',
+    type: 'INTERNSHIP',
     stipend: '',
     duration: '',
     deadline: '',
     description: '',
     skills: '',
     responsibilities: '',
-    requirements: '',
   });
 
   const handleChange = (e) => {
@@ -31,9 +33,35 @@ export default function CreateOpportunityPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push('/company/opportunities');
+    setLoading(true);
+    setError(null);
+
+    try {
+      const skillsArray = formData.skills
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const res = await careerApi.createOpportunity({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        location: formData.location.trim(),
+        skills: skillsArray.length > 0 ? skillsArray : ['General Engineering'],
+      });
+
+      if (res?.data?.id) {
+        router.push('/company/opportunities');
+      } else {
+        router.push('/company/opportunities');
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to post opportunity. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,6 +79,13 @@ export default function CreateOpportunityPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card className="p-6 sm:p-8 space-y-5">
             <h2 className="text-base font-bold text-slate-900">Role Basics</h2>
@@ -64,6 +99,7 @@ export default function CreateOpportunityPage() {
                   value={formData.title}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -75,6 +111,7 @@ export default function CreateOpportunityPage() {
                   value={formData.department}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -84,12 +121,13 @@ export default function CreateOpportunityPage() {
                   name="type"
                   value={formData.type}
                   onChange={handleChange}
+                  disabled={loading}
                   className="w-full rounded-lg border border-border p-2.5 text-xs bg-white text-slate-900"
                 >
-                  <option value="Internship">Internship</option>
-                  <option value="Full-Time">Full-Time</option>
-                  <option value="Part-Time">Part-Time</option>
-                  <option value="Apprenticeship">Apprenticeship</option>
+                  <option value="INTERNSHIP">Internship</option>
+                  <option value="FULL_TIME">Full-Time</option>
+                  <option value="PART_TIME">Part-Time</option>
+                  <option value="CONTRACT">Apprenticeship / Contract</option>
                 </select>
               </div>
 
@@ -101,6 +139,7 @@ export default function CreateOpportunityPage() {
                   value={formData.location}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -112,6 +151,7 @@ export default function CreateOpportunityPage() {
                   value={formData.stipend}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -122,6 +162,7 @@ export default function CreateOpportunityPage() {
                   placeholder="e.g. 3 Months (June – August 2026)"
                   value={formData.duration}
                   onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
 
@@ -133,6 +174,7 @@ export default function CreateOpportunityPage() {
                   value={formData.deadline}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -151,6 +193,7 @@ export default function CreateOpportunityPage() {
                   value={formData.description}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   className="w-full rounded-lg border border-border p-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
                 />
               </div>
@@ -159,10 +202,11 @@ export default function CreateOpportunityPage() {
                 <label className="text-xs font-semibold text-slate-700">Required Skills (comma separated)</label>
                 <Input
                   name="skills"
-                  placeholder="e.g. React.js, Next.js, Tailwind CSS, TypeScript"
+                  placeholder="e.g. React.js, Next.js, Tailwind CSS, JavaScript"
                   value={formData.skills}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -174,6 +218,7 @@ export default function CreateOpportunityPage() {
                   placeholder="Collaborate on UI design...&#10;Implement Server Actions..."
                   value={formData.responsibilities}
                   onChange={handleChange}
+                  disabled={loading}
                   className="w-full rounded-lg border border-border p-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
                 />
               </div>
@@ -182,13 +227,22 @@ export default function CreateOpportunityPage() {
 
           <div className="flex justify-end gap-3">
             <Link href="/company/opportunities">
-              <Button type="button" variant="outline" className="text-xs">
+              <Button type="button" variant="outline" className="text-xs" disabled={loading}>
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" className="text-xs flex items-center gap-1.5">
-              <Save className="w-4 h-4" />
-              Publish Opportunity
+            <Button type="submit" disabled={loading} className="text-xs flex items-center gap-1.5">
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Publish Opportunity
+                </>
+              )}
             </Button>
           </div>
         </form>

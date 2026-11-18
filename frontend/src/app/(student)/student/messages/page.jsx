@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { mockConversations } from '@/lib/mockStudentData';
+import { messagingApi } from '@/lib/api';
 import {
   Send,
   Search,
@@ -33,12 +34,71 @@ export default function StudentMessagesPage() {
 
   const activeConv = conversations.find((c) => c.id === activeConvId);
 
+  useEffect(() => {
+    async function loadConversations() {
+      try {
+        const res = await messagingApi.getConversations();
+        if (res.data?.data && res.data.data.length > 0) {
+          const liveConvs = res.data.data.map(msg => ({
+            id: msg.conversationId,
+            user: {
+              id: msg.sender?.id,
+              name: [msg.sender?.profile?.firstName, msg.sender?.profile?.lastName].filter(Boolean).join(' ') || 'User',
+              role: 'Member',
+              avatar: msg.sender?.profile?.avatar || '/images/default-avatar.png',
+              isOnline: false,
+            },
+            lastMessage: msg.content,
+            lastMessageTime: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            unreadCount: msg.isRead ? 0 : 1,
+            messages: [],
+          }));
+          setConversations(liveConvs);
+          if (liveConvs.length > 0) setActiveConvId(liveConvs[0].id);
+        }
+      } catch {
+        // Keep mock data
+      }
+    }
+    loadConversations();
+  }, []);
+
+  useEffect(() => {
+    if (!activeConvId) return;
+    async function loadMessages() {
+      try {
+        const res = await messagingApi.getMessages(activeConvId);
+        if (res.data?.data) {
+          setConversations(prev =>
+            prev.map(c => {
+              if (c.id === activeConvId) {
+                return {
+                  ...c,
+                  messages: res.data.data.map(m => ({
+                    id: m.id,
+                    senderId: m.senderId,
+                    text: m.content,
+                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  })),
+                };
+              }
+              return c;
+            })
+          );
+        }
+      } catch {
+        // Keep existing messages
+      }
+    }
+    loadMessages();
+  }, [activeConvId]);
+
   const filteredConversations = conversations.filter((c) =>
     c.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.user.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !activeConvId) return;
 
@@ -49,6 +109,7 @@ export default function StudentMessagesPage() {
       time: 'Just now',
     };
 
+    // Optimistic local update
     setConversations((prev) =>
       prev.map((c) => {
         if (c.id === activeConvId) {
@@ -63,7 +124,15 @@ export default function StudentMessagesPage() {
       })
     );
 
+    const msgText = messageInput.trim();
     setMessageInput('');
+
+    try {
+      const recipientId = activeConv?.user?.id || activeConvId;
+      await messagingApi.sendMessage(activeConvId, recipientId, msgText);
+    } catch {
+      // Message already shown optimistically
+    }
   };
 
   const selectConversation = (id) => {

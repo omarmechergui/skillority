@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -11,6 +11,8 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import { mockCourses, mockStudentProfile } from '@/lib/mockLearningData';
+import { coursesApi, learningApi, walletApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import {
   BookOpen,
   Clock,
@@ -25,7 +27,9 @@ import {
   Award,
   ChevronRight,
   ArrowLeft,
-  FileText
+  FileText,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function CourseDetailsPage() {

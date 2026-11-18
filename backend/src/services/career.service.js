@@ -1,7 +1,9 @@
 import prisma from '../config/database.js';
 
-export async function listOpportunities({ type, location, search, page = 1, limit = 10 }) {
-  const where = { isOpen: true };
+export async function listOpportunities({ type, location, search, companyId, isOpen = true, page = 1, limit = 10 }) {
+  const where = {};
+  if (isOpen !== undefined) where.isOpen = isOpen;
+  if (companyId) where.companyId = companyId;
   if (type) where.type = type;
   if (location) where.location = { contains: location, mode: 'insensitive' };
   if (search) {
@@ -48,6 +50,20 @@ export async function createOpportunity(companyId, data) {
 export async function applyToOpportunity(studentId, opportunityId, notes = '') {
   const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId } });
   if (!opp || !opp.isOpen) throw new Error('OPPORTUNITY_NOT_AVAILABLE');
+
+  const existing = await prisma.application.findUnique({
+    where: {
+      opportunityId_studentId: {
+        opportunityId,
+        studentId,
+      },
+    },
+  });
+  if (existing) {
+    const error = new Error('ALREADY_APPLIED');
+    error.code = 'ALREADY_APPLIED';
+    throw error;
+  }
 
   return prisma.application.create({
     data: {

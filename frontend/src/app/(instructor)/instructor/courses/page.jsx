@@ -9,35 +9,48 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockInstructorCourses } from '@/lib/mockInstructorData';
 import { coursesApi } from '@/lib/api';
-import { BookOpen, Plus, Users, Star, Eye, Edit, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { BookOpen, Plus, Users, Star, Eye, Edit, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 export default function InstructorCoursesPage() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState(mockInstructorCourses);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadInstructorCourses() {
+      setLoading(true);
+      setError(null);
       try {
-        const res = await coursesApi.getCourses();
+        const params = { status: 'ALL' };
+        if (user?.id) params.instructorId = user.id;
+        const res = await coursesApi.getCourses(params);
         if (res.data?.courses && res.data.courses.length > 0) {
-          const liveList = res.data.courses.map(c => ({
+          const liveList = res.data.courses.map((c) => ({
             id: c.id,
             title: c.title,
-            category: c.category || 'Engineering',
+            description: c.description || 'No description provided.',
+            category: c.category || 'Web Development',
             level: c.level || 'Intermediate',
-            status: c.isPublished ? 'PUBLISHED' : (c.reviewStatus || 'DRAFT'),
-            chaptersCount: c.chapters?.length || 0,
-            lessonsCount: c._count?.lessons || 12,
-            enrolledCount: c._count?.enrollments || 0,
-            rating: 4.8
+            status: c.status || 'DRAFT',
+            totalChapters: c.chapters?.length || c._count?.chapters || 0,
+            totalLessons: c._count?.lessons || 0,
+            completionRate: '0%',
+            enrolledStudents: c._count?.enrollments || 0,
           }));
           setCourses(liveList);
+        } else if (res.data?.courses && res.data.courses.length === 0) {
+          setCourses([]);
         }
-      } catch {
-        // Safe fallback
+      } catch (err) {
+        // Safe fallback to mock if unauthenticated or error
+      } finally {
+        setLoading(false);
       }
     }
     loadInstructorCourses();
-  }, []);
+  }, [user]);
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
@@ -59,6 +72,19 @@ export default function InstructorCoursesPage() {
             </Button>
           </Link>
         </div>
+
+        {courses.length === 0 && !loading && (
+          <Card className="p-8 text-center space-y-3">
+            <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
+            <h3 className="text-base font-bold text-slate-900">No courses created yet</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Get started by clicking &quot;Create New Course&quot; to author chapters and lessons.
+            </p>
+            <Link href="/instructor/courses/create">
+              <Button size="sm" className="text-xs">Create Your First Course</Button>
+            </Link>
+          </Card>
+        )}
 
         <div className="space-y-4">
           {courses.map((course) => (

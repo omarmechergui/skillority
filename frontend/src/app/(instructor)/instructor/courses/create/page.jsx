@@ -8,16 +8,18 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { BookOpen, ArrowLeft, Save } from 'lucide-react';
+import { coursesApi } from '@/lib/api';
+import { BookOpen, ArrowLeft, Save, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CreateCoursePage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [form, setForm] = useState({
     title: '',
     category: 'Web Development',
     level: 'Intermediate',
     description: '',
-    learningObjectives: '',
   });
 
   const handleChange = (e) => {
@@ -25,9 +27,30 @@ export default function CreateCoursePage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push('/instructor/courses');
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await coursesApi.createCourse({
+        title: form.title.trim(),
+        category: form.category,
+        level: form.level,
+        description: form.description.trim(),
+        tags: [form.category, form.level],
+      });
+
+      if (res?.data?.id) {
+        router.push(`/instructor/courses/${res.data.id}/curriculum`);
+      } else {
+        router.push('/instructor/courses');
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to create course. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +68,13 @@ export default function CreateCoursePage() {
           </div>
         </div>
 
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card className="p-6 sm:p-8 space-y-5">
             <h2 className="text-base font-bold text-slate-900">Course Information</h2>
@@ -58,6 +88,7 @@ export default function CreateCoursePage() {
                   value={form.title}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -67,6 +98,7 @@ export default function CreateCoursePage() {
                   name="category"
                   value={form.category}
                   onChange={handleChange}
+                  disabled={loading}
                   className="w-full rounded-lg border border-border p-2.5 text-xs bg-white text-slate-900"
                 >
                   <option value="Web Development">Web Development</option>
@@ -82,6 +114,7 @@ export default function CreateCoursePage() {
                   name="level"
                   value={form.level}
                   onChange={handleChange}
+                  disabled={loading}
                   className="w-full rounded-lg border border-border p-2.5 text-xs bg-white text-slate-900"
                 >
                   <option value="Beginner">Beginner</option>
@@ -100,6 +133,7 @@ export default function CreateCoursePage() {
                 value={form.description}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 className="w-full rounded-lg border border-border p-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
               />
             </div>
@@ -107,13 +141,22 @@ export default function CreateCoursePage() {
 
           <div className="flex justify-end gap-3">
             <Link href="/instructor/courses">
-              <Button type="button" variant="outline" className="text-xs">
+              <Button type="button" variant="outline" className="text-xs" disabled={loading}>
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" className="text-xs flex items-center gap-1.5">
-              <Save className="w-4 h-4" />
-              Save & Proceed to Curriculum
+            <Button type="submit" disabled={loading} className="text-xs flex items-center gap-1.5">
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating Course...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save & Proceed to Curriculum
+                </>
+              )}
             </Button>
           </div>
         </form>

@@ -11,7 +11,7 @@ export const coursesApi = {
   deleteCourse: (id) => api.delete(`/courses/${id}`),
   addChapter: (courseId, data) => api.post(`/courses/${courseId}/chapters`, data),
   addLesson: (chapterId, data) => api.post(`/courses/chapters/${chapterId}/lessons`, data),
-  submitForReview: (courseId) => api.post(`/courses/${courseId}/review-request`, {}),
+  submitForReview: (courseId) => api.post(`/courses/${courseId}/submit-review`, {}),
 };
 
 export default coursesApi;

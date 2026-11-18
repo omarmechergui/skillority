@@ -80,14 +80,16 @@ export default function StudentCareersPage() {
   };
 
   const filteredOpportunities = opportunities.filter(opp => {
+    const companyName = typeof opp.company === 'object' ? opp.company?.name : opp.company;
+    const skills = opp.matchedSkills || opp.skills || [];
     const matchesSearch =
       opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opp.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opp.matchedSkills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+      (companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesType = selectedType === 'All Types' || opp.type === selectedType;
     const matchesWorkplace =
-      selectedWorkplace === 'All Workplaces' || opp.workplaceType === selectedWorkplace;
+      selectedWorkplace === 'All Workplaces' || opp.workplaceType === selectedWorkplace || opp.workplace === selectedWorkplace;
 
     return matchesSearch && matchesType && matchesWorkplace;
   });

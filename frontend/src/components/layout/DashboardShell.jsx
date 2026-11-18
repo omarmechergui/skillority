@@ -18,31 +18,83 @@ import {
 import { Avatar } from '@/components/ui/Avatar';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { useAuth } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import {
+  studentNav,
+  companyNav,
+  instructorNav,
+  adminNav,
+} from '@/components/layout/navigationConfig';
 
 export function DashboardShell({
-  roleTitle = 'Student Portal',
-  navItems = [],
+  roleTitle,
+  navItems,
   children,
   breadcrumbs = [],
   action,
-  role = 'STUDENT',
+  role,
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logoutUser } = useAuth();
 
-  const isStudent = role === 'STUDENT' || roleTitle.includes('Student');
+  // Determine active role prioritizing:
+  // 1. Explicit role prop
+  // 2. Route-derived path role
+  // 3. Authenticated user role
+  // 4. Safe default ('STUDENT')
+  const pathRole = pathname?.startsWith('/admin')
+    ? 'ADMIN'
+    : pathname?.startsWith('/instructor')
+    ? 'INSTRUCTOR'
+    : pathname?.startsWith('/company')
+    ? 'COMPANY'
+    : pathname?.startsWith('/student')
+    ? 'STUDENT'
+    : null;
+
+  const validRoles = ['STUDENT', 'COMPANY', 'INSTRUCTOR', 'ADMIN'];
+  const rawRole = role || pathRole || user?.role || 'STUDENT';
+  const activeRole = validRoles.includes(String(rawRole).toUpperCase())
+    ? String(rawRole).toUpperCase()
+    : 'STUDENT';
+  const isStudent = activeRole === 'STUDENT';
+
+  // Resolve role title and default nav items per role
+  const resolvedRoleTitle =
+    roleTitle ||
+    (activeRole === 'ADMIN'
+      ? 'Platform Admin'
+      : activeRole === 'INSTRUCTOR'
+      ? 'Instructor Portal'
+      : activeRole === 'COMPANY'
+      ? 'Recruiter Portal'
+      : 'Student Portal');
+
+  const resolvedNavItems =
+    navItems && navItems.length > 0
+      ? navItems
+      : activeRole === 'ADMIN'
+      ? adminNav
+      : activeRole === 'INSTRUCTOR'
+      ? instructorNav
+      : activeRole === 'COMPANY'
+      ? companyNav
+      : studentNav;
+
+  const rolePrefix = activeRole.toLowerCase();
 
   const userMenuItems = [
     {
       label: 'My Profile',
       icon: User,
-      onClick: () => console.log('Navigate to profile'),
+      onClick: () => router.push(`/${rolePrefix}/profile`),
     },
     {
       label: 'Account Settings',
       icon: Settings,
-      onClick: () => console.log('Navigate to settings'),
+      onClick: () => router.push(`/${rolePrefix}/settings`),
     },
     { divider: true },
     {
@@ -235,15 +287,15 @@ export function DashboardShell({
           </div>
           <div>
             <span className="font-bold text-sm tracking-tight block leading-none">Skillority</span>
-            <span className="text-[10px] text-neutral-slate font-medium">{roleTitle}</span>
+            <span className="text-[10px] text-neutral-slate font-medium">{resolvedRoleTitle}</span>
           </div>
         </div>
 
         {/* Navigation Items */}
         <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
-          {navItems.map((item, idx) => {
+          {resolvedNavItems.map((item, idx) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isActive = pathname === item.href || (item.href !== `/${rolePrefix}/dashboard` && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -296,7 +348,7 @@ export function DashboardShell({
                         ? `${user.profile.firstName} ${user.profile.lastName || ''}`
                         : user?.email || 'Authenticated User'}
                     </p>
-                    <p className="text-[10px] text-neutral-slate truncate">{user?.role || roleTitle}</p>
+                    <p className="text-[10px] text-neutral-slate truncate">{user?.role || resolvedRoleTitle}</p>
                   </div>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-neutral-slate shrink-0 ml-1" />

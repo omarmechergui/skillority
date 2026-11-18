@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockCandidates } from '@/lib/mockCompanyData';
+import { careerApi } from '@/lib/api';
 import {
   Users,
   Search,
@@ -24,6 +25,30 @@ export default function ApplicationsInboxPage() {
   const [candidates, setCandidates] = useState(mockCandidates);
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState('ALL');
+
+  useEffect(() => {
+    async function loadApplications() {
+      try {
+        const res = await careerApi.getCompanyApplications();
+        if (res.data?.data && res.data.data.length > 0) {
+          const liveApps = res.data.data.map(app => ({
+            id: app.id,
+            name: [app.student?.profile?.firstName, app.student?.profile?.lastName].filter(Boolean).join(' ') || 'Candidate',
+            avatar: app.student?.profile?.avatar || '/images/default-avatar.png',
+            appliedRole: app.opportunity?.title || 'Position',
+            education: 'Skillority Student',
+            appliedDate: new Date(app.createdAt).toLocaleDateString(),
+            stage: app.status === 'PENDING' ? 'APPLIED' : app.status,
+            matchScore: 85,
+          }));
+          setCandidates(liveApps);
+        }
+      } catch {
+        // Keep mock data
+      }
+    }
+    loadApplications();
+  }, []);
 
   const filtered = candidates.filter((c) => {
     const matchesSearch =

@@ -1,7 +1,9 @@
 import prisma from '../config/database.js';
 
-export async function listCourses({ category, level, status = 'PUBLISHED', search, page = 1, limit = 10 }) {
-  const where = { status };
+export async function listCourses({ category, level, status = 'PUBLISHED', instructorId, search, page = 1, limit = 10 }) {
+  const where = {};
+  if (status && status !== 'ALL') where.status = status;
+  if (instructorId) where.instructorId = instructorId;
   if (category) where.category = category;
   if (level) where.level = level;
   if (search) {

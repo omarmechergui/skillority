@@ -2,11 +2,13 @@ import * as careerService from '../services/career.service.js';
 
 export async function listOpportunities(req, res, next) {
   try {
-    const { type, location, search, page, limit } = req.query;
+    const { type, location, search, companyId, isOpen, page, limit } = req.query;
     const result = await careerService.listOpportunities({
       type,
       location,
       search,
+      companyId,
+      isOpen: isOpen === undefined ? undefined : (isOpen === 'true' || isOpen === true),
       page: Number(page) || 1,
       limit: Number(limit) || 10,
     });
@@ -42,7 +44,7 @@ export async function apply(req, res, next) {
     const application = await careerService.applyToOpportunity(req.user.id, opportunityId, notes);
     return res.status(201).json({ success: true, message: 'Application submitted', data: application });
   } catch (err) {
-    if (err.code === 'P2002' || err.message?.includes('Unique constraint')) {
+    if (err.code === 'P2002' || err.code === 'ALREADY_APPLIED' || err.message === 'ALREADY_APPLIED' || err.message?.includes('Unique constraint')) {
       return res.status(409).json({ success: false, error: { code: 'ALREADY_APPLIED', message: 'You have already applied to this opportunity' } });
     }
     if (err.message === 'OPPORTUNITY_NOT_AVAILABLE') {

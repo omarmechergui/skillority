@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { companyNav } from '@/components/layout/navigationConfig';
@@ -8,6 +8,8 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { mockCompanyOpportunities } from '@/lib/mockCompanyData';
+import { careerApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import {
   Briefcase,
   Plus,
@@ -20,17 +22,54 @@ import {
   Edit,
   Eye,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 
 export default function CompanyOpportunitiesPage() {
+  const { user } = useAuth();
   const [opportunities, setOpportunities] = useState(mockCompanyOpportunities);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  useEffect(() => {
+    async function loadOpportunities() {
+      setLoading(true);
+      try {
+        const params = {};
+        if (user?.id) params.companyId = user.id;
+        const res = await careerApi.getOpportunities(params);
+        if (res.data?.opportunities && res.data.opportunities.length > 0) {
+          const liveList = res.data.opportunities.map((opp) => ({
+            id: opp.id,
+            title: opp.title,
+            department: 'Core Operations',
+            location: opp.location || 'Remote',
+            type: opp.type === 'FULL_TIME' ? 'Full-Time' : opp.type,
+            status: opp.isOpen ? 'ACTIVE' : 'CLOSED',
+            description: opp.description,
+            requiredSkills: opp.skills || [],
+            applicantsCount: opp._count?.applications || 0,
+            viewsCount: 120,
+            postedDate: new Date(opp.createdAt).toLocaleDateString(),
+          }));
+          setOpportunities(liveList);
+        } else if (res.data?.opportunities && res.data.opportunities.length === 0) {
+          setOpportunities([]);
+        }
+      } catch (err) {
+        // Safe fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOpportunities();
+  }, [user]);
 
   const filteredOpps = opportunities.filter((opp) => {
     const matchesSearch =
       opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opp.department.toLowerCase().includes(searchQuery.toLowerCase());
+      opp.department?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || opp.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -96,6 +135,19 @@ export default function CompanyOpportunitiesPage() {
           </div>
         </div>
 
+        {opportunities.length === 0 && !loading && (
+          <Card className="p-8 text-center space-y-3">
+            <Briefcase className="w-10 h-10 text-slate-300 mx-auto" />
+            <h3 className="text-base font-bold text-slate-900">No opportunities posted yet</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Publish your first internship or full-time position to discover verified talent.
+            </p>
+            <Link href="/company/opportunities/create">
+              <Button size="sm" className="text-xs">Post an Opportunity</Button>
+            </Link>
+          </Card>
+        )}
+
         {/* Opportunities List */}
         <div className="space-y-4">
           {filteredOpps.map((opp) => (
@@ -118,7 +170,7 @@ export default function CompanyOpportunitiesPage() {
                 <p className="text-xs text-slate-500 line-clamp-1">{opp.description}</p>
 
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {opp.requiredSkills.map((sk) => (
+                  {opp.requiredSkills?.map((sk) => (
                     <span key={sk} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
                       {sk}
                     </span>
