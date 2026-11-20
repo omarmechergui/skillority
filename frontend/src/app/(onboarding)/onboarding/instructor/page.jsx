@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { GraduationCap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
 
 export default function InstructorOnboardingPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function InstructorOnboardingPage() {
   };
 
   return (
+    <OnboardingGuard requiredRole="INSTRUCTOR">
     <div className="min-h-screen bg-canvas flex flex-col justify-center items-center p-4 sm:p-6">
       <div className="w-full max-w-xl space-y-6">
         <div className="text-center space-y-2">
@@ -92,6 +94,7 @@ export default function InstructorOnboardingPage() {
         </Card>
       </div>
     </div>
+    </OnboardingGuard>
   );
 }
 

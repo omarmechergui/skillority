@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/apiClient';
+import { getPostLoginDestination } from '@/lib/onboarding';
+import { LoadingState } from '@/components/ui/LoadingState';
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loginUser } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -30,13 +33,10 @@ export default function SignInPage() {
 
       loginUser(res.data.user, res.data.accessToken);
 
-      // Redirect by role
-      const role = res.data.user.role;
-      if (role === 'STUDENT') router.push('/onboarding/student');
-      else if (role === 'COMPANY') router.push('/onboarding/company');
-      else if (role === 'INSTRUCTOR') router.push('/instructor/dashboard');
-      else if (role === 'ADMIN') router.push('/admin/dashboard');
-      else router.push('/');
+      // Determine destination: redirect param → onboarding (if incomplete) → dashboard
+      const redirectParam = searchParams.get('redirect');
+      const destination = getPostLoginDestination(res.data.user, redirectParam);
+      router.push(destination);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -133,5 +133,19 @@ export default function SignInPage() {
         </Button>
       </form>
     </AuthCard>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-canvas flex items-center justify-center">
+          <LoadingState message="Loading sign in..." />
+        </div>
+      }
+    >
+      <SignInForm />
+    </Suspense>
   );
 }

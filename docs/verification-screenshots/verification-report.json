@@ -1,0 +1,263 @@
+{
+  "browser": "Google Chrome (System Installation via Playwright Chrome Channel)",
+  "initialUrl": "http://localhost:3000/auth/signin",
+  "qaEmail": "qa_student_1794847236916@skillority.test",
+  "loginStatus": 200,
+  "loginSuccess": true,
+  "userRole": "STUDENT",
+  "userId": "6afb3209540de4074c8a1e30",
+  "finalUrl": "http://localhost:3000/student/dashboard",
+  "localStorageSessionActive": true,
+  "sessionPersistedAfterReload": true,
+  "logoutCompleted": true,
+  "screenshots": [
+    "C:\\Users\\USER\\Desktop\\skillority\\docs\\verification-screenshots\\chrome-1-signin-loaded.png",
+    "C:\\Users\\USER\\Desktop\\skillority\\docs\\verification-screenshots\\chrome-2-credentials-filled.png",
+    "C:\\Users\\USER\\Desktop\\skillority\\docs\\verification-screenshots\\chrome-3-dashboard-loaded.png",
+    "C:\\Users\\USER\\Desktop\\skillority\\docs\\verification-screenshots\\chrome-4-session-persisted-after-reload.png",
+    "C:\\Users\\USER\\Desktop\\skillority\\docs\\verification-screenshots\\chrome-5-logged-out.png"
+  ],
+  "networkActivity": [
+    {
+      "event": "REQUEST",
+      "method": "POST",
+      "url": "http://localhost:5000/api/auth/login",
+      "postData": "{\"email\":\"qa_student_1794847236916@skillority.test\",\"password\":\"[REDACTED]\"}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/auth/login",
+      "body": "{\"success\":true,\"message\":\"Login successful\",\"data\":{\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"profile\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\"}},\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZmIzMjA5NTQwZGU0MDc0YzhhMWUzMCIsImVtYWlsIjoicWFfc3R1ZGVudF8xNzk0ODQ3MjM2OTE2QHNraWxsb3JpdHkudGVzdCIsInJvbGUiOiJTVFVERU5UIiwidG9rZW5WZXJzaW9uIjowLCJpYXQiOjE3OTUxODY2ODUsImV4cCI6MTc5NTE4NzU4NX0.XfrhD0_ymKsKPu4YpWaJe_NSw8i8YdNHOq4iHEu31f8\"}}"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/profiles/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/wallet"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/courses?published=true"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/profiles/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/wallet"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/courses?published=true"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/courses?published=true",
+      "body": "{\"success\":true,\"data\":[],\"meta\":{\"courses\":[],\"total\":0,\"page\":1,\"limit\":10,\"totalPages\":0}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/courses?published=true",
+      "body": "{\"success\":true,\"data\":[],\"meta\":{\"courses\":[],\"total\":0,\"page\":1,\"limit\":10,\"totalPages\":0}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/profiles/me",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\",\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isActive\":true,\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/wallet",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e32\",\"userId\":\"6afb3209540de4074c8a1e30\",\"balance\":485,\"lastLoginBonus\":\"2026-11-16T16:40:43.129Z\",\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:43.138Z\",\"transactions\":[{\"id\":\"6afb320b540de4074c8a1e33\",\"walletId\":\"6afb320a540de4074c8a1e32\",\"amount\":5,\"type\":\"DAILY_LOGIN\",\"description\":\"Daily check-in reward\",\"referenceId\":null,\"createdAt\":\"2026-11-16T16:40:43.138Z\"}]}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/wallet",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e32\",\"userId\":\"6afb3209540de4074c8a1e30\",\"balance\":485,\"lastLoginBonus\":\"2026-11-16T16:40:43.129Z\",\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:43.138Z\",\"transactions\":[{\"id\":\"6afb320b540de4074c8a1e33\",\"walletId\":\"6afb320a540de4074c8a1e32\",\"amount\":5,\"type\":\"DAILY_LOGIN\",\"description\":\"Daily check-in reward\",\"referenceId\":null,\"createdAt\":\"2026-11-16T16:40:43.138Z\"}]}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/profiles/me",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\",\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isActive\":true,\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/auth/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/auth/me"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/auth/me",
+      "body": "{\"success\":true,\"data\":{\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isVerified\":true,\"isActive\":true,\"profile\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\"},\"wallet\":{\"balance\":485},\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/profiles/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/wallet"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/courses?published=true"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/profiles/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/wallet"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/courses?published=true"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/courses?published=true",
+      "body": "{\"success\":true,\"data\":[],\"meta\":{\"courses\":[],\"total\":0,\"page\":1,\"limit\":10,\"totalPages\":0}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/courses?published=true",
+      "body": "{\"success\":true,\"data\":[],\"meta\":{\"courses\":[],\"total\":0,\"page\":1,\"limit\":10,\"totalPages\":0}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/wallet",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e32\",\"userId\":\"6afb3209540de4074c8a1e30\",\"balance\":485,\"lastLoginBonus\":\"2026-11-16T16:40:43.129Z\",\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:43.138Z\",\"transactions\":[{\"id\":\"6afb320b540de4074c8a1e33\",\"walletId\":\"6afb320a540de4074c8a1e32\",\"amount\":5,\"type\":\"DAILY_LOGIN\",\"description\":\"Daily check-in reward\",\"referenceId\":null,\"createdAt\":\"2026-11-16T16:40:43.138Z\"}]}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/profiles/me",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\",\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isActive\":true,\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/auth/me",
+      "body": "{\"success\":true,\"data\":{\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isVerified\":true,\"isActive\":true,\"profile\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\"},\"wallet\":{\"balance\":485},\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/profiles/me"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/wallet"
+    },
+    {
+      "event": "REQUEST",
+      "method": "GET",
+      "url": "http://localhost:5000/api/courses?published=true"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/courses?published=true",
+      "body": "{\"success\":true,\"data\":[],\"meta\":{\"courses\":[],\"total\":0,\"page\":1,\"limit\":10,\"totalPages\":0}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/profiles/me",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\",\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isActive\":true,\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/wallet",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e32\",\"userId\":\"6afb3209540de4074c8a1e30\",\"balance\":485,\"lastLoginBonus\":\"2026-11-16T16:40:43.129Z\",\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:43.138Z\",\"transactions\":[{\"id\":\"6afb320b540de4074c8a1e33\",\"walletId\":\"6afb320a540de4074c8a1e32\",\"amount\":5,\"type\":\"DAILY_LOGIN\",\"description\":\"Daily check-in reward\",\"referenceId\":null,\"createdAt\":\"2026-11-16T16:40:43.138Z\"}]}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/profiles/me",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e31\",\"userId\":\"6afb3209540de4074c8a1e30\",\"firstName\":\"Alex\",\"lastName\":\"Morgan\",\"avatar\":null,\"bio\":\"Enthusiastic full stack student learner\",\"skills\":[\"React\",\"Next.js\",\"Tailwind\",\"Node.js\"],\"university\":\"Tech University\",\"major\":\"Computer Science\",\"graduationYear\":2026,\"interests\":[],\"learningGoals\":\"Full Stack Engineer at a top tech company\",\"companyName\":null,\"companyDescription\":null,\"industry\":null,\"companySize\":null,\"website\":null,\"expertise\":[],\"experience\":null,\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:38.098Z\",\"user\":{\"id\":\"6afb3209540de4074c8a1e30\",\"email\":\"qa_student_1794847236916@skillority.test\",\"role\":\"STUDENT\",\"isActive\":true,\"createdAt\":\"2026-11-16T16:40:38.098Z\"}}}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/wallet",
+      "body": "{\"success\":true,\"data\":{\"id\":\"6afb320a540de4074c8a1e32\",\"userId\":\"6afb3209540de4074c8a1e30\",\"balance\":485,\"lastLoginBonus\":\"2026-11-16T16:40:43.129Z\",\"createdAt\":\"2026-11-16T16:40:38.098Z\",\"updatedAt\":\"2026-11-16T16:40:43.138Z\",\"transactions\":[{\"id\":\"6afb320b540de4074c8a1e33\",\"walletId\":\"6afb320a540de4074c8a1e32\",\"amount\":5,\"type\":\"DAILY_LOGIN\",\"description\":\"Daily check-in reward\",\"referenceId\":null,\"createdAt\":\"2026-11-16T16:40:43.138Z\"}]}}"
+    },
+    {
+      "event": "REQUEST",
+      "method": "POST",
+      "url": "http://localhost:5000/api/auth/logout",
+      "postData": "{}"
+    },
+    {
+      "event": "RESPONSE",
+      "status": 200,
+      "url": "http://localhost:5000/api/auth/logout",
+      "body": "{\"success\":true,\"message\":\"Logged out successfully\"}"
+    }
+  ],
+  "consoleMessages": [
+    {
+      "type": "verbose",
+      "text": "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "log",
+      "text": "[HMR] connected"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "log",
+      "text": "[HMR] connected"
+    },
+    {
+      "type": "verbose",
+      "text": "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o"
+    }
+  ]
+}

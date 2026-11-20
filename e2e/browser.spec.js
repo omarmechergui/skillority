@@ -331,4 +331,435 @@ test.describe('Skillority Route Authorization & Multi-Role Navigation E2E', () =
     await expect(page.getByRole('heading', { name: /Course Review/i })).toBeVisible();
   });
 
+  // ==========================================
+  // SUITE 5: ONBOARDING & SIGN-IN POLICY (PHASE 5)
+  // ==========================================
+
+  test('22. Sign-In Flow — Incomplete Student profile routes to /onboarding/student', async ({ page }) => {
+    // Intercept login request and return incomplete student profile
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-inc-1',
+              email: 'newstudent@test.com',
+              role: 'STUDENT',
+              profile: { firstName: 'New', lastName: 'Student', university: null, major: null },
+            },
+            accessToken: 'mock-inc-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin');
+    await page.locator('input[type="email"]').fill('newstudent@test.com');
+    await page.locator('input[type="password"]').fill('Password123!');
+    await page.locator('button[type="submit"]').click();
+
+    // Verify redirected to student onboarding
+    await expect(page).toHaveURL(/\/onboarding\/student/);
+  });
+
+  test('23. Sign-In Flow — Completed Student profile routes to /student/dashboard', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-comp-1',
+              email: 'alex@student.test',
+              role: 'STUDENT',
+              profile: {
+                firstName: 'Alex',
+                lastName: 'Morgan',
+                university: 'Tech University',
+                major: 'Computer Science',
+              },
+            },
+            accessToken: 'mock-comp-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin');
+    await page.locator('input[type="email"]').fill('alex@student.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+  });
+
+  test('24. Sign-In Flow — Incomplete Company profile routes to /onboarding/company', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'company-inc-1',
+              email: 'recruiter@newco.test',
+              role: 'COMPANY',
+              profile: { firstName: 'Sarah', lastName: 'Recruiter', companyName: null },
+            },
+            accessToken: 'mock-inc-company-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin');
+    await page.locator('input[type="email"]').fill('recruiter@newco.test');
+    await page.locator('input[type="password"]').fill('Password123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/onboarding\/company/);
+  });
+
+  test('25. Sign-In Flow — Completed Company profile routes to /company/dashboard', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'company-comp-1',
+              email: 'recruiter@techcorp.test',
+              role: 'COMPANY',
+              profile: {
+                firstName: 'Sarah',
+                lastName: 'Recruiter',
+                companyName: 'TechCorp International',
+                industry: 'Cloud Infrastructure',
+              },
+            },
+            accessToken: 'mock-comp-company-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin');
+    await page.locator('input[type="email"]').fill('recruiter@techcorp.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/company\/dashboard/);
+  });
+
+  test('26. Sign-In Flow — Safe redirect query parameter is honored over dashboard', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-comp-1',
+              email: 'alex@student.test',
+              role: 'STUDENT',
+              profile: {
+                firstName: 'Alex',
+                lastName: 'Morgan',
+                university: 'Tech University',
+                major: 'Computer Science',
+              },
+            },
+            accessToken: 'mock-comp-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin?redirect=%2Fstudent%2Flearn');
+    await page.locator('input[type="email"]').fill('alex@student.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/student\/learn/);
+  });
+
+  test('27. Sign-In Flow — Malicious external redirect is rejected and falls back safely', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-comp-1',
+              email: 'alex@student.test',
+              role: 'STUDENT',
+              profile: {
+                firstName: 'Alex',
+                lastName: 'Morgan',
+                university: 'Tech University',
+                major: 'Computer Science',
+              },
+            },
+            accessToken: 'mock-comp-token',
+          },
+        }),
+      });
+    });
+
+    // Try protocol-relative external domain
+    await page.goto('/auth/signin?redirect=%2F%2Fevil.com');
+    await page.locator('input[type="email"]').fill('alex@student.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    // Rejection falls back to /student/dashboard
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+  });
+
+  test('28. Onboarding Role Guard — Student accessing Company onboarding is redirected', async ({ page }) => {
+    // Incomplete student visits /onboarding/company -> should be redirected to /onboarding/student
+    await mockAuthenticatedUser(page, {
+      id: 'student-inc-1',
+      email: 'student@test.com',
+      role: 'STUDENT',
+      profile: { firstName: 'Incomplete', lastName: 'Student', university: null, major: null },
+    });
+
+    await page.goto('/onboarding/company');
+    await expect(page).toHaveURL(/\/onboarding\/student/);
+  });
+
+  test('29. Onboarding Role Guard — Company accessing Student onboarding is redirected', async ({ page }) => {
+    // Incomplete company visits /onboarding/student -> should be redirected to /onboarding/company
+    await mockAuthenticatedUser(page, {
+      id: 'company-inc-1',
+      email: 'company@test.com',
+      role: 'COMPANY',
+      profile: { firstName: 'Incomplete', lastName: 'Company', companyName: null },
+    });
+
+    await page.goto('/onboarding/student');
+    await expect(page).toHaveURL(/\/onboarding\/company/);
+  });
+
+  test('30. Onboarding Completion Guard — Completed Student revisiting onboarding is redirected to dashboard', async ({ page }) => {
+    await mockAuthenticatedUser(page, {
+      id: 'student-comp-1',
+      email: 'alex@student.test',
+      role: 'STUDENT',
+      profile: {
+        firstName: 'Alex',
+        lastName: 'Morgan',
+        university: 'Tech University',
+        major: 'Computer Science',
+      },
+    });
+
+    await page.goto('/onboarding/student');
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+  });
+
+  test('31. Onboarding Completion Guard — Completed Company revisiting onboarding is redirected to dashboard', async ({ page }) => {
+    await mockAuthenticatedUser(page, {
+      id: 'company-comp-1',
+      email: 'recruiter@techcorp.test',
+      role: 'COMPANY',
+      profile: {
+        firstName: 'Sarah',
+        lastName: 'Recruiter',
+        companyName: 'TechCorp International',
+        industry: 'Cloud Infrastructure',
+      },
+    });
+
+    await page.goto('/onboarding/company');
+    await expect(page).toHaveURL(/\/company\/dashboard/);
+  });
+
+  test('32. Real Login Integration — Student real login against backend API', async ({ page }) => {
+    // Uses real active student account in MongoDB Atlas
+    await page.goto('/auth/signin');
+    await page.locator('input[type="email"]').fill('qa_student_1794847236916@skillority.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    // Since this student has complete profile (Tech University / Computer Science), lands on dashboard
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+    await expect(page.locator('text=Student Workspace')).toBeVisible();
+  });
+
+  // ==========================================
+  // SUITE 6: ADDITIONAL STRICT AUDIT VERIFICATIONS
+  // ==========================================
+
+  test('33. Redirect Policy — Incomplete Student cannot bypass onboarding via ?redirect query', async ({ page }) => {
+    // Scenario: Incomplete student attempts to visit /student/learn, gets sent to /auth/signin?redirect=%2Fstudent%2Flearn,
+    // then logs in. They MUST be redirected to /onboarding/student, NOT /student/learn!
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-inc-audit',
+              email: 'incomplete@student.test',
+              role: 'STUDENT',
+              profile: { firstName: 'Incomplete', lastName: 'Student', university: null, major: null },
+            },
+            accessToken: 'mock-inc-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin?redirect=%2Fstudent%2Flearn');
+    await page.locator('input[type="email"]').fill('incomplete@student.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    // MUST land on /onboarding/student because onboarding is incomplete!
+    await expect(page).toHaveURL(/\/onboarding\/student/);
+  });
+
+  test('34. Redirect Policy — Incomplete Company cannot bypass onboarding via ?redirect query', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'company-inc-audit',
+              email: 'incomplete@company.test',
+              role: 'COMPANY',
+              profile: { firstName: 'Incomplete', lastName: 'Company', companyName: null },
+            },
+            accessToken: 'mock-inc-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin?redirect=%2Fcompany%2Fpipeline');
+    await page.locator('input[type="email"]').fill('incomplete@company.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/onboarding\/company/);
+  });
+
+  test('35. Redirect Policy — Incomplete Instructor cannot bypass onboarding via ?redirect query', async ({ page }) => {
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'instructor-inc-audit',
+              email: 'incomplete@instructor.test',
+              role: 'INSTRUCTOR',
+              profile: { firstName: 'Incomplete', lastName: 'Instructor', expertise: [], experience: null },
+            },
+            accessToken: 'mock-inc-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin?redirect=%2Finstructor%2Fcourses');
+    await page.locator('input[type="email"]').fill('incomplete@instructor.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/onboarding\/instructor/);
+  });
+
+  test('36. Redirect Policy — Cross-role redirect query is rejected even for completed user', async ({ page }) => {
+    // Completed student tries to redirect into /admin/dashboard or /company/pipeline via query param
+    await page.route('**/api/auth/login', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'student-comp-audit',
+              email: 'complete@student.test',
+              role: 'STUDENT',
+              profile: {
+                firstName: 'Alex',
+                lastName: 'Morgan',
+                university: 'Tech University',
+                major: 'Computer Science',
+              },
+            },
+            accessToken: 'mock-comp-token',
+          },
+        }),
+      });
+    });
+
+    await page.goto('/auth/signin?redirect=%2Fadmin%2Fusers');
+    await page.locator('input[type="email"]').fill('complete@student.test');
+    await page.locator('input[type="password"]').fill('SecurePass123!');
+    await page.locator('button[type="submit"]').click();
+
+    // Cross-role redirect must be rejected and fall back safely to student dashboard
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+  });
+
+  test('37. Role Selection Policy — Authenticated user cannot change role at /onboarding/role', async ({ page }) => {
+    // Authenticated student visiting /onboarding/role should be automatically routed
+    await mockAuthenticatedUser(page, {
+      id: 'student-comp-audit',
+      email: 'alex@student.test',
+      role: 'STUDENT',
+      profile: {
+        firstName: 'Alex',
+        lastName: 'Morgan',
+        university: 'Tech University',
+        major: 'Computer Science',
+      },
+    });
+
+    await page.goto('/onboarding/role');
+    // Completed student is automatically redirected to /student/dashboard
+    await expect(page).toHaveURL(/\/student\/dashboard/);
+  });
+
+  test('38. Role Selection Policy — Incomplete authenticated student at /onboarding/role routed to student onboarding', async ({ page }) => {
+    await mockAuthenticatedUser(page, {
+      id: 'student-inc-audit',
+      email: 'inc@student.test',
+      role: 'STUDENT',
+      profile: {
+        firstName: 'New',
+        lastName: 'Student',
+        university: null,
+        major: null,
+      },
+    });
+
+    await page.goto('/onboarding/role');
+    // Incomplete student is automatically routed to /onboarding/student
+    await expect(page).toHaveURL(/\/onboarding\/student/);
+  });
+
 });

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
 
 export default function StudentOnboardingPage() {
   const router = useRouter();
@@ -31,10 +32,11 @@ export default function StudentOnboardingPage() {
   };
 
   return (
-    <AuthCard
-      title="Complete student profile"
-      subtitle="Help instructors and recruiters get to know your background"
-    >
+    <OnboardingGuard requiredRole="STUDENT">
+      <AuthCard
+        title="Complete student profile"
+        subtitle="Help instructors and recruiters get to know your background"
+      >
       <form onSubmit={handleSubmit} className="space-y-4 text-left">
         <Input
           label="University or School"
@@ -94,6 +96,7 @@ export default function StudentOnboardingPage() {
         </Button>
       </form>
     </AuthCard>
+    </OnboardingGuard>
   );
 }
 

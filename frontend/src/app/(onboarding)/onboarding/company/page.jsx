@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
 
 export default function CompanyOnboardingPage() {
   const router = useRouter();
@@ -30,10 +31,11 @@ export default function CompanyOnboardingPage() {
   };
 
   return (
-    <AuthCard
-      title="Company profile setup"
-      subtitle="Establish your organization profile to attract qualified students"
-    >
+    <OnboardingGuard requiredRole="COMPANY">
+      <AuthCard
+        title="Company profile setup"
+        subtitle="Establish your organization profile to attract qualified students"
+      >
       <form onSubmit={handleSubmit} className="space-y-4 text-left">
         <Input
           label="Company Name"
@@ -98,6 +100,7 @@ export default function CompanyOnboardingPage() {
         </Button>
       </form>
     </AuthCard>
+    </OnboardingGuard>
   );
 }
 

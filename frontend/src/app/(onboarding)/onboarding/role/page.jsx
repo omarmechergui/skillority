@@ -1,14 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { Button } from '@/components/ui/Button';
 import { GraduationCap, Building2, BookOpen } from 'lucide-react';
+import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
+import { useAuth } from '@/lib/auth';
+import { ROLE_ONBOARDING, isOnboardingComplete, ROLE_DASHBOARDS } from '@/lib/onboarding';
 
 export default function RoleSelectionPage() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState('STUDENT');
+  const { user } = useAuth();
+  const [selectedRole, setSelectedRole] = useState(user?.role || 'STUDENT');
+
+  // If user already has an established account role, direct them to their role's onboarding
+  useEffect(() => {
+    if (user?.role) {
+      if (isOnboardingComplete(user)) {
+        router.replace(ROLE_DASHBOARDS[user.role] || '/');
+      } else if (ROLE_ONBOARDING[user.role]) {
+        router.replace(ROLE_ONBOARDING[user.role]);
+      }
+    }
+  }, [user, router]);
 
   const roles = [
     {
@@ -42,11 +57,12 @@ export default function RoleSelectionPage() {
   };
 
   return (
-    <AuthCard
-      title="Choose your platform role"
-      subtitle="Select how you plan to use Skillority to personalize your experience"
-    >
-      <div className="space-y-3 mb-6">
+    <OnboardingGuard>
+      <AuthCard
+        title="Choose your platform role"
+        subtitle="Select how you plan to use Skillority to personalize your experience"
+      >
+        <div className="space-y-3 mb-6">
         {roles.map((r) => {
           const Icon = r.icon;
           const isSelected = selectedRole === r.id;
@@ -93,6 +109,7 @@ export default function RoleSelectionPage() {
         Continue to Profile Setup
       </Button>
     </AuthCard>
+    </OnboardingGuard>
   );
 }
 
