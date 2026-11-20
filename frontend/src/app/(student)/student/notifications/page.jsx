@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockNotifications } from '@/lib/mockStudentData';
 import {
   Bell,
   CheckCircle2,
@@ -23,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function StudentNotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('ALL');
 
   const unreadCount = notifications.filter((n) => !n.read).length;

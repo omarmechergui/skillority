@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import {
   Users,
   Search,
@@ -21,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function TalentDiscoveryPage() {
-  const [candidates, setCandidates] = useState(mockCandidates);
+  const [candidates, setCandidates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('ALL');
 
@@ -100,85 +99,99 @@ export default function TalentDiscoveryPage() {
 
         {/* Talent Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((c) => (
-            <Card key={c.id} className="p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-border">
-                      <Image
-                        src={c.avatar}
-                        alt={c.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
+          {filtered.length === 0 ? (
+            <div className="col-span-full">
+              <Card className="p-12 text-center text-slate-500 text-xs">
+                No candidates found matching the selected search and filter criteria.
+              </Card>
+            </div>
+          ) : (
+            filtered.map((c) => (
+              <Card key={c.id} className="p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-border bg-slate-100 flex items-center justify-center">
+                        {c.avatar ? (
+                          <Image
+                            src={c.avatar}
+                            alt={c.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-slate-400 font-bold text-sm">
+                            {c.name ? c.name.charAt(0) : 'C'}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm leading-snug">{c.name}</h3>
+                        <p className="text-xs text-slate-500">{c.location}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleSave(c.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-colors"
+                    >
+                      {c.isSaved ? (
+                        <BookmarkCheck className="w-5 h-5 text-amber-500 fill-amber-500" />
+                      ) : (
+                        <Bookmark className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-600 line-clamp-2">{c.title}</p>
+
+                  {/* Score badge & Completion */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-border flex items-center justify-between text-xs">
+                    <div>
+                      <span className="block text-slate-400 text-[10px] uppercase">Match Score</span>
+                      <span className="font-extrabold text-emerald-600">{c.matchScore}% Match</span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm leading-snug">{c.name}</h3>
-                      <p className="text-xs text-slate-500">{c.location}</p>
+                      <span className="block text-slate-400 text-[10px] uppercase">Certificates</span>
+                      <span className="font-bold text-slate-800">{c.certificatesCount} Verified</span>
+                    </div>
+                    <div>
+                      <span className="block text-slate-400 text-[10px] uppercase">Streak</span>
+                      <span className="font-bold text-orange-600">{c.studyStreak} Days</span>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => toggleSave(c.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition-colors"
-                  >
-                    {c.isSaved ? (
-                      <BookmarkCheck className="w-5 h-5 text-amber-500 fill-amber-500" />
-                    ) : (
-                      <Bookmark className="w-5 h-5" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {c.skills.slice(0, 4).map((sk) => (
+                      <span key={sk} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">
+                        {sk}
+                      </span>
+                    ))}
+                    {c.skills.length > 4 && (
+                      <span className="text-[10px] text-slate-400 px-1 py-0.5">
+                        +{c.skills.length - 4} more
+                      </span>
                     )}
-                  </button>
-                </div>
-
-                <p className="text-xs text-slate-600 line-clamp-2">{c.title}</p>
-
-                {/* Score badge & Completion */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-border flex items-center justify-between text-xs">
-                  <div>
-                    <span className="block text-slate-400 text-[10px] uppercase">Match Score</span>
-                    <span className="font-extrabold text-emerald-600">{c.matchScore}% Match</span>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400 text-[10px] uppercase">Certificates</span>
-                    <span className="font-bold text-slate-800">{c.certificatesCount} Verified</span>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400 text-[10px] uppercase">Streak</span>
-                    <span className="font-bold text-orange-600">{c.studyStreak} Days</span>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {c.skills.slice(0, 4).map((sk) => (
-                    <span key={sk} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">
-                      {sk}
-                    </span>
-                  ))}
-                  {c.skills.length > 4 && (
-                    <span className="text-[10px] text-slate-400 px-1 py-0.5">
-                      +{c.skills.length - 4} more
-                    </span>
-                  )}
+                <div className="pt-5 border-t border-border mt-4 flex items-center gap-2">
+                  <Link href={`/company/talent/${c.id}`} className="flex-1">
+                    <Button variant="outline" className="w-full text-xs font-semibold">
+                      View Profile
+                    </Button>
+                  </Link>
+                  <Link href={`/company/talent/${c.id}/evaluate`}>
+                    <Button className="text-xs font-semibold">
+                      Evaluate
+                    </Button>
+                  </Link>
                 </div>
-              </div>
-
-              <div className="pt-5 border-t border-border mt-4 flex items-center gap-2">
-                <Link href={`/company/talent/${c.id}`} className="flex-1">
-                  <Button variant="outline" className="w-full text-xs font-semibold">
-                    View Profile
-                  </Button>
-                </Link>
-                <Link href={`/company/talent/${c.id}/evaluate`}>
-                  <Button className="text-xs font-semibold">
-                    Evaluate
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardShell>

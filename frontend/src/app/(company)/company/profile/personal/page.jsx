@@ -8,7 +8,7 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockRecruiterUser, mockCompanyProfile } from '@/lib/mockCompanyData';
+import { useAuth } from '@/lib/auth';
 import {
   Mail,
   Phone,
@@ -21,8 +21,20 @@ import {
 } from 'lucide-react';
 
 export default function RecruiterPersonalProfilePage() {
-  const [recruiter] = useState(mockRecruiterUser);
-  const company = mockCompanyProfile;
+  const { user } = useAuth();
+  const recruiter = {
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Recruiter',
+    email: user?.email || '',
+    phone: '',
+    role: 'Lead Technical Recruiter',
+    department: 'Talent Acquisition',
+    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+    avatar: null,
+  };
+  const company = {
+    name: user?.companyName || user?.profile?.companyName || 'Your Company',
+    location: '',
+  };
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
@@ -52,14 +64,20 @@ export default function RecruiterPersonalProfilePage() {
 
         {/* Profile Card */}
         <Card className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 shrink-0">
-            <Image
-              src={recruiter.avatar}
-              alt={recruiter.name}
-              fill
-              className="object-cover"
-              unoptimized
-            />
+          <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 shrink-0 bg-slate-100 flex items-center justify-center">
+            {recruiter.avatar ? (
+              <Image
+                src={recruiter.avatar}
+                alt={recruiter.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <span className="text-primary font-bold text-xl">
+                {recruiter.name ? recruiter.name.charAt(0) : 'R'}
+              </span>
+            )}
           </div>
 
           <div className="space-y-2 flex-1">

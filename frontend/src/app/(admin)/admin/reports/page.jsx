@@ -6,11 +6,16 @@ import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockAdminStats } from '@/lib/mockAdminData';
 import { BarChart3, TrendingUp, Users, Coins, Download } from 'lucide-react';
 
 export default function ReportsAnalyticsPage() {
-  const stats = mockAdminStats;
+  const [stats] = useState({
+    learnerRetention: '0%',
+    coinsMinted: 0,
+    quizPasses: 0,
+    coinsBurned: 0,
+    unlockedChapters: 0,
+  });
 
   return (
     <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
@@ -34,20 +39,20 @@ export default function ReportsAnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="p-6 space-y-3">
             <h3 className="font-bold text-sm text-slate-900">Learner Retention</h3>
-            <p className="text-3xl font-black text-slate-900">84.2%</p>
-            <p className="text-xs text-emerald-600 font-semibold">+3.8% over last quarter</p>
+            <p className="text-3xl font-black text-slate-900">{stats.learnerRetention}</p>
+            <p className="text-xs text-slate-500">Platform quarterly learner cohort rate</p>
           </Card>
 
           <Card className="p-6 space-y-3">
             <h3 className="font-bold text-sm text-slate-900">Total Coins Minted (Quizzes)</h3>
-            <p className="text-3xl font-black text-amber-600">+192,400</p>
-            <p className="text-xs text-slate-500">Earned across 3,848 quiz passes</p>
+            <p className="text-3xl font-black text-amber-600">+{stats.coinsMinted}</p>
+            <p className="text-xs text-slate-500">Earned across {stats.quizPasses} quiz passes</p>
           </Card>
 
           <Card className="p-6 space-y-3">
             <h3 className="font-bold text-sm text-slate-900">Coins Burned (Chapter 6+ Unlocks)</h3>
-            <p className="text-3xl font-black text-rose-600">-118,500</p>
-            <p className="text-xs text-slate-500">474 advanced chapters unlocked</p>
+            <p className="text-3xl font-black text-rose-600">-{stats.coinsBurned}</p>
+            <p className="text-xs text-slate-500">{stats.unlockedChapters} advanced chapters unlocked</p>
           </Card>
         </div>
       </div>

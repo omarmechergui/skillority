@@ -7,12 +7,11 @@ import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourseReviews } from '@/lib/mockAdminData';
 import { adminApi } from '@/lib/api';
 import { FileCheck, ArrowRight, BookOpen, Clock, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function CourseReviewDashboardPage() {
-  const [reviews, setReviews] = useState(mockCourseReviews);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

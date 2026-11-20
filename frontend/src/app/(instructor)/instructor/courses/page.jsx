@@ -7,14 +7,13 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorCourses } from '@/lib/mockInstructorData';
 import { coursesApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { BookOpen, Plus, Users, Star, Eye, Edit, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 export default function InstructorCoursesPage() {
   const { user } = useAuth();
-  const [courses, setCourses] = useState(mockInstructorCourses);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,7 +43,7 @@ export default function InstructorCoursesPage() {
           setCourses([]);
         }
       } catch (err) {
-        // Safe fallback to mock if unauthenticated or error
+        // Safe fallback
       } finally {
         setLoading(false);
       }

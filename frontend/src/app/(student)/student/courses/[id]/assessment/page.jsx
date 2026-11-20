@@ -9,7 +9,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { mockCourses } from '@/lib/mockLearningData';
 import { assessmentApi } from '@/lib/api';
 import {
   Award,
@@ -28,8 +27,24 @@ import {
 
 export default function FinalAssessmentPage() {
   const params = useParams();
-  const courseId = params?.id || 'course-1';
-  const course = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
+  const courseId = params?.id || '';
+  const [course] = useState(null);
+
+  if (!course) {
+    return (
+      <DashboardShell roleTitle="Student Portal" navItems={studentNav}>
+        <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Assessment Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course final assessment could not be found or has not been loaded.</p>
+            <Link href="/student/learn">
+              <Button variant="outline" className="text-xs">Back to Learning</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const assessment = course.finalAssessment || {
     id: 'fa-fallback',

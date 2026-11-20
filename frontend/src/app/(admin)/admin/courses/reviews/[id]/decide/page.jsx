@@ -8,17 +8,32 @@ import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourseReviews } from '@/lib/mockAdminData';
 import { adminApi } from '@/lib/api';
 import { ArrowLeft, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CourseApprovalDecisionPage({ params }) {
   const router = useRouter();
-  const review = mockCourseReviews.find((r) => r.id === params.id) || mockCourseReviews[0];
+  const [review] = useState(null);
   const [decisionNotes, setDecisionNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+
+  if (!review) {
+    return (
+      <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
+        <div className="space-y-6 max-w-3xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Course Review Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course review could not be found or has not been loaded.</p>
+            <Link href="/admin/courses/reviews">
+              <Button variant="outline" className="text-xs">Back to Reviews</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const handleDecision = async (outcome) => {
     setLoading(true);

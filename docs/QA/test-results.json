@@ -1,0 +1,111 @@
+{
+  "startedAt": "2026-11-20T15:22:57.293Z",
+  "environment": {
+    "frontend": "http://localhost:3000",
+    "backend": "http://localhost:5000",
+    "nodeVersion": "v24.21.0"
+  },
+  "suites": [
+    {
+      "name": "Company Portal",
+      "tests": [
+        {
+          "testId": "COM-02",
+          "title": "Talent Discovery displays candidate directory and skill filters",
+          "status": "FAIL",
+          "durationMs": 1346,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\com-02-talent.png",
+          "error": null,
+          "notes": null
+        },
+        {
+          "testId": "COM-03",
+          "title": "Recruitment Pipeline renders Kanban hiring stages",
+          "status": "FAIL",
+          "durationMs": 922,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\com-03-pipeline.png",
+          "error": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "name": "Instructor Studio",
+      "tests": [
+        {
+          "testId": "INS-01",
+          "title": "Instructor sign-in routes correctly to instructor workspace or onboarding",
+          "status": "PASS",
+          "durationMs": 2546,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\ins-01-dashboard.png",
+          "error": null,
+          "notes": "Landed on: http://localhost:3000/instructor/dashboard"
+        },
+        {
+          "testId": "INS-02",
+          "title": "Instructor course management catalog renders course table and create button",
+          "status": "FAIL",
+          "durationMs": 909,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\ins-02-courses.png",
+          "error": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "name": "Admin Console",
+      "tests": [
+        {
+          "testId": "ADM-01",
+          "title": "Admin routes strictly reject Student role and bounce to student dashboard",
+          "status": "PASS",
+          "durationMs": 3985,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\adm-01-rbac-protection.png",
+          "error": null,
+          "notes": null
+        },
+        {
+          "testId": "ADM-02",
+          "title": "Unauthenticated request to Admin dashboard redirects to /auth/signin",
+          "status": "PASS",
+          "durationMs": 338,
+          "evidence": null,
+          "error": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "name": "UI Responsiveness",
+      "tests": [
+        {
+          "testId": "RESP-01",
+          "title": "Mobile viewport 390px adapts navbar with mobile drawer button",
+          "status": "PASS",
+          "durationMs": 2029,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\resp-01-mobile-dashboard.png",
+          "error": null,
+          "notes": null
+        },
+        {
+          "testId": "RESP-02",
+          "title": "Tablet viewport 768px renders course grid cleanly without horizontal overflow",
+          "status": "PASS",
+          "durationMs": 847,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\resp-02-tablet-catalog.png",
+          "error": null,
+          "notes": null
+        },
+        {
+          "testId": "RESP-03",
+          "title": "Laptop viewport 1280px renders wallet metrics and action cards",
+          "status": "PASS",
+          "durationMs": 876,
+          "evidence": "C:\\Users\\USER\\Desktop\\skillority\\docs\\QA\\screenshots\\resp-03-laptop-wallet.png",
+          "error": null,
+          "notes": null
+        }
+      ]
+    }
+  ]
+}

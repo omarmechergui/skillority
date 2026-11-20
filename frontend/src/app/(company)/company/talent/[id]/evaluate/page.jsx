@@ -9,7 +9,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import {
   ArrowLeft,
   FileCheck,
@@ -20,13 +19,13 @@ import {
 
 export default function CandidateEvaluationPage({ params }) {
   const router = useRouter();
-  const candidate = mockCandidates.find((c) => c.id === params.id) || mockCandidates[0];
+  const [candidate] = useState(null);
 
   const [scores, setScores] = useState({
-    technical: candidate.evaluation?.technicalScore || 85,
-    communication: candidate.evaluation?.communicationScore || 85,
-    problemSolving: candidate.evaluation?.problemSolvingScore || 85,
-    notes: candidate.evaluation?.notes || '',
+    technical: 0,
+    communication: 0,
+    problemSolving: 0,
+    notes: '',
     recommendation: 'STRONG_HIRE',
   });
 
@@ -34,11 +33,24 @@ export default function CandidateEvaluationPage({ params }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => {
-      router.push(`/company/talent/${params.id}`);
-    }, 1200);
+    router.push(`/company/talent/${params.id}`);
   };
+
+  if (!candidate) {
+    return (
+      <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
+        <div className="space-y-6 max-w-3xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Candidate Not Found</h2>
+            <p className="text-sm text-slate-500">The requested candidate evaluation could not be found or has not been loaded.</p>
+            <Link href="/company/talent">
+              <Button variant="outline" className="text-xs">Back to Talent Discovery</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>

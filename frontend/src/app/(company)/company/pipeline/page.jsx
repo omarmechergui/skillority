@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import { careerApi } from '@/lib/api';
 import {
   FileCheck,
@@ -22,7 +21,7 @@ import {
 const STAGES = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED'];
 
 export default function RecruitmentPipelinePage() {
-  const [candidates, setCandidates] = useState(mockCandidates);
+  const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
     async function loadPipeline() {
@@ -32,7 +31,7 @@ export default function RecruitmentPipelinePage() {
           const liveApps = res.data.data.map(app => ({
             id: app.id,
             name: [app.student?.profile?.firstName, app.student?.profile?.lastName].filter(Boolean).join(' ') || 'Candidate',
-            avatar: app.student?.profile?.avatar || '/images/default-avatar.png',
+            avatar: app.student?.profile?.avatar || null,
             appliedRole: app.opportunity?.title || 'Position',
             stage: app.status === 'PENDING' ? 'APPLIED' : app.status,
             matchScore: 85,
@@ -40,7 +39,7 @@ export default function RecruitmentPipelinePage() {
           setCandidates(liveApps);
         }
       } catch {
-        // Keep mock data
+        // Safe fallback
       }
     }
     loadPipeline();
@@ -112,14 +111,20 @@ export default function RecruitmentPipelinePage() {
                   {stageCandidates.map((c) => (
                     <Card key={c.id} className="p-3.5 space-y-2.5 bg-white hover:shadow-md transition-shadow">
                       <div className="flex items-start gap-2.5">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0">
-                          <Image
-                            src={c.avatar}
-                            alt={c.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-slate-100 flex items-center justify-center">
+                          {c.avatar ? (
+                            <Image
+                              src={c.avatar}
+                              alt={c.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-slate-400 font-bold text-[10px]">
+                              {c.name ? c.name.charAt(0) : 'C'}
+                            </span>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-xs text-slate-900 truncate">{c.name}</h4>

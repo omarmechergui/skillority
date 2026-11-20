@@ -8,11 +8,7 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import {
-  mockInstructorProfile,
-  mockInstructorCourses,
-  mockInstructorStudents,
-} from '@/lib/mockInstructorData';
+import { useAuth } from '@/lib/auth';
 import {
   BookOpen,
   Users,
@@ -25,9 +21,18 @@ import {
 } from 'lucide-react';
 
 export default function InstructorDashboardPage() {
-  const [profile] = useState(mockInstructorProfile);
-  const courses = mockInstructorCourses;
-  const recentStudents = mockInstructorStudents;
+  const { user } = useAuth();
+  const profile = {
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Instructor',
+    stats: {
+      totalStudents: 0,
+      activeCourses: 0,
+      averageRating: 0,
+      completionRate: '0%',
+    },
+  };
+  const [courses] = useState([]);
+  const [recentStudents] = useState([]);
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
@@ -113,33 +118,39 @@ export default function InstructorDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {courses.map((course) => (
-                <Card key={course.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="primary" className="text-[10px]">{course.level}</Badge>
-                      <Badge variant={course.status === 'PUBLISHED' ? 'success' : 'warning'} className="text-[10px]">
-                        {course.status}
-                      </Badge>
-                    </div>
-                    <h3 className="font-bold text-slate-900 text-base">{course.title}</h3>
-                    <p className="text-xs text-slate-500">{course.totalChapters} Chapters · {course.totalLessons} Lessons</p>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-base font-extrabold text-slate-900">{course.enrolledStudents}</div>
-                      <div className="text-[10px] text-slate-400">Students</div>
-                    </div>
-                    <Link href={`/instructor/courses/${course.id}`}>
-                      <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                        Manage
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </Link>
-                  </div>
+              {courses.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No author courses created yet.
                 </Card>
-              ))}
+              ) : (
+                courses.map((course) => (
+                  <Card key={course.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary" className="text-[10px]">{course.level}</Badge>
+                        <Badge variant={course.status === 'PUBLISHED' ? 'success' : 'warning'} className="text-[10px]">
+                          {course.status}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-slate-900 text-base">{course.title}</h3>
+                      <p className="text-xs text-slate-500">{course.totalChapters} Chapters · {course.totalLessons} Lessons</p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-base font-extrabold text-slate-900">{course.enrolledStudents}</div>
+                        <div className="text-[10px] text-slate-400">Students</div>
+                      </div>
+                      <Link href={`/instructor/courses/${course.id}`}>
+                        <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                          Manage
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -154,31 +165,43 @@ export default function InstructorDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {recentStudents.map((st) => (
-                <Card key={st.id} className="p-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border">
-                      <Image
-                        src={st.avatar}
-                        alt={st.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-slate-900">{st.name}</h4>
-                      <p className="text-[10px] text-slate-500">{st.progressPercentage}% track progress</p>
-                    </div>
-                  </div>
-
-                  <Link href={`/instructor/students/${st.id}`}>
-                    <Button variant="outline" className="text-xs py-1 h-auto">
-                      View
-                    </Button>
-                  </Link>
+              {recentStudents.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No enrolled students yet.
                 </Card>
-              ))}
+              ) : (
+                recentStudents.map((st) => (
+                  <Card key={st.id} className="p-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border bg-slate-100 flex items-center justify-center">
+                        {st.avatar ? (
+                          <Image
+                            src={st.avatar}
+                            alt={st.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-slate-400 font-bold text-xs">
+                            {st.name ? st.name.charAt(0) : 'S'}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs text-slate-900">{st.name}</h4>
+                        <p className="text-[10px] text-slate-500">{st.progressPercentage}% track progress</p>
+                      </div>
+                    </div>
+
+                    <Link href={`/instructor/students/${st.id}`}>
+                      <Button variant="outline" className="text-xs py-1 h-auto">
+                        View
+                      </Button>
+                    </Link>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>

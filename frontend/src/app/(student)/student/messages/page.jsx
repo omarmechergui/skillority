@@ -9,8 +9,8 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
-import { mockConversations } from '@/lib/mockStudentData';
 import { messagingApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import {
   Send,
   Search,
@@ -26,8 +26,9 @@ import {
 } from 'lucide-react';
 
 export default function StudentMessagesPage() {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [activeConvId, setActiveConvId] = useState(mockConversations[0]?.id || null);
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
@@ -57,7 +58,7 @@ export default function StudentMessagesPage() {
           if (liveConvs.length > 0) setActiveConvId(liveConvs[0].id);
         }
       } catch {
-        // Keep mock data
+        // Safe empty fallback
       }
     }
     loadConversations();
@@ -104,7 +105,7 @@ export default function StudentMessagesPage() {
 
     const newMessage = {
       id: `msg-${Date.now()}`,
-      senderId: 'usr-student-01',
+      senderId: user?.id || 'me',
       text: messageInput.trim(),
       time: 'Just now',
     };
@@ -181,63 +182,75 @@ export default function StudentMessagesPage() {
 
             {/* Conversation Threads */}
             <div className="flex-1 overflow-y-auto divide-y divide-border/60">
-              {filteredConversations.map((conv) => {
-                const isActive = conv.id === activeConvId;
-                return (
-                  <button
-                    key={conv.id}
-                    type="button"
-                    onClick={() => selectConversation(conv.id)}
-                    className={`w-full p-4 flex items-start gap-3 text-left transition-colors ${
-                      isActive
-                        ? 'bg-blue-50/70 border-l-4 border-l-primary'
-                        : 'hover:bg-slate-100/70'
-                    }`}
-                  >
-                    {/* User Avatar with status indicator */}
-                    <div className="relative flex-shrink-0">
-                      <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border bg-white">
-                        <Image
-                          src={conv.user.avatar}
-                          alt={conv.user.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                      {conv.user.online && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-slate-900 text-xs truncate">
-                          {conv.user.name}
-                        </h4>
-                        <span className="text-[10px] text-slate-400 flex-shrink-0">
-                          {conv.lastMessageTime}
-                        </span>
-                      </div>
-
-                      <p className="text-[11px] text-slate-500 truncate">
-                        {conv.user.role}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-600 truncate font-normal">
-                          {conv.lastMessage}
-                        </p>
-                        {conv.unreadCount > 0 && (
-                          <span className="ml-2 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                            {conv.unreadCount}
-                          </span>
+              {filteredConversations.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  No conversation threads found.
+                </div>
+              ) : (
+                filteredConversations.map((conv) => {
+                  const isActive = conv.id === activeConvId;
+                  return (
+                    <button
+                      key={conv.id}
+                      type="button"
+                      onClick={() => selectConversation(conv.id)}
+                      className={`w-full p-4 flex items-start gap-3 text-left transition-colors ${
+                        isActive
+                          ? 'bg-blue-50/70 border-l-4 border-l-primary'
+                          : 'hover:bg-slate-100/70'
+                      }`}
+                    >
+                      {/* User Avatar with status indicator */}
+                      <div className="relative flex-shrink-0">
+                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border bg-white flex items-center justify-center">
+                          {conv.user?.avatar ? (
+                            <Image
+                              src={conv.user.avatar}
+                              alt={conv.user.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-slate-400 font-bold text-xs">
+                              {conv.user?.name ? conv.user.name.charAt(0) : 'U'}
+                            </span>
+                          )}
+                        </div>
+                        {conv.user?.online && (
+                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
                         )}
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
+
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-900 text-xs truncate">
+                            {conv.user?.name || 'User'}
+                          </h4>
+                          <span className="text-[10px] text-slate-400 flex-shrink-0">
+                            {conv.lastMessageTime}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {conv.user?.role || 'Member'}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-slate-600 truncate font-normal">
+                            {conv.lastMessage}
+                          </p>
+                          {conv.unreadCount > 0 && (
+                            <span className="ml-2 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -323,7 +336,7 @@ export default function StudentMessagesPage() {
                 </div>
 
                 {activeConv.messages.map((msg) => {
-                  const isMe = msg.senderId === 'usr-student-01';
+                  const isMe = msg.senderId === (user?.id || 'me');
                   return (
                     <div
                       key={msg.id}

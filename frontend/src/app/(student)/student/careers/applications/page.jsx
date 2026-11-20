@@ -9,7 +9,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { mockStudentApplications, mockOpportunities } from '@/lib/mockCareerData';
 import { careerApi } from '@/lib/api';
 import {
   FileCheck,
@@ -30,11 +29,11 @@ import {
 
 export default function StudentApplicationsPage() {
   const [activeTab, setActiveTab] = useState('applications'); // 'applications' | 'saved'
-  const [applications, setApplications] = useState(mockStudentApplications);
+  const [applications, setApplications] = useState([]);
   const [withdrawAppId, setWithdrawAppId] = useState(null);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
 
-  const savedOpportunities = mockOpportunities.filter(o => o.isSaved);
+  const [savedOpportunities] = useState([]);
 
   useEffect(() => {
     async function loadApplications() {
@@ -63,7 +62,7 @@ export default function StudentApplicationsPage() {
           setApplications(liveApps);
         }
       } catch {
-        // Keep mock data
+        // Safe fallback
       }
     }
     loadApplications();

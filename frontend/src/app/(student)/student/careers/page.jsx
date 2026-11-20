@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockOpportunities, mockCareerHubStats } from '@/lib/mockCareerData';
 import { careerApi } from '@/lib/api';
 import {
   Briefcase,
@@ -34,13 +33,16 @@ const FILTER_TYPES = ['All Types', 'Internship', 'Apprenticeship', 'Full-Time Ju
 const WORKPLACE_FILTERS = ['All Workplaces', 'Remote', 'Hybrid', 'On-Site'];
 
 export default function StudentCareersPage() {
-  const [opportunities, setOpportunities] = useState(mockOpportunities);
+  const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All Types');
   const [selectedWorkplace, setSelectedWorkplace] = useState('All Workplaces');
-  const [savedIds, setSavedIds] = useState(
-    mockOpportunities.filter(o => o.isSaved).map(o => o.id)
-  );
+  const [savedIds, setSavedIds] = useState([]);
+  const [stats] = useState({
+    activeApplicationsCount: 0,
+    interviewInvitesCount: 0,
+    savedOpportunitiesCount: 0,
+  });
 
   useEffect(() => {
     async function loadCareers() {
@@ -111,7 +113,7 @@ export default function StudentCareersPage() {
             <Link href="/student/careers/applications">
               <Button variant="outline" size="sm" className="text-xs">
                 <FileCheck2 className="w-4 h-4 mr-1.5 text-primary" />
-                My Applications ({mockCareerHubStats.activeApplicationsCount})
+                My Applications ({stats.activeApplicationsCount})
               </Button>
             </Link>
           </div>
@@ -137,20 +139,20 @@ export default function StudentCareersPage() {
           {/* Quick Metrics Strip */}
           <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-border shrink-0">
             <div className="text-center px-2">
-              <div className="text-xl font-bold text-slate-900">{mockOpportunities.length}</div>
+              <div className="text-xl font-bold text-slate-900">{opportunities.length}</div>
               <div className="text-xs text-slate-500">Open Roles</div>
             </div>
             <div className="h-8 w-px bg-slate-200" />
             <div className="text-center px-2">
               <div className="text-xl font-bold text-emerald-600">
-                {mockCareerHubStats.interviewInvitesCount}
+                {stats.interviewInvitesCount}
               </div>
               <div className="text-xs text-slate-500">Interviews</div>
             </div>
             <div className="h-8 w-px bg-slate-200" />
             <div className="text-center px-2">
               <div className="text-xl font-bold text-primary">
-                {mockCareerHubStats.savedOpportunitiesCount}
+                {savedIds.length}
               </div>
               <div className="text-xs text-slate-500">Saved</div>
             </div>
@@ -360,7 +362,7 @@ export default function StudentCareersPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-xs">
                   <span className="text-slate-600">Active Applications:</span>
-                  <span className="font-bold text-slate-900">{mockCareerHubStats.activeApplicationsCount}</span>
+                  <span className="font-bold text-slate-900">{stats.activeApplicationsCount}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-xs">
                   <span className="text-slate-600">Saved Opportunities:</span>
@@ -368,7 +370,7 @@ export default function StudentCareersPage() {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-xs">
                   <span className="text-slate-600">Interview Invitations:</span>
-                  <span className="font-bold text-emerald-600">{mockCareerHubStats.interviewInvitesCount}</span>
+                  <span className="font-bold text-emerald-600">{stats.interviewInvitesCount}</span>
                 </div>
               </div>
 

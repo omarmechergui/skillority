@@ -1,0 +1,1278 @@
+{
+  "summary": {
+    "totalFrontendPages": 75,
+    "totalBackendEndpoints": 54,
+    "prismaModels": [
+      "User",
+      "Profile",
+      "PasswordResetToken",
+      "RefreshToken",
+      "AdminInvitation",
+      "Course",
+      "Chapter",
+      "Lesson",
+      "Enrollment",
+      "QuizAttempt",
+      "AssessmentAttempt",
+      "Certificate",
+      "Wallet",
+      "WalletTransaction",
+      "Opportunity",
+      "Application",
+      "CommunityPost",
+      "Comment",
+      "Message",
+      "Notification"
+    ],
+    "pagesByRole": {
+      "PUBLIC": 6,
+      "ONBOARDING": 4,
+      "STUDENT": 18,
+      "COMPANY": 17,
+      "INSTRUCTOR": 17,
+      "ADMIN": 13
+    },
+    "pagesByStatus": {
+      "Implemented": 7,
+      "Partial (API + Mock Fallback)": 0,
+      "Mock Data / Not Connected": 54,
+      "Partial / UI Only": 6,
+      "Coming Soon": 2,
+      "Placeholder": 6
+    }
+  },
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/admin/users",
+      "file": "backend/src/routes/admin.routes.js",
+      "line": 13
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/admin/users/:id/status",
+      "file": "backend/src/routes/admin.routes.js",
+      "line": 14
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/courses/reviews",
+      "file": "backend/src/routes/admin.routes.js",
+      "line": 15
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/stats",
+      "file": "backend/src/routes/admin.routes.js",
+      "line": 16
+    },
+    {
+      "method": "POST",
+      "path": "/api/assessments/quizzes/:chapterId/submit",
+      "file": "backend/src/routes/assessment.routes.js",
+      "line": 14
+    },
+    {
+      "method": "POST",
+      "path": "/api/assessments/courses/:courseId/submit",
+      "file": "backend/src/routes/assessment.routes.js",
+      "line": 15
+    },
+    {
+      "method": "POST",
+      "path": "/api/assessments/courses/:courseId/claim-completion",
+      "file": "backend/src/routes/assessment.routes.js",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "path": "/api/assessments/my-certificates",
+      "file": "backend/src/routes/assessment.routes.js",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "path": "/api/assessments/verify/:credentialId",
+      "file": "backend/src/routes/assessment.routes.js",
+      "line": 22
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/signup/student",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 58
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/signup/company",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 59
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 60
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 61
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 62
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 63
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 64
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/instructors/invitation/:token",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 80
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 102
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/users/:userId/profile",
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 123
+    },
+    {
+      "method": "GET",
+      "path": "/api/careers/opportunities",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "path": "/api/careers/opportunities/:id",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 22
+    },
+    {
+      "method": "POST",
+      "path": "/api/careers/opportunities/:opportunityId/apply",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "path": "/api/careers/my-applications",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 26
+    },
+    {
+      "method": "POST",
+      "path": "/api/careers/opportunities",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "path": "/api/careers/applications",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 30
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/careers/applications/:applicationId/status",
+      "file": "backend/src/routes/career.routes.js",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "path": "/api/community/posts",
+      "file": "backend/src/routes/community.routes.js",
+      "line": 15
+    },
+    {
+      "method": "GET",
+      "path": "/api/community/posts/:id",
+      "file": "backend/src/routes/community.routes.js",
+      "line": 16
+    },
+    {
+      "method": "POST",
+      "path": "/api/community/posts",
+      "file": "backend/src/routes/community.routes.js",
+      "line": 17
+    },
+    {
+      "method": "POST",
+      "path": "/api/community/posts/:id/like",
+      "file": "backend/src/routes/community.routes.js",
+      "line": 18
+    },
+    {
+      "method": "POST",
+      "path": "/api/community/posts/:id/comments",
+      "file": "backend/src/routes/community.routes.js",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "path": "/api/courses/",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "path": "/api/courses/:id",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 26
+    },
+    {
+      "method": "POST",
+      "path": "/api/courses/",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 29
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/courses/:id",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "path": "/api/courses/:id/chapters",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 31
+    },
+    {
+      "method": "POST",
+      "path": "/api/courses/chapters/:chapterId/lessons",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 32
+    },
+    {
+      "method": "POST",
+      "path": "/api/courses/:id/submit-review",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 33
+    },
+    {
+      "method": "POST",
+      "path": "/api/courses/:id/review-decision",
+      "file": "backend/src/routes/course.routes.js",
+      "line": 36
+    },
+    {
+      "method": "POST",
+      "path": "/api/learning/enroll/:courseId",
+      "file": "backend/src/routes/learning.routes.js",
+      "line": 12
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/my-courses",
+      "file": "backend/src/routes/learning.routes.js",
+      "line": 13
+    },
+    {
+      "method": "POST",
+      "path": "/api/learning/courses/:courseId/lessons/:lessonId/complete",
+      "file": "backend/src/routes/learning.routes.js",
+      "line": 14
+    },
+    {
+      "method": "POST",
+      "path": "/api/learning/courses/:courseId/chapters/:chapterId/unlock",
+      "file": "backend/src/routes/learning.routes.js",
+      "line": 15
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/conversations",
+      "file": "backend/src/routes/messaging.routes.js",
+      "line": 14
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/conversations/:conversationId",
+      "file": "backend/src/routes/messaging.routes.js",
+      "line": 15
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/conversations/:conversationId",
+      "file": "backend/src/routes/messaging.routes.js",
+      "line": 16
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/notifications",
+      "file": "backend/src/routes/messaging.routes.js",
+      "line": 19
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/messages/notifications/:id/read",
+      "file": "backend/src/routes/messaging.routes.js",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "path": "/api/profiles/me",
+      "file": "backend/src/routes/profile.routes.js",
+      "line": 13
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/profiles/me",
+      "file": "backend/src/routes/profile.routes.js",
+      "line": 14
+    },
+    {
+      "method": "GET",
+      "path": "/api/profiles/:userId",
+      "file": "backend/src/routes/profile.routes.js",
+      "line": 15
+    },
+    {
+      "method": "GET",
+      "path": "/api/wallet/",
+      "file": "backend/src/routes/wallet.routes.js",
+      "line": 11
+    },
+    {
+      "method": "POST",
+      "path": "/api/wallet/claim-daily-login",
+      "file": "backend/src/routes/wallet.routes.js",
+      "line": 12
+    },
+    {
+      "method": "POST",
+      "path": "/api/wallet/claim-ad-reward",
+      "file": "backend/src/routes/wallet.routes.js",
+      "line": 13
+    }
+  ],
+  "pageAnalysis": [
+    {
+      "route": "/admin/activity/log",
+      "file": "(admin)/admin/activity/log/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/activity",
+      "file": "(admin)/admin/activity/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/courses/reviews",
+      "file": "(admin)/admin/courses/reviews/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/courses/reviews/[id]/decide",
+      "file": "(admin)/admin/courses/reviews/[id]/decide/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/courses/reviews/[id]",
+      "file": "(admin)/admin/courses/reviews/[id]/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/dashboard",
+      "file": "(admin)/admin/dashboard/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/notifications",
+      "file": "(admin)/admin/notifications/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/profile",
+      "file": "(admin)/admin/profile/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/reports",
+      "file": "(admin)/admin/reports/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/settings",
+      "file": "(admin)/admin/settings/page.jsx",
+      "role": "ADMIN",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/users",
+      "file": "(admin)/admin/users/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/users/[id]/manage",
+      "file": "(admin)/admin/users/[id]/manage/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/admin/users/[id]",
+      "file": "(admin)/admin/users/[id]/page.jsx",
+      "role": "ADMIN",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/applications",
+      "file": "(company)/company/applications/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/applications/[id]",
+      "file": "(company)/company/applications/[id]/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/dashboard",
+      "file": "(company)/company/dashboard/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/messages",
+      "file": "(company)/company/messages/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/notifications",
+      "file": "(company)/company/notifications/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/opportunities/create",
+      "file": "(company)/company/opportunities/create/page.jsx",
+      "role": "COMPANY",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/opportunities",
+      "file": "(company)/company/opportunities/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/opportunities/[id]/edit",
+      "file": "(company)/company/opportunities/[id]/edit/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/opportunities/[id]",
+      "file": "(company)/company/opportunities/[id]/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/pipeline",
+      "file": "(company)/company/pipeline/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/profile",
+      "file": "(company)/company/profile/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/profile/personal",
+      "file": "(company)/company/profile/personal/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/settings",
+      "file": "(company)/company/settings/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/talent",
+      "file": "(company)/company/talent/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/talent/saved",
+      "file": "(company)/company/talent/saved/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/talent/[id]/evaluate",
+      "file": "(company)/company/talent/[id]/evaluate/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/company/talent/[id]",
+      "file": "(company)/company/talent/[id]/page.jsx",
+      "role": "COMPANY",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/create",
+      "file": "(instructor)/instructor/courses/create/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses",
+      "file": "(instructor)/instructor/courses/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/assessment/edit",
+      "file": "(instructor)/instructor/courses/[id]/assessment/edit/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/assessment/preview",
+      "file": "(instructor)/instructor/courses/[id]/assessment/preview/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/curriculum",
+      "file": "(instructor)/instructor/courses/[id]/curriculum/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/lessons/create",
+      "file": "(instructor)/instructor/courses/[id]/lessons/create/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/lessons/[lessonId]/edit",
+      "file": "(instructor)/instructor/courses/[id]/lessons/[lessonId]/edit/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]/lessons/[lessonId]/preview",
+      "file": "(instructor)/instructor/courses/[id]/lessons/[lessonId]/preview/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/courses/[id]",
+      "file": "(instructor)/instructor/courses/[id]/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/dashboard",
+      "file": "(instructor)/instructor/dashboard/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/notifications",
+      "file": "(instructor)/instructor/notifications/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/profile",
+      "file": "(instructor)/instructor/profile/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/settings",
+      "file": "(instructor)/instructor/settings/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/students/directory",
+      "file": "(instructor)/instructor/students/directory/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/students",
+      "file": "(instructor)/instructor/students/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/students/[id]/courses/[courseId]",
+      "file": "(instructor)/instructor/students/[id]/courses/[courseId]/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Partial / UI Only",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/instructor/students/[id]",
+      "file": "(instructor)/instructor/students/[id]/page.jsx",
+      "role": "INSTRUCTOR",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/onboarding/company",
+      "file": "(onboarding)/onboarding/company/page.jsx",
+      "role": "ONBOARDING",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/onboarding/instructor",
+      "file": "(onboarding)/onboarding/instructor/page.jsx",
+      "role": "ONBOARDING",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/onboarding/role",
+      "file": "(onboarding)/onboarding/role/page.jsx",
+      "role": "ONBOARDING",
+      "status": "Implemented",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/onboarding/student",
+      "file": "(onboarding)/onboarding/student/page.jsx",
+      "role": "ONBOARDING",
+      "status": "Placeholder",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/auth/forgot-password",
+      "file": "(public)/auth/forgot-password/page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": true,
+      "apiCalls": [
+        "POST /auth/forgot-password"
+      ],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/auth/reset-password",
+      "file": "(public)/auth/reset-password/page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": true,
+      "apiCalls": [
+        "POST /auth/reset-password"
+      ],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/auth/signin",
+      "file": "(public)/auth/signin/page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": true,
+      "apiCalls": [
+        "POST /auth/login"
+      ],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/auth/signup",
+      "file": "(public)/auth/signup/page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": true,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/auth/verify-email",
+      "file": "(public)/auth/verify-email/page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/careers/applications",
+      "file": "(student)/student/careers/applications/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/careers",
+      "file": "(student)/student/careers/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/careers/[id]",
+      "file": "(student)/student/careers/[id]/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/community/create",
+      "file": "(student)/student/community/create/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/community",
+      "file": "(student)/student/community/page.jsx",
+      "role": "STUDENT",
+      "status": "Coming Soon",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": true,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/courses/[id]/assessment",
+      "file": "(student)/student/courses/[id]/assessment/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/courses/[id]/chapters/[chapterId]/lessons/[lessonId]",
+      "file": "(student)/student/courses/[id]/chapters/[chapterId]/lessons/[lessonId]/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/courses/[id]/chapters/[chapterId]",
+      "file": "(student)/student/courses/[id]/chapters/[chapterId]/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/courses/[id]/chapters/[chapterId]/quiz",
+      "file": "(student)/student/courses/[id]/chapters/[chapterId]/quiz/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/courses/[id]",
+      "file": "(student)/student/courses/[id]/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/dashboard",
+      "file": "(student)/student/dashboard/page.jsx",
+      "role": "STUDENT",
+      "status": "Coming Soon",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": true,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/learn",
+      "file": "(student)/student/learn/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/messages",
+      "file": "(student)/student/messages/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/notifications",
+      "file": "(student)/student/notifications/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/profile",
+      "file": "(student)/student/profile/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/progress",
+      "file": "(student)/student/progress/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/settings",
+      "file": "(student)/student/settings/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": true,
+      "hasTodo": false
+    },
+    {
+      "route": "/student/wallet",
+      "file": "(student)/student/wallet/page.jsx",
+      "role": "STUDENT",
+      "status": "Mock Data / Not Connected",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": true,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    },
+    {
+      "route": "/",
+      "file": "page.jsx",
+      "role": "PUBLIC",
+      "status": "Implemented",
+      "usesApi": false,
+      "apiCalls": [],
+      "hasMockData": false,
+      "hasComingSoon": false,
+      "hasPlaceholder": false,
+      "hasTodo": false
+    }
+  ]
+}

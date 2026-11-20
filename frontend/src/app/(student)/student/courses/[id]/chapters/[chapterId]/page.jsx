@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourses } from '@/lib/mockLearningData';
 import {
   ArrowLeft,
   BookOpen,
@@ -26,11 +25,26 @@ import {
 
 export default function ChapterDetailsPage() {
   const params = useParams();
-  const courseId = params?.id || 'course-1';
-  const chapterId = params?.chapterId || 'chap-0';
+  const courseId = params?.id || '';
+  const chapterId = params?.chapterId || '';
 
-  const course = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
-  const chapter = course.chapters.find((ch) => ch.id === chapterId) || course.chapters[0];
+  const [course] = useState(null);
+
+  if (!course) {
+    return (
+      <DashboardShell roleTitle="Student Portal" navItems={studentNav}>
+        <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Chapter Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course chapter could not be found or has not been loaded.</p>
+            <Link href="/student/learn">
+              <Button variant="outline" className="text-xs">Back to Learning</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const getLessonIcon = (type) => {
     switch (type) {
@@ -100,7 +114,7 @@ export default function ChapterDetailsPage() {
             <div className="flex items-center gap-2 text-xs text-slate-600">
               <Coins className="w-4 h-4 text-amber-600" />
               <span>
-                Earn <strong>+{chapter.quiz?.rewardCoins || 0} Skillority Coins</strong> upon passing the Chapter Quiz (mock reward).
+                Earn <strong>+{chapter.quiz?.rewardCoins || 0} Skillority Coins</strong> upon passing the Chapter Quiz.
               </span>
             </div>
 

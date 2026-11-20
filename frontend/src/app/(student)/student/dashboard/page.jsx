@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockStudentProfile, mockCourses } from '@/lib/mockLearningData';
 import { useAuth } from '@/lib/auth';
 import { profileApi, walletApi, coursesApi } from '@/lib/api';
 import {
@@ -30,9 +29,20 @@ import {
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(mockStudentProfile);
-  const [coursesList, setCoursesList] = useState(mockCourses);
-  const [walletInfo, setWalletInfo] = useState({ balance: 480 });
+  const [profile, setProfile] = useState({
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Student',
+    currentStreakDays: 0,
+    coinBalance: 0,
+    coinsBalance: 0,
+    coursesCompleted: 0,
+    hoursLearned: 0,
+    certificatesEarned: 0,
+    dailyMissions: [],
+    upcomingActivities: [],
+    recentOpportunities: [],
+  });
+  const [coursesList, setCoursesList] = useState([]);
+  const [walletInfo, setWalletInfo] = useState({ balance: 0 });
 
   useEffect(() => {
     async function loadLiveData() {
@@ -64,7 +74,7 @@ export default function StudentDashboardPage() {
         }
 
         if (crsRes.status === 'fulfilled' && crsRes.value?.data?.courses?.length > 0) {
-          // Merge live courses or fallback to structured mock courses
+          // Merge live courses
           const liveList = crsRes.value.data.courses;
           if (Array.isArray(liveList) && liveList.length > 0) {
             setCoursesList(prev => {
@@ -89,14 +99,14 @@ export default function StudentDashboardPage() {
           }
         }
       } catch {
-        // Safe graceful fallback to initial mock profile
+        // Safe graceful fallback to initial empty state
       }
     }
     loadLiveData();
   }, [user]);
 
   const enrolledCourses = coursesList.filter(c => c.isEnrolled);
-  const activeCourse = enrolledCourses[0] || coursesList[0] || mockCourses[0];
+  const activeCourse = enrolledCourses[0] || coursesList[0] || null;
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>
@@ -253,29 +263,33 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                {profile.dailyMissions.map((mission) => (
-                  <div
-                    key={mission.id}
-                    className={`flex items-center justify-between p-3.5 rounded-xl border transition-colors ${
-                      mission.completed
-                        ? 'bg-slate-50/80 border-slate-200 text-slate-400'
-                        : 'bg-white border-border hover:border-blue-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={mission.completed ? 'text-emerald-500' : 'text-slate-300'}>
-                        <CheckCircle2 className="w-5 h-5" />
+                {(!profile.dailyMissions || profile.dailyMissions.length === 0) ? (
+                  <p className="text-xs text-slate-400 py-4 text-center">No active daily missions available today.</p>
+                ) : (
+                  profile.dailyMissions.map((mission) => (
+                    <div
+                      key={mission.id}
+                      className={`flex items-center justify-between p-3.5 rounded-xl border transition-colors ${
+                        mission.completed
+                          ? 'bg-slate-50/80 border-slate-200 text-slate-400'
+                          : 'bg-white border-border hover:border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={mission.completed ? 'text-emerald-500' : 'text-slate-300'}>
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <span className={`text-sm font-medium ${mission.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                          {mission.title}
+                        </span>
                       </div>
-                      <span className={`text-sm font-medium ${mission.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                        {mission.title}
-                      </span>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 rounded-lg text-amber-800 text-xs font-semibold">
+                        <Coins className="w-3.5 h-3.5 text-amber-600" />
+                        +{mission.reward}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 rounded-lg text-amber-800 text-xs font-semibold">
-                      <Coins className="w-3.5 h-3.5 text-amber-600" />
-                      +{mission.reward}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </Card>
 
@@ -292,8 +306,13 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockCourses.map((course) => (
-                  <Card key={course.id} className="p-5 flex flex-col justify-between hover:shadow-md transition-shadow border-border">
+                {coursesList.length === 0 ? (
+                  <Card className="col-span-full p-8 text-center text-slate-500 text-xs">
+                    No enrolled courses yet. Explore our course catalog to start learning!
+                  </Card>
+                ) : (
+                  coursesList.map((course) => (
+                    <Card key={course.id} className="p-5 flex flex-col justify-between hover:shadow-md transition-shadow border-border">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Badge variant="outline" className="text-xs font-medium text-slate-600">
@@ -345,7 +364,7 @@ export default function StudentDashboardPage() {
                       </Link>
                     </div>
                   </Card>
-                ))}
+                )))}
               </div>
             </div>
           </div>
@@ -361,24 +380,28 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                {profile.upcomingActivities.map((act) => (
-                  <div key={act.id} className="p-3 bg-slate-50 rounded-xl border border-border/80 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-900">{act.title}</span>
-                      {act.comingSoon ? (
-                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-slate-200/80 text-slate-700">
-                          Coming Soon
-                        </Badge>
-                      ) : (
-                        <Badge variant="primary" className="text-[10px] py-0 px-1.5">
-                          Open
-                        </Badge>
-                      )}
+                {profile.upcomingActivities.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No upcoming events scheduled.</p>
+                ) : (
+                  profile.upcomingActivities.map((act) => (
+                    <div key={act.id} className="p-3 bg-slate-50 rounded-xl border border-border/80 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-900">{act.title}</span>
+                        {act.comingSoon ? (
+                          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-slate-200/80 text-slate-700">
+                            Coming Soon
+                          </Badge>
+                        ) : (
+                          <Badge variant="primary" className="text-[10px] py-0 px-1.5">
+                            Open
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500">{act.date}</p>
+                      <p className="text-[11px] text-slate-400">Host: {act.host} · {act.type}</p>
                     </div>
-                    <p className="text-xs text-slate-500">{act.date}</p>
-                    <p className="text-[11px] text-slate-400">Host: {act.host} · {act.type}</p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </Card>
 
@@ -392,23 +415,27 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                {profile.recentOpportunities.map((opp) => (
-                  <div key={opp.id} className="p-3 border border-border rounded-xl hover:border-blue-200 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-900">{opp.role}</span>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        {opp.match}
-                      </span>
+                {profile.recentOpportunities.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No career matches at this moment.</p>
+                ) : (
+                  profile.recentOpportunities.map((opp) => (
+                    <div key={opp.id} className="p-3 border border-border rounded-xl hover:border-blue-200 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-slate-900">{opp.role}</span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {opp.match}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">{opp.company} · {opp.location}</p>
+                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                        <span>Stipend: <strong className="text-slate-800">{opp.stipend}</strong></span>
+                        <span className="text-primary font-medium flex items-center gap-0.5">
+                          View <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-600">{opp.company} · {opp.location}</p>
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                      <span>Stipend: <strong className="text-slate-800">{opp.stipend}</strong></span>
-                      <span className="text-primary font-medium flex items-center gap-0.5">
-                        View <ChevronRight className="w-3 h-3" />
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </Card>
 

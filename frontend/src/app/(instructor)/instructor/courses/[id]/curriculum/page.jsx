@@ -7,7 +7,6 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorCourses } from '@/lib/mockInstructorData';
 import {
   ArrowLeft,
   Plus,
@@ -24,8 +23,24 @@ import {
 } from 'lucide-react';
 
 export default function CourseCurriculumBuilderPage({ params }) {
-  const course = mockInstructorCourses.find((c) => c.id === params.id) || mockInstructorCourses[0];
-  const [chapters, setChapters] = useState(course.chapters);
+  const [course] = useState(null);
+  const [chapters, setChapters] = useState([]);
+
+  if (!course) {
+    return (
+      <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
+        <div className="space-y-6 max-w-5xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Curriculum Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course curriculum could not be found or has not been loaded.</p>
+            <Link href="/instructor/courses">
+              <Button variant="outline" className="text-xs">Back to Courses</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>

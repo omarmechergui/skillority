@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourses } from '@/lib/mockLearningData';
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,11 +28,27 @@ export default function StudentLessonViewerPage() {
   const params = useParams();
   const router = useRouter();
 
-  const courseId = params?.id || 'course-1';
-  const chapterId = params?.chapterId || 'chap-0';
-  const lessonId = params?.lessonId || 'les-0-1';
+  const courseId = params?.id || '';
+  const chapterId = params?.chapterId || '';
+  const lessonId = params?.lessonId || '';
 
-  const course = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
+  const [course] = useState(null);
+
+  if (!course) {
+    return (
+      <DashboardShell roleTitle="Student Portal" navItems={studentNav}>
+        <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Lesson Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course lesson could not be found or has not been loaded.</p>
+            <Link href="/student/learn">
+              <Button variant="outline" className="text-xs">Back to Learning</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
   const chapter = course.chapters.find((ch) => ch.id === chapterId) || course.chapters[0];
   const currentLessonIndex = chapter.lessons.findIndex((l) => l.id === lessonId);
   const lesson = chapter.lessons[currentLessonIndex] || chapter.lessons[0];

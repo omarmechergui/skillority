@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import {
   ArrowLeft,
   Bookmark,
@@ -25,8 +24,24 @@ import {
 } from 'lucide-react';
 
 export default function StudentTalentProfilePage({ params }) {
-  const candidate = mockCandidates.find((c) => c.id === params.id) || mockCandidates[0];
-  const [isSaved, setIsSaved] = useState(candidate.isSaved);
+  const [candidate] = useState(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  if (!candidate) {
+    return (
+      <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
+        <div className="space-y-6 max-w-5xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Candidate Not Found</h2>
+            <p className="text-sm text-slate-500">The requested student profile could not be found or has not been loaded.</p>
+            <Link href="/company/talent">
+              <Button variant="outline" className="text-xs">Back to Talent Discovery</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>

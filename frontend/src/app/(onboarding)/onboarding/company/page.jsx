@@ -22,12 +22,7 @@ export default function CompanyOnboardingPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/company/dashboard');
-    }, 1000);
+    router.push('/company/dashboard');
   };
 
   return (

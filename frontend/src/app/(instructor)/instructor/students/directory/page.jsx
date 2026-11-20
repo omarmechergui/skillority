@@ -8,7 +8,6 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorStudents } from '@/lib/mockInstructorData';
 import {
   Users,
   Search,
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function InstructorStudentDirectoryPage() {
-  const [students] = useState(mockInstructorStudents);
+  const [students] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filtered = students.filter(
@@ -53,40 +52,52 @@ export default function InstructorStudentDirectoryPage() {
         </div>
 
         <div className="space-y-3">
-          {filtered.map((st) => (
-            <Card key={st.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border shrink-0">
-                  <Image
-                    src={st.avatar}
-                    alt={st.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">{st.name}</h3>
-                  <p className="text-xs text-slate-500">{st.enrolledCourses.join(', ')}</p>
-                  <p className="text-[11px] text-slate-400">Last active {st.lastActive}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-5 sm:text-right">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">{st.progressPercentage}% Completed</div>
-                  <div className="text-[10px] text-slate-400">{st.completedLessons} of {st.totalLessons} Lessons</div>
-                </div>
-
-                <Link href={`/instructor/students/${st.id}`}>
-                  <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" />
-                    Inspect
-                  </Button>
-                </Link>
-              </div>
+          {filtered.length === 0 ? (
+            <Card className="p-8 text-center text-slate-500 text-xs">
+              No students found in your author directory.
             </Card>
-          ))}
+          ) : (
+            filtered.map((st) => (
+              <Card key={st.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border shrink-0 bg-slate-100 flex items-center justify-center">
+                    {st.avatar ? (
+                      <Image
+                        src={st.avatar}
+                        alt={st.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-slate-400 font-bold text-xs">
+                        {st.name ? st.name.charAt(0) : 'S'}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900">{st.name}</h3>
+                    <p className="text-xs text-slate-500">{st.enrolledCourses?.join(', ') || 'No courses'}</p>
+                    <p className="text-[11px] text-slate-400">Last active {st.lastActive}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-5 sm:text-right">
+                  <div>
+                    <div className="text-sm font-bold text-slate-900">{st.progressPercentage}% Completed</div>
+                    <div className="text-[10px] text-slate-400">{st.completedLessons} of {st.totalLessons} Lessons</div>
+                  </div>
+
+                  <Link href={`/instructor/students/${st.id}`}>
+                    <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      Inspect
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardShell>

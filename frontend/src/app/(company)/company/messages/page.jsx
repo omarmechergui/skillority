@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCompanyConversations } from '@/lib/mockCompanyData';
 import {
   Send,
   Search,
@@ -25,8 +24,8 @@ import {
 } from 'lucide-react';
 
 export default function CompanyMessagesPage() {
-  const [conversations, setConversations] = useState(mockCompanyConversations);
-  const [activeConvId, setActiveConvId] = useState(mockCompanyConversations[0]?.id || null);
+  const [conversations, setConversations] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
@@ -127,56 +126,68 @@ export default function CompanyMessagesPage() {
 
             {/* Conversation Threads */}
             <div className="flex-1 overflow-y-auto divide-y divide-border/60">
-              {filteredConversations.map((conv) => {
-                const isActive = conv.id === activeConvId;
-                return (
-                  <button
-                    key={conv.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveConvId(conv.id);
-                      setMobileThreadOpen(true);
-                    }}
-                    className={`w-full p-4 flex items-start gap-3 text-left transition-colors ${
-                      isActive
-                        ? 'bg-blue-50/70 border-l-4 border-l-primary'
-                        : 'hover:bg-slate-100/70'
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border bg-white">
-                        <Image
-                          src={conv.candidate.avatar}
-                          alt={conv.candidate.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
+              {filteredConversations.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  No conversation threads found.
+                </div>
+              ) : (
+                filteredConversations.map((conv) => {
+                  const isActive = conv.id === activeConvId;
+                  return (
+                    <button
+                      key={conv.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveConvId(conv.id);
+                        setMobileThreadOpen(true);
+                      }}
+                      className={`w-full p-4 flex items-start gap-3 text-left transition-colors ${
+                        isActive
+                          ? 'bg-blue-50/70 border-l-4 border-l-primary'
+                          : 'hover:bg-slate-100/70'
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border bg-white flex items-center justify-center">
+                          {conv.candidate.avatar ? (
+                            <Image
+                              src={conv.candidate.avatar}
+                              alt={conv.candidate.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-slate-400 font-bold text-xs">
+                              {conv.candidate.name ? conv.candidate.name.charAt(0) : 'C'}
+                            </span>
+                          )}
+                        </div>
+                        {conv.candidate.online && (
+                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+                        )}
                       </div>
-                      {conv.candidate.online && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
-                      )}
-                    </div>
 
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-slate-900 text-xs truncate">
-                          {conv.candidate.name}
-                        </h4>
-                        <span className="text-[10px] text-slate-400 shrink-0">
-                          {conv.lastMessageTime}
-                        </span>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-900 text-xs truncate">
+                            {conv.candidate.name}
+                          </h4>
+                          <span className="text-[10px] text-slate-400 shrink-0">
+                            {conv.lastMessageTime}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {conv.candidate.role}
+                        </p>
+                        <p className="text-xs text-slate-600 truncate font-normal">
+                          {conv.lastMessage}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-500 truncate">
-                        {conv.candidate.role}
-                      </p>
-                      <p className="text-xs text-slate-600 truncate font-normal">
-                        {conv.lastMessage}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 

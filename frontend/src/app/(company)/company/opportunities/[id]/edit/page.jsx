@@ -8,24 +8,39 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { mockCompanyOpportunities } from '@/lib/mockCompanyData';
 import { Briefcase, ArrowLeft, Save } from 'lucide-react';
 
 export default function EditOpportunityPage({ params }) {
   const router = useRouter();
-  const existing = mockCompanyOpportunities.find((o) => o.id === params.id) || mockCompanyOpportunities[0];
+  const [existing] = useState(null);
 
   const [formData, setFormData] = useState({
-    title: existing.title,
-    department: existing.department,
-    location: existing.location,
-    type: existing.type,
-    stipend: existing.stipend,
-    duration: existing.duration,
-    deadline: '2026-05-30',
-    description: existing.description,
-    skills: existing.requiredSkills.join(', '),
+    title: '',
+    department: '',
+    location: '',
+    type: 'INTERNSHIP',
+    stipend: '',
+    duration: '',
+    deadline: '',
+    description: '',
+    skills: '',
   });
+
+  if (!existing) {
+    return (
+      <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
+        <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Opportunity Not Found</h2>
+            <p className="text-sm text-slate-500">The requested opportunity listing could not be found or has not been loaded.</p>
+            <Link href="/company/opportunities">
+              <Button variant="outline" className="text-xs">Back to Opportunities</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;

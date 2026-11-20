@@ -6,7 +6,7 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { mockRecruiterUser, mockCompanyProfile } from '@/lib/mockCompanyData';
+import { useAuth } from '@/lib/auth';
 import {
   User,
   Building,
@@ -17,18 +17,19 @@ import {
 } from 'lucide-react';
 
 export default function RecruiterSettingsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('ACCOUNT');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const [form, setForm] = useState({
-    name: mockRecruiterUser.name,
-    email: mockRecruiterUser.email,
-    phone: mockRecruiterUser.phone,
-    role: mockRecruiterUser.role,
-    companyName: mockCompanyProfile.name,
-    tagline: mockCompanyProfile.tagline,
-    website: mockCompanyProfile.website,
-    headquarters: mockCompanyProfile.headquarters,
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : '',
+    email: user?.email || '',
+    phone: '',
+    role: 'Lead Technical Recruiter',
+    companyName: user?.companyName || user?.profile?.companyName || '',
+    tagline: '',
+    website: '',
+    headquarters: '',
   });
 
   const handleChange = (e) => {

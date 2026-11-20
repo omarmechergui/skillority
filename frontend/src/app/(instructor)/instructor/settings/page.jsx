@@ -6,17 +6,18 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { mockInstructorProfile } from '@/lib/mockInstructorData';
+import { useAuth } from '@/lib/auth';
 import { Save, Check } from 'lucide-react';
 
 export default function InstructorSettingsPage() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
-    name: mockInstructorProfile.name,
-    email: mockInstructorProfile.email,
-    title: mockInstructorProfile.title,
-    bio: mockInstructorProfile.bio,
-    phone: mockInstructorProfile.phone,
-    website: mockInstructorProfile.website,
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : '',
+    email: user?.email || '',
+    title: '',
+    bio: '',
+    phone: '',
+    website: '',
   });
   const [saved, setSaved] = useState(false);
 

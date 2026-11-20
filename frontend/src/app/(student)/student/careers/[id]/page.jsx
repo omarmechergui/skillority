@@ -10,7 +10,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
-import { mockOpportunities } from '@/lib/mockCareerData';
 import { careerApi } from '@/lib/api';
 import {
   Briefcase,
@@ -34,49 +33,62 @@ import {
 export default function OpportunityDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const opportunityId = params?.id || 'opp-1';
+  const opportunityId = params?.id || '';
 
-  const [opportunity, setOpportunity] = useState(
-    mockOpportunities.find(o => o.id === opportunityId) || mockOpportunities[0]
-  );
-
-  const [isSaved, setIsSaved] = useState(opportunity.isSaved || false);
+  const [opportunity, setOpportunity] = useState(null);
+  const [isSaved, setIsSaved] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [coverNote, setCoverNote] = useState('');
-  const [portfolioLink, setPortfolioLink] = useState('https://github.com/alexrivera');
+  const [portfolioLink, setPortfolioLink] = useState('');
 
   useEffect(() => {
     async function loadOpportunity() {
+      if (!opportunityId) return;
       try {
         const res = await careerApi.getOpportunity(opportunityId);
         if (res.data?.data) {
           const o = res.data.data;
-          setOpportunity(prev => ({
-            ...prev,
+          setOpportunity({
             ...o,
-            company: o.company?.companyName || prev.company,
-            companyLogo: o.company?.logoUrl || prev.companyLogo,
-            location: o.location || prev.location,
-            stipend: o.salaryRange || prev.stipend,
-            type: o.type || prev.type,
-            matchedSkills: o.skills || prev.matchedSkills || [],
-            skillsMatchPercentage: prev.skillsMatchPercentage || 85,
-            workplaceType: o.workplaceType || prev.workplaceType || 'Remote',
-            duration: o.duration || prev.duration || '3-6 months',
-            deadline: o.deadline || prev.deadline || 'Open',
-            responsibilities: o.responsibilities || prev.responsibilities || [],
-            requirements: o.requirements || prev.requirements || [],
-            aboutCompany: o.aboutCompany || prev.aboutCompany || '',
-            mentorshipDetails: prev.mentorshipDetails,
-          }));
+            company: o.company?.companyName || 'Verified Partner',
+            companyLogo: o.company?.logoUrl || null,
+            location: o.location || 'Remote',
+            stipend: o.salaryRange || 'Competitive',
+            type: o.type || 'INTERNSHIP',
+            matchedSkills: o.skills || [],
+            skillsMatchPercentage: 85,
+            workplaceType: o.workplaceType || 'Remote',
+            duration: o.duration || '3-6 months',
+            deadline: o.deadline || 'Open',
+            responsibilities: o.responsibilities || [],
+            requirements: o.requirements || [],
+            aboutCompany: o.aboutCompany || '',
+            mentorshipDetails: null,
+          });
         }
       } catch {
-        // Keep mock/default data
+        // Safe fallback
       }
     }
     loadOpportunity();
   }, [opportunityId]);
+
+  if (!opportunity) {
+    return (
+      <DashboardShell role="STUDENT" navItems={studentNav}>
+        <div className="space-y-6 max-w-5xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Opportunity Not Found</h2>
+            <p className="text-sm text-slate-500">The requested career opportunity could not be found or has not been loaded.</p>
+            <Link href="/student/careers">
+              <Button variant="outline" className="text-xs">Back to Career Opportunities</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const handleConfirmApplication = async () => {
     try {

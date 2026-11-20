@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import { careerApi } from '@/lib/api';
 import {
   Users,
@@ -22,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function ApplicationsInboxPage() {
-  const [candidates, setCandidates] = useState(mockCandidates);
+  const [candidates, setCandidates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState('ALL');
 
@@ -34,7 +33,7 @@ export default function ApplicationsInboxPage() {
           const liveApps = res.data.data.map(app => ({
             id: app.id,
             name: [app.student?.profile?.firstName, app.student?.profile?.lastName].filter(Boolean).join(' ') || 'Candidate',
-            avatar: app.student?.profile?.avatar || '/images/default-avatar.png',
+            avatar: app.student?.profile?.avatar || null,
             appliedRole: app.opportunity?.title || 'Position',
             education: 'Skillority Student',
             appliedDate: new Date(app.createdAt).toLocaleDateString(),
@@ -44,7 +43,7 @@ export default function ApplicationsInboxPage() {
           setCandidates(liveApps);
         }
       } catch {
-        // Keep mock data
+        // Safe fallback
       }
     }
     loadApplications();
@@ -115,57 +114,69 @@ export default function ApplicationsInboxPage() {
 
         {/* Candidate Applications Table / Card List */}
         <div className="space-y-3">
-          {filtered.map((c) => (
-            <Card key={c.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 hover:shadow-sm transition-shadow">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-border flex-shrink-0">
-                  <Image
-                    src={c.avatar}
-                    alt={c.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 text-sm truncate">{c.name}</h3>
-                    <Badge variant="success" className="text-[10px]">
-                      {c.matchScore}% Match
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-500 truncate">
-                    Applied for: <strong className="text-slate-700">{c.appliedRole}</strong>
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    {c.education} · Applied {c.appliedDate}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-border">
-                <div className="text-left md:text-right">
-                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">{c.stage}</div>
-                  <div className="text-[10px] text-slate-400">Current Pipeline Stage</div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Link href={`/company/applications/${c.id}`}>
-                    <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" />
-                      Review
-                    </Button>
-                  </Link>
-                  <Link href={`/company/talent/${c.id}/evaluate`}>
-                    <Button className="text-xs font-semibold">
-                      Evaluate
-                    </Button>
-                  </Link>
-                </div>
-              </div>
+          {filtered.length === 0 ? (
+            <Card className="p-8 text-center text-slate-500 text-xs">
+              No candidate applications found matching the selected filter.
             </Card>
-          ))}
+          ) : (
+            filtered.map((c) => (
+              <Card key={c.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 hover:shadow-sm transition-shadow">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-border flex-shrink-0 bg-slate-100 flex items-center justify-center">
+                    {c.avatar ? (
+                      <Image
+                        src={c.avatar}
+                        alt={c.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-slate-400 font-bold text-sm">
+                        {c.name ? c.name.charAt(0) : 'C'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 text-sm truncate">{c.name}</h3>
+                      <Badge variant="success" className="text-[10px]">
+                        {c.matchScore}% Match
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate">
+                      Applied for: <strong className="text-slate-700">{c.appliedRole}</strong>
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {c.education} · Applied {c.appliedDate}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-border">
+                  <div className="text-left md:text-right">
+                    <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">{c.stage}</div>
+                    <div className="text-[10px] text-slate-400">Current Pipeline Stage</div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Link href={`/company/applications/${c.id}`}>
+                      <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5" />
+                        Review
+                      </Button>
+                    </Link>
+                    <Link href={`/company/talent/${c.id}/evaluate`}>
+                      <Button className="text-xs font-semibold">
+                        Evaluate
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardShell>

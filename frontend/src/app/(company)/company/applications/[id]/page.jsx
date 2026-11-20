@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import {
   ArrowLeft,
   Mail,
@@ -25,8 +24,24 @@ import {
 } from 'lucide-react';
 
 export default function ApplicationDetailsPage({ params }) {
-  const candidate = mockCandidates.find((c) => c.id === params.id) || mockCandidates[0];
-  const [currentStage, setCurrentStage] = useState(candidate.stage);
+  const [candidate] = useState(null);
+  const [currentStage, setCurrentStage] = useState('APPLIED');
+
+  if (!candidate) {
+    return (
+      <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
+        <div className="space-y-6 max-w-5xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Application Not Found</h2>
+            <p className="text-sm text-slate-500">The requested application could not be found or has not been loaded.</p>
+            <Link href="/company/applications">
+              <Button variant="outline" className="text-xs">Back to Applications</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>

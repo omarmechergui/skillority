@@ -9,7 +9,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
-import { mockCourses } from '@/lib/mockLearningData';
 import { coursesApi, learningApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -37,7 +36,7 @@ const CATEGORIES = [
 
 export default function LearnHubPage() {
   const { user } = useAuth();
-  const [courses, setCourses] = useState(mockCourses);
+  const [courses, setCourses] = useState([]);
   const [enrolledMap, setEnrolledMap] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('All Tracks');
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,7 +204,14 @@ export default function LearnHubPage() {
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
+          {filteredCourses.length === 0 && !loading ? (
+            <div className="col-span-full">
+              <Card className="p-12 text-center text-slate-500 text-xs">
+                No courses found matching your criteria.
+              </Card>
+            </div>
+          ) : (
+            filteredCourses.map((course) => (
             <Card
               key={course.id}
               className="overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-200 border-border group"
@@ -301,7 +307,7 @@ export default function LearnHubPage() {
                 </div>
               </div>
             </Card>
-          ))}
+          )))}
         </div>
       </div>
     </DashboardShell>

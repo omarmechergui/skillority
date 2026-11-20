@@ -8,11 +8,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import {
-  mockAdminStats,
-  mockCourseReviews,
-  mockActivityLogs,
-} from '@/lib/mockAdminData';
-import {
   ShieldCheck,
   Users,
   BookOpen,
@@ -25,9 +20,22 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const stats = mockAdminStats;
-  const reviews = mockCourseReviews;
-  const activity = mockActivityLogs.slice(0, 4);
+  const [stats] = useState({
+    totalUsers: 0,
+    activeStudents: 0,
+    registeredInstructors: 0,
+    partnerCompanies: 0,
+    totalCourses: 0,
+    pendingCourseReviews: 0,
+    approvedCourses: 0,
+    rejectedCourses: 0,
+    totalCoinsCirculating: '0',
+    totalTransactions: 0,
+    flaggedReports: 0,
+    monthlyActiveGrowth: '0%',
+  });
+  const [reviews] = useState([]);
+  const [activity] = useState([]);
 
   return (
     <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
@@ -110,26 +118,32 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {reviews.map((rev) => (
-                <Card key={rev.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="warning" className="text-[10px]">{rev.status}</Badge>
-                      <span className="text-xs text-slate-400">•</span>
-                      <span className="text-xs text-slate-500">{rev.category}</span>
-                    </div>
-                    <h3 className="font-bold text-slate-900 text-sm leading-snug">{rev.title}</h3>
-                    <p className="text-xs text-slate-500">Instructor: {rev.instructor} · Submitted {rev.submittedDate}</p>
-                  </div>
-
-                  <Link href={`/admin/courses/reviews/${rev.id}`}>
-                    <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                      Inspect Syllabus
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </Link>
+              {reviews.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No pending course accreditations in the queue.
                 </Card>
-              ))}
+              ) : (
+                reviews.map((rev) => (
+                  <Card key={rev.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="warning" className="text-[10px]">{rev.status}</Badge>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs text-slate-500">{rev.category}</span>
+                      </div>
+                      <h3 className="font-bold text-slate-900 text-sm leading-snug">{rev.title}</h3>
+                      <p className="text-xs text-slate-500">Instructor: {rev.instructor} · Submitted {rev.submittedDate}</p>
+                    </div>
+
+                    <Link href={`/admin/courses/reviews/${rev.id}`}>
+                      <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                        Inspect Syllabus
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -142,16 +156,22 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {activity.map((act) => (
-                <Card key={act.id} className="p-4 space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-bold text-slate-900">{act.user}</span>
-                    <span className="text-slate-400">{act.timestamp}</span>
-                  </div>
-                  <p className="text-xs text-slate-700 font-medium">{act.action}</p>
-                  <p className="text-[11px] text-slate-500">{act.details}</p>
+              {activity.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No recent platform events recorded.
                 </Card>
-              ))}
+              ) : (
+                activity.map((act) => (
+                  <Card key={act.id} className="p-4 space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-slate-900">{act.user}</span>
+                      <span className="text-slate-400">{act.timestamp}</span>
+                    </div>
+                    <p className="text-xs text-slate-700 font-medium">{act.action}</p>
+                    <p className="text-[11px] text-slate-500">{act.details}</p>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>

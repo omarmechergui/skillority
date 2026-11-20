@@ -8,15 +8,30 @@ import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockAdminUsers } from '@/lib/mockAdminData';
 import { ArrowLeft, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
 
 export default function UserAccountManagePage({ params }) {
   const router = useRouter();
-  const user = mockAdminUsers.find((u) => u.id === params.id) || mockAdminUsers[0];
-  const [status, setStatus] = useState(user.status);
+  const [user] = useState(null);
+  const [status, setStatus] = useState('ACTIVE');
   const [reason, setReason] = useState('');
   const [updated, setUpdated] = useState(false);
+
+  if (!user) {
+    return (
+      <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
+        <div className="space-y-6 max-w-3xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">User Not Found</h2>
+            <p className="text-sm text-slate-500">The requested user account could not be found or has not been loaded.</p>
+            <Link href="/admin/users">
+              <Button variant="outline" className="text-xs">Back to Users</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const handleUpdateStatus = (newStatus) => {
     setStatus(newStatus);

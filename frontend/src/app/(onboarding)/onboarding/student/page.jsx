@@ -23,12 +23,7 @@ export default function StudentOnboardingPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/student/dashboard');
-    }, 1000);
+    router.push('/student/dashboard');
   };
 
   return (

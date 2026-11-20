@@ -8,7 +8,7 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { mockProfileDetails } from '@/lib/mockStudentData';
+import { useAuth } from '@/lib/auth';
 import {
   User,
   Bell,
@@ -24,17 +24,18 @@ import {
 } from 'lucide-react';
 
 export default function StudentSettingsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('ACCOUNT');
   const [profileForm, setProfileForm] = useState({
-    name: mockProfileDetails.name,
-    email: mockProfileDetails.email,
-    headline: mockProfileDetails.headline,
-    bio: mockProfileDetails.bio,
-    phone: mockProfileDetails.phone,
-    location: mockProfileDetails.location,
-    website: mockProfileDetails.website,
-    github: mockProfileDetails.github,
-    linkedin: mockProfileDetails.linkedin,
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : '',
+    email: user?.email || '',
+    headline: '',
+    bio: '',
+    phone: '',
+    location: '',
+    website: '',
+    github: '',
+    linkedin: '',
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -155,14 +156,18 @@ export default function StudentSettingsPage() {
 
               {/* Avatar Uploader Preview */}
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50/70 border border-border rounded-xl">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-primary bg-white shadow-sm">
-                  <Image
-                    src={mockProfileDetails.avatar}
-                    alt={profileForm.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-primary bg-slate-100 shadow-sm flex items-center justify-center">
+                  {user?.profile?.avatarUrl ? (
+                    <Image
+                      src={user.profile.avatarUrl}
+                      alt={profileForm.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-400" />
+                  )}
                 </div>
                 <div className="space-y-1 text-center sm:text-left">
                   <p className="text-sm font-bold text-slate-900">Profile Picture</p>

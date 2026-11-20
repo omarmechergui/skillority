@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCandidates } from '@/lib/mockCompanyData';
 import {
   BookmarkCheck,
   ArrowLeft,
@@ -19,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function SavedCandidatesPage() {
-  const [candidates, setCandidates] = useState(mockCandidates.filter((c) => c.isSaved));
+  const [candidates, setCandidates] = useState([]);
 
   const removeSaved = (id) => {
     setCandidates((prev) => prev.filter((c) => c.id !== id));

@@ -7,7 +7,6 @@ import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockAdminUsers } from '@/lib/mockAdminData';
 import { adminApi } from '@/lib/api';
 import {
   Users,
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function UserManagementDirectoryPage() {
-  const [users, setUsers] = useState(mockAdminUsers);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
 
@@ -101,35 +100,41 @@ export default function UserManagementDirectoryPage() {
 
         {/* User Table / List */}
         <div className="space-y-3">
-          {filtered.map((u) => (
-            <Card key={u.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-slate-900">{u.name}</h3>
-                  <Badge variant="primary" className="text-[10px]">{u.role}</Badge>
-                  <Badge variant={u.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[10px]">
-                    {u.status}
-                  </Badge>
-                </div>
-                <p className="text-xs text-slate-500">{u.email} · Joined {u.joinedDate}</p>
-                <p className="text-[11px] text-slate-400">{u.activityCount}</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Link href={`/admin/users/${u.id}`}>
-                  <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" />
-                    Inspect Details
-                  </Button>
-                </Link>
-                <Link href={`/admin/users/${u.id}/manage`}>
-                  <Button variant="outline" className="text-xs font-semibold text-rose-600 border-rose-200 hover:bg-rose-50">
-                    Moderation
-                  </Button>
-                </Link>
-              </div>
+          {filtered.length === 0 ? (
+            <Card className="p-8 text-center text-slate-500 text-xs">
+              No users found matching the selected filter.
             </Card>
-          ))}
+          ) : (
+            filtered.map((u) => (
+              <Card key={u.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-slate-900">{u.name}</h3>
+                    <Badge variant="primary" className="text-[10px]">{u.role}</Badge>
+                    <Badge variant={u.status === 'ACTIVE' ? 'success' : 'danger'} className="text-[10px]">
+                      {u.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500">{u.email} · Joined {u.joinedDate}</p>
+                  <p className="text-[11px] text-slate-400">{u.activityCount}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Link href={`/admin/users/${u.id}`}>
+                    <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      Inspect Details
+                    </Button>
+                  </Link>
+                  <Link href={`/admin/users/${u.id}/manage`}>
+                    <Button variant="outline" className="text-xs font-semibold text-rose-600 border-rose-200 hover:bg-rose-50">
+                      Moderation
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardShell>

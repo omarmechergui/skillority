@@ -6,11 +6,19 @@ import DashboardShell from '@/components/layout/DashboardShell';
 import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { mockAdminProfile } from '@/lib/mockAdminData';
+import { useAuth } from '@/lib/auth';
 import { ShieldCheck, Mail, Calendar, Key } from 'lucide-react';
 
 export default function AdminPersonalProfilePage() {
-  const [profile] = useState(mockAdminProfile);
+  const { user } = useAuth();
+  const profile = {
+    name: user?.profile ? `${user.profile.firstName || ''} ${user.profile.lastName || ''}`.trim() || user.email : user?.email || 'Platform Administrator',
+    email: user?.email || '',
+    role: 'Platform Superadministrator',
+    department: 'Platform Governance & Accreditation',
+    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+    avatar: user?.profile?.avatarUrl || null,
+  };
 
   return (
     <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
@@ -27,14 +35,18 @@ export default function AdminPersonalProfilePage() {
         </div>
 
         <Card className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-rose-500/20 shrink-0">
-            <Image
-              src={profile.avatar}
-              alt={profile.name}
-              fill
-              className="object-cover"
-              unoptimized
-            />
+          <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-rose-500/20 bg-slate-100 flex items-center justify-center shrink-0">
+            {profile.avatar ? (
+              <Image
+                src={profile.avatar}
+                alt={profile.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <ShieldCheck className="w-8 h-8 text-rose-600" />
+            )}
           </div>
 
           <div className="space-y-1.5 flex-1">

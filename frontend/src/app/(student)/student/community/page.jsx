@@ -8,13 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import {
-  mockCommunityCategories,
-  mockCommunityPosts,
-  mockTrendingTopics,
-  mockActivePeers,
-  mockCommunityGuidelines
-} from '@/lib/mockCommunityData';
 import { communityApi } from '@/lib/api';
 import {
   MessagesSquare,
@@ -50,10 +43,27 @@ const categoryIcons = {
   career_advice: Briefcase,
 };
 
+const COMMUNITY_CATEGORIES = [
+  { id: 'all', label: 'All Discussions' },
+  { id: 'questions', label: 'Questions & Help' },
+  { id: 'showcase', label: 'Project Showcase' },
+  { id: 'study_groups', label: 'Study Groups' },
+  { id: 'career_advice', label: 'Career Advice' },
+];
+
+const COMMUNITY_GUIDELINES = [
+  'Be respectful and constructive with feedback',
+  'Share reproducible code snippets when asking for debugging help',
+  'No academic dishonesty or sharing quiz solutions',
+  'Respect intellectual property and original student projects',
+];
+
 export default function CommunityFeedPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [posts, setPosts] = useState(mockCommunityPosts);
+  const [posts, setPosts] = useState([]);
+  const [trendingTopics] = useState([]);
+  const [activePeers] = useState([]);
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const [newCommentText, setNewCommentText] = useState('');
   const [shareToast, setShareToast] = useState(false);
@@ -84,7 +94,7 @@ export default function CommunityFeedPage() {
           setPosts(livePosts);
         }
       } catch {
-        // Keep mock data as fallback
+        // Safe fallback
       }
     }
     loadPosts();
@@ -246,7 +256,7 @@ export default function CommunityFeedPage() {
         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
           {/* Category Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-            {mockCommunityCategories.map(cat => {
+            {COMMUNITY_CATEGORIES.map(cat => {
               const Icon = categoryIcons[cat.id] || MessagesSquare;
               const isActive = selectedCategory === cat.id;
               return (
@@ -490,7 +500,7 @@ export default function CommunityFeedPage() {
                 <ShieldCheck className="w-4 h-4 text-primary" /> Community Guidelines
               </h3>
               <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
-                {mockCommunityGuidelines.map((g, i) => (
+                {COMMUNITY_GUIDELINES.map((g, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                     <span>{g}</span>
@@ -505,16 +515,20 @@ export default function CommunityFeedPage() {
                 <TrendingUp className="w-4 h-4 text-emerald-600" /> Trending Topics
               </h3>
               <div className="space-y-2">
-                {mockTrendingTopics.map((topic, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSearchQuery(topic.tag.replace('#', ''))}
-                    className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs transition-colors text-left"
-                  >
-                    <span className="font-semibold text-primary">{topic.tag}</span>
-                    <span className="text-slate-400">{topic.count}</span>
-                  </button>
-                ))}
+                {trendingTopics.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-1">No trending topics yet.</p>
+                ) : (
+                  trendingTopics.map((topic, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSearchQuery(topic.tag.replace('#', ''))}
+                      className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs transition-colors text-left"
+                    >
+                      <span className="font-semibold text-primary">{topic.tag}</span>
+                      <span className="text-slate-400">{topic.count}</span>
+                    </button>
+                  ))
+                )}
               </div>
             </Card>
 
@@ -524,32 +538,40 @@ export default function CommunityFeedPage() {
                 <Users className="w-4 h-4 text-primary" /> Active Study Peers
               </h3>
               <div className="space-y-2.5">
-                {mockActivePeers.map((peer, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="relative w-7 h-7 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                        <Image
-                          src={peer.avatar}
-                          alt={peer.name}
-                          fill
-                          sizes="28px"
-                          className="object-cover"
-                          unoptimized
-                        />
-                        {peer.online && (
-                          <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
-                        )}
+                {activePeers.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-1">No active study peers online.</p>
+                ) : (
+                  activePeers.map((peer, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative w-7 h-7 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                          {peer.avatar ? (
+                            <Image
+                              src={peer.avatar}
+                              alt={peer.name}
+                              fill
+                              sizes="28px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold">{peer.name ? peer.name.charAt(0) : 'P'}</span>
+                          )}
+                          {peer.online && (
+                            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800 leading-none">{peer.name}</div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{peer.role}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 leading-none">{peer.name}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{peer.role}</div>
-                      </div>
+                      <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
+                        Active
+                      </span>
                     </div>
-                    <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
-                      Active
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </Card>
 

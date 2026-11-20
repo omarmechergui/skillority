@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCourses } from '@/lib/mockLearningData';
 import { assessmentApi, coursesApi } from '@/lib/api';
 import {
   HelpCircle,
@@ -26,8 +25,8 @@ import {
 
 export default function ChapterQuizPage() {
   const params = useParams();
-  const courseId = params?.id || 'course-1';
-  const chapterId = params?.chapterId || 'chap-0';
+  const courseId = params?.id || '';
+  const chapterId = params?.chapterId || '';
 
   const [course, setCourse] = useState(null);
   const [chapter, setChapter] = useState(null);
@@ -35,26 +34,7 @@ export default function ChapterQuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const fallbackCourse = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
-  const fallbackChapter = fallbackCourse.chapters.find((ch) => ch.id === chapterId) || fallbackCourse.chapters[0];
-  const fallbackQuiz = fallbackChapter.quiz || {
-    id: 'quiz-fallback',
-    title: `Chapter ${fallbackChapter.chapterNumber} Assessment`,
-    passingScore: 80,
-    rewardCoins: 20,
-    questions: [
-      {
-        id: 'q1',
-        type: 'single',
-        prompt: 'Which package manager is strictly used in this architecture?',
-        options: ['npm', 'pnpm', 'yarn', 'bun'],
-        correctAnswer: 'pnpm',
-        explanation: 'pnpm is strictly required for workspace dependency isolation.',
-      },
-    ],
-  };
-
-  const [quiz, setQuiz] = useState(fallbackQuiz);
+  const [quiz, setQuiz] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -77,7 +57,7 @@ export default function ChapterQuizPage() {
           }
         }
       } catch (err) {
-        // Fallback to structured mock chapter data
+        // Safe fallback
       } finally {
         setLoading(false);
       }
@@ -85,8 +65,35 @@ export default function ChapterQuizPage() {
     loadQuizData();
   }, [courseId, chapterId]);
 
-  const activeCourse = course || fallbackCourse;
-  const activeChapter = chapter || fallbackChapter;
+  const activeCourse = course || { id: courseId, title: 'Course' };
+  const activeChapter = chapter || { id: chapterId, chapterNumber: 1 };
+
+  if (loading) {
+    return (
+      <DashboardShell role="STUDENT" navItems={studentNav}>
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <DashboardShell role="STUDENT" navItems={studentNav}>
+        <div className="max-w-3xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Quiz Not Found</h2>
+            <p className="text-sm text-slate-500">There is no quiz available for this chapter.</p>
+            <Link href={`/student/courses/${courseId}`}>
+              <Button variant="outline" className="text-xs">Back to Course</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   const currentQuestion = quiz.questions[currentQuestionIndex] || quiz.questions[0];
 
   const handleSelectOption = (option) => {
@@ -133,7 +140,6 @@ export default function ChapterQuizPage() {
           setCoinsAwarded(true);
         }
       } else {
-        // Fallback for mock chapters
         const clientScore = calculateClientScore();
         const clientPassed = clientScore >= (quiz.passingScore || 70);
         setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });
@@ -141,7 +147,6 @@ export default function ChapterQuizPage() {
         if (clientPassed) setCoinsAwarded(true);
       }
     } catch (err) {
-      // Graceful fallback for mock chapters that don't exist in live MongoDB
       const clientScore = calculateClientScore();
       const clientPassed = clientScore >= (quiz.passingScore || 70);
       setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });

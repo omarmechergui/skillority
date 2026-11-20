@@ -8,7 +8,7 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorProfile } from '@/lib/mockInstructorData';
+import { useAuth } from '@/lib/auth';
 import {
   Globe,
   Mail,
@@ -19,37 +19,62 @@ import {
   BookOpen,
   Edit,
   CheckCircle,
+  GraduationCap,
 } from 'lucide-react';
 
 export default function InstructorMyProfilePage() {
-  const [profile] = useState(mockInstructorProfile);
+  const { user } = useAuth();
+  const profile = {
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Instructor',
+    title: 'Senior Software Architect & Instructor',
+    bio: 'Educating developers on modern enterprise web architectures, distributed systems, and real-world software engineering practices.',
+    email: user?.email || '',
+    location: '',
+    website: 'https://skillority.com',
+    expertise: ['Web Development', 'System Architecture', 'React & Next.js'],
+    coverPhoto: null,
+    avatar: null,
+    stats: {
+      totalStudents: 0,
+      activeCourses: 0,
+      averageRating: 0,
+    },
+  };
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
       <div className="space-y-8 max-w-5xl mx-auto">
         {/* Cover Photo */}
         <div className="relative rounded-2xl overflow-hidden bg-white border border-border shadow-sm">
-          <div className="relative h-48 sm:h-64 w-full bg-slate-800">
-            <Image
-              src={profile.coverPhoto}
-              alt={profile.name}
-              fill
-              className="object-cover opacity-80"
-              unoptimized
-            />
+          <div className="relative h-48 sm:h-64 w-full bg-slate-800 flex items-center justify-center">
+            {profile.coverPhoto ? (
+              <Image
+                src={profile.coverPhoto}
+                alt={profile.name}
+                fill
+                className="object-cover opacity-80"
+                unoptimized
+              />
+            ) : (
+              <div className="text-slate-500 font-bold text-sm">Instructor Profile Banner</div>
+            )}
           </div>
 
           <div className="px-6 sm:px-8 pb-6 pt-0 relative">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-14 sm:-mt-16 gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
-                  <Image
-                    src={profile.avatar}
-                    alt={profile.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white flex items-center justify-center">
+                  {profile.avatar ? (
+                    <Image
+                      src={profile.avatar}
+                      alt={profile.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <GraduationCap className="w-10 h-10 text-primary" />
+                  )}
                 </div>
 
                 <div className="space-y-1">

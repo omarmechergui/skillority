@@ -46,7 +46,7 @@ export function AuthGuard({ allowedRoles = [], children }) {
     }
   }, [loading, isAuthenticated, user, allowedRoles, pathname, router]);
 
-  // While checking auth, show full-page loading state to prevent flash of content/mock data
+  // While checking auth, show full-page loading state to prevent flash of unauthenticated content
   if (loading) {
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center">

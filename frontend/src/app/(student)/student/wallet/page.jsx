@@ -8,7 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockWalletData } from '@/lib/mockStudentData';
 import { walletApi } from '@/lib/api';
 import {
   Coins,
@@ -26,9 +25,23 @@ import {
   Zap,
 } from 'lucide-react';
 
+const COIN_ECONOMY_RULES = {
+  freeChapters: 'Chapters 0 through 5 are permanently free and open to all enrolled learners.',
+  chapter6Cost: 250,
+  chapter7Cost: 500,
+  quizReward: 50,
+  dailyMissionRange: '10 - 25 Coins',
+};
+
 export default function StudentWalletPage() {
   const [filter, setFilter] = useState('ALL');
-  const [wallet, setWallet] = useState(mockWalletData);
+  const [wallet, setWallet] = useState({
+    balance: 0,
+    totalEarned: 0,
+    totalSpent: 0,
+    rules: COIN_ECONOMY_RULES,
+    transactions: [],
+  });
   const [claimingDaily, setClaimingDaily] = useState(false);
   const [claimingAd, setClaimingAd] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState(null);
@@ -226,52 +239,58 @@ export default function StudentWalletPage() {
 
             {/* Transactions Card List */}
             <div className="space-y-3">
-              {filteredTransactions.map((tx) => (
-                <Card
-                  key={tx.id}
-                  className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div
-                      className={`p-2.5 rounded-xl flex-shrink-0 ${
-                        tx.type === 'EARNED'
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                          : 'bg-rose-50 text-rose-600 border border-rose-100'
-                      }`}
-                    >
-                      {tx.type === 'EARNED' ? (
-                        <ArrowDownLeft className="w-5 h-5" />
-                      ) : (
-                        <ArrowUpRight className="w-5 h-5" />
-                      )}
-                    </div>
+              {filteredTransactions.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No transactions recorded in your ledger yet.
+                </Card>
+              ) : (
+                filteredTransactions.map((tx) => (
+                  <Card
+                    key={tx.id}
+                    className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div
+                        className={`p-2.5 rounded-xl flex-shrink-0 ${
+                          tx.type === 'EARNED'
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                            : 'bg-rose-50 text-rose-600 border border-rose-100'
+                        }`}
+                      >
+                        {tx.type === 'EARNED' ? (
+                          <ArrowDownLeft className="w-5 h-5" />
+                        ) : (
+                          <ArrowUpRight className="w-5 h-5" />
+                        )}
+                      </div>
 
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm leading-snug">
-                        {tx.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 pt-0.5">
-                        <span className="font-medium text-slate-600">{tx.category}</span>
-                        <span>•</span>
-                        <span>{tx.date}</span>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm leading-snug">
+                          {tx.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 pt-0.5">
+                          <span className="font-medium text-slate-600">{tx.category}</span>
+                          <span>•</span>
+                          <span>{tx.date}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right flex-shrink-0">
-                    <div
-                      className={`text-base font-extrabold ${
-                        tx.type === 'EARNED' ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {tx.type === 'EARNED' ? `+${tx.amount}` : tx.amount} Coins
+                    <div className="text-right flex-shrink-0">
+                      <div
+                        className={`text-base font-extrabold ${
+                          tx.type === 'EARNED' ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {tx.type === 'EARNED' ? `+${tx.amount}` : tx.amount} Coins
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Balance: {tx.balanceAfter}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-slate-400">
-                      Balance: {tx.balanceAfter}
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 

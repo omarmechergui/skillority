@@ -68,7 +68,7 @@ export default function CreateCommunityPostPage() {
     setContent(prev => `${prev}\n${prefix}Formatted text${suffix}\n`);
   };
 
-  // Mock Attachment Handling
+  // Attachment Preview Handling
   const handleSimulateAttachment = () => {
     setAttachmentPreview('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80');
   };

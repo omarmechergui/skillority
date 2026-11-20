@@ -8,7 +8,6 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorStudents } from '@/lib/mockInstructorData';
 import {
   ArrowLeft,
   Mail,
@@ -20,7 +19,23 @@ import {
 } from 'lucide-react';
 
 export default function StudentLearningProgressPage({ params }) {
-  const student = mockInstructorStudents.find((s) => s.id === params.id) || mockInstructorStudents[0];
+  const [student] = useState(null);
+
+  if (!student) {
+    return (
+      <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
+        <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Student Not Found</h2>
+            <p className="text-sm text-slate-500">The requested student learning record could not be found or has not been loaded.</p>
+            <Link href="/instructor/students">
+              <Button variant="outline" className="text-xs">Back to Students</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>

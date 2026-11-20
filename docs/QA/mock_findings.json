@@ -1,0 +1,656 @@
+{
+  "mockExports": {
+    "mockAdminData.js": [
+      "mockAdminProfile",
+      "mockAdminStats",
+      "mockAdminUsers",
+      "mockCourseReviews",
+      "mockActivityLogs",
+      "mockAdminNotifications"
+    ],
+    "mockCareerData.js": [
+      "mockOpportunities",
+      "mockStudentApplications",
+      "mockCareerHubStats"
+    ],
+    "mockCommunityData.js": [
+      "mockCommunityCategories",
+      "mockCommunityPosts",
+      "ResponsiveHeader",
+      "mockTrendingTopics",
+      "mockActivePeers",
+      "mockCommunityGuidelines"
+    ],
+    "mockCompanyData.js": [
+      "mockCompanyProfile",
+      "mockRecruiterUser",
+      "mockCompanyOpportunities",
+      "mockCandidates",
+      "mockCompanyConversations",
+      "mockCompanyNotifications"
+    ],
+    "mockInstructorData.js": [
+      "mockInstructorProfile",
+      "mockInstructorCourses",
+      "mockInstructorStudents",
+      "mockInstructorNotifications"
+    ],
+    "mockLearningData.js": [
+      "mockCourses",
+      "asyncHandler",
+      "CourseProgressBadge",
+      "useDebounce",
+      "mockStudentProfile"
+    ],
+    "mockStudentData.js": [
+      "mockProgressData",
+      "mockProfileDetails",
+      "mockNotifications",
+      "mockConversations",
+      "mockWalletData"
+    ]
+  },
+  "findings": [
+    {
+      "file": "frontend/src/app/(admin)/admin/activity/log/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockActivityLogs"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/activity/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockActivityLogs",
+        "mockAdminStats"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/courses/reviews/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourseReviews"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/courses/reviews/[id]/decide/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourseReviews"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/courses/reviews/[id]/decide/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/courses/reviews/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourseReviews"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/dashboard/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport {\n  mockAdminStats",
+        "mockCourseReviews",
+        "mockActivityLogs",
+        ""
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/notifications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminNotifications"
+      ],
+      "line": 6
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/profile/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminProfile"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/reports/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminStats"
+      ],
+      "line": 6
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/settings/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/users/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminUsers"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/users/[id]/manage/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminUsers"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/users/[id]/manage/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(admin)/admin/users/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockAdminData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockAdminUsers"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(company)/company/applications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/applications/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/dashboard/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport {\n  mockCompanyProfile",
+        "mockRecruiterUser",
+        "mockCompanyOpportunities",
+        "mockCandidates",
+        ""
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/messages/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCompanyConversations"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/notifications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCompanyNotifications"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(company)/company/opportunities/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCompanyOpportunities"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(company)/company/opportunities/[id]/edit/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockCompanyOpportunities"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/opportunities/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCompanyOpportunities",
+        "mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/pipeline/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/profile/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCompanyProfile"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/profile/personal/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockRecruiterUser",
+        "mockCompanyProfile"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/settings/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockRecruiterUser",
+        "mockCompanyProfile"
+      ],
+      "line": 6
+    },
+    {
+      "file": "frontend/src/app/(company)/company/settings/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(company)/company/talent/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/talent/saved/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(company)/company/talent/[id]/evaluate/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockCandidates"
+      ],
+      "line": 9
+    },
+    {
+      "file": "frontend/src/app/(company)/company/talent/[id]/evaluate/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(company)/company/talent/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCompanyData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCandidates"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/courses/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorCourses"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/courses/[id]/assessment/edit/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/courses/[id]/curriculum/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorCourses"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/courses/[id]/lessons/[lessonId]/edit/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/courses/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorCourses"
+      ],
+      "line": 7
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/dashboard/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport {\n  mockInstructorProfile",
+        "mockInstructorCourses",
+        "mockInstructorStudents",
+        ""
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/notifications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorNotifications"
+      ],
+      "line": 6
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/profile/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorProfile"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/settings/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockInstructorProfile"
+      ],
+      "line": 6
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/settings/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/students/directory/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorStudents"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/students/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorStudents"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(instructor)/instructor/students/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockInstructorData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockInstructorStudents"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(onboarding)/onboarding/company/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(onboarding)/onboarding/student/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(public)/auth/reset-password/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(public)/auth/verify-email/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(student)/student/careers/applications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCareerData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport ConfirmDialog from '@/components/ui/ConfirmDialog';\nimport { mockStudentApplications",
+        "mockOpportunities"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/careers/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCareerData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockOpportunities",
+        "mockCareerHubStats"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/careers/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCareerData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport Modal from '@/components/ui/Modal';\nimport { mockOpportunities"
+      ],
+      "line": 9
+    },
+    {
+      "file": "frontend/src/app/(student)/student/community/create/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(student)/student/community/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockCommunityData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport {\n  mockCommunityCategories",
+        "mockCommunityPosts",
+        "mockTrendingTopics",
+        "mockActivePeers",
+        "mockCommunityGuidelines"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/community/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(student)/student/courses/[id]/assessment/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport ConfirmDialog from '@/components/ui/ConfirmDialog';\nimport { mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/courses/[id]/chapters/[chapterId]/lessons/[lessonId]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/courses/[id]/chapters/[chapterId]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/courses/[id]/chapters/[chapterId]/quiz/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/courses/[id]/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport Modal from '@/components/ui/Modal';\nimport { mockCourses",
+        "mockStudentProfile"
+      ],
+      "line": 9
+    },
+    {
+      "file": "frontend/src/app/(student)/student/dashboard/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockStudentProfile",
+        "mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/learn/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport Input from '@/components/ui/Input';\nimport { mockCourses"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/messages/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport Badge from '@/components/ui/Badge';\nimport { mockConversations"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/notifications/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockNotifications"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/profile/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProfileDetails"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/progress/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProgressData"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/progress/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockLearningData",
+      "items": [
+        "mockStudentProfile"
+      ],
+      "line": 12
+    },
+    {
+      "file": "frontend/src/app/(student)/student/settings/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockProfileDetails"
+      ],
+      "line": 8
+    },
+    {
+      "file": "frontend/src/app/(student)/student/settings/page.jsx",
+      "type": "SIMULATED_ASYNC",
+      "description": "Uses setTimeout to simulate API latency or async response"
+    },
+    {
+      "file": "frontend/src/app/(student)/student/wallet/page.jsx",
+      "type": "MOCK_IMPORT",
+      "source": "@/lib/mockStudentData",
+      "items": [
+        "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockWalletData"
+      ],
+      "line": 8
+    }
+  ]
+}

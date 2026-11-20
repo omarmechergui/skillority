@@ -10,7 +10,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
-import { mockCourses, mockStudentProfile } from '@/lib/mockLearningData';
 import { coursesApi, learningApi, walletApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -34,20 +33,31 @@ import {
 
 export default function CourseDetailsPage() {
   const params = useParams();
-  const courseId = params?.id || 'course-1';
-  const course = mockCourses.find((c) => c.id === courseId) || mockCourses[0];
+  const courseId = params?.id || '';
+  const [course] = useState(null);
 
-  const [studentCoins, setStudentCoins] = useState(mockStudentProfile.coinsBalance);
-  const [unlockedChapters, setUnlockedChapters] = useState(
-    course.chapters.reduce((acc, chap) => {
-      acc[chap.id] = chap.isUnlocked;
-      return acc;
-    }, {})
-  );
+  const [studentCoins, setStudentCoins] = useState(0);
+  const [unlockedChapters, setUnlockedChapters] = useState({});
 
   // Modal State for Coins Unlock
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const [selectedChapterToUnlock, setSelectedChapterToUnlock] = useState(null);
+
+  if (!course) {
+    return (
+      <DashboardShell role="STUDENT" navItems={studentNav}>
+        <div className="space-y-6 max-w-7xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Course Not Found</h2>
+            <p className="text-sm text-slate-500">The requested course could not be found or has not been loaded.</p>
+            <Link href="/student/learn">
+              <Button variant="outline" className="text-xs">Back to Learning Hub</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   const handleOpenUnlockModal = (chapter) => {
     setSelectedChapterToUnlock(chapter);

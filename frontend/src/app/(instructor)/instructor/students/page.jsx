@@ -8,7 +8,6 @@ import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockInstructorStudents } from '@/lib/mockInstructorData';
 import {
   Users,
   Search,
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function InstructorStudentManagementPage() {
-  const [students] = useState(mockInstructorStudents);
+  const [students] = useState([]);
 
   return (
     <DashboardShell roleTitle="Instructor Portal" navItems={instructorNav}>
@@ -45,47 +44,61 @@ export default function InstructorStudentManagementPage() {
 
         {/* Student Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {students.map((st) => (
-            <Card key={st.id} className="p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-border">
-                  <Image
-                    src={st.avatar}
-                    alt={st.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+          {students.length === 0 ? (
+            <div className="col-span-full">
+              <Card className="p-12 text-center text-slate-500 text-xs">
+                No active student enrollments found.
+              </Card>
+            </div>
+          ) : (
+            students.map((st) => (
+              <Card key={st.id} className="p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-border bg-slate-100 flex items-center justify-center">
+                    {st.avatar ? (
+                      <Image
+                        src={st.avatar}
+                        alt={st.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-slate-400 font-bold text-sm">
+                        {st.name ? st.name.charAt(0) : 'S'}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900">{st.name}</h3>
+                    <p className="text-[11px] text-slate-500">{st.email}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">{st.name}</h3>
-                  <p className="text-[11px] text-slate-500">{st.email}</p>
-                </div>
-              </div>
 
-              <div className="space-y-1.5 pt-2 border-t border-border">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Progress:</span>
-                  <span className="font-bold text-slate-900">{st.progressPercentage}%</span>
+                <div className="space-y-1.5 pt-2 border-t border-border">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Progress:</span>
+                    <span className="font-bold text-slate-900">{st.progressPercentage}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${st.progressPercentage}%` }} />
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${st.progressPercentage}%` }} />
+
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                  <span>Quiz Avg: <strong className="text-emerald-600">{st.quizScoreAvg}</strong></span>
+                  <span>Streak: <strong className="text-orange-600">{st.streak}d</strong></span>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                <span>Quiz Avg: <strong className="text-emerald-600">{st.quizScoreAvg}</strong></span>
-                <span>Streak: <strong className="text-orange-600">{st.streak}d</strong></span>
-              </div>
-
-              <Link href={`/instructor/students/${st.id}`}>
-                <Button variant="outline" className="w-full text-xs font-semibold flex items-center justify-center gap-1">
-                  View Student Profile
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              </Link>
-            </Card>
-          ))}
+                <Link href={`/instructor/students/${st.id}`}>
+                  <Button variant="outline" className="w-full text-xs font-semibold flex items-center justify-center gap-1">
+                    View Student Profile
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardShell>

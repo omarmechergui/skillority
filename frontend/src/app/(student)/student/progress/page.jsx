@@ -8,8 +8,6 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockProgressData } from '@/lib/mockStudentData';
-import { mockStudentProfile } from '@/lib/mockLearningData';
 import {
   TrendingUp,
   Clock,
@@ -29,7 +27,18 @@ import {
 
 export default function StudentProgressPage() {
   const [filter, setFilter] = useState('ALL');
-  const { overallCompletion, hoursLearned, currentStreak, longestStreak, totalXp, weeklyActivity, skillMastery, courseProgress, milestones } = mockProgressData;
+  const [progressData] = useState({
+    overallCompletion: 0,
+    hoursLearned: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalXp: 0,
+    weeklyActivity: [],
+    skillMastery: [],
+    courseProgress: [],
+    milestones: [],
+  });
+  const { overallCompletion, hoursLearned, currentStreak, longestStreak, totalXp, weeklyActivity, skillMastery, courseProgress, milestones } = progressData;
 
   const filteredCourses = courseProgress.filter((c) => {
     if (filter === 'IN_PROGRESS') return c.badge === 'In Progress';
@@ -128,25 +137,31 @@ export default function StudentProgressPage() {
             </div>
 
             {/* Weekly Bar Graph Representation */}
-            <div className="pt-4 grid grid-cols-7 gap-3 items-end h-48 border-b border-border pb-4">
-              {weeklyActivity.map((day) => {
-                const heightPercent = Math.min(100, Math.round((day.hours / 5) * 100));
-                return (
-                  <div key={day.day} className="flex flex-col items-center gap-2 h-full justify-end group">
-                    <span className="text-[11px] font-semibold text-slate-600 group-hover:text-primary transition-colors">
-                      {day.hours}h
-                    </span>
-                    <div className="w-full max-w-[42px] bg-slate-100 rounded-t-lg h-full max-h-[140px] flex items-end">
-                      <div
-                        className="w-full bg-primary hover:bg-blue-700 transition-all rounded-t-lg"
-                        style={{ height: `${heightPercent}%` }}
-                      ></div>
+            {weeklyActivity.length === 0 ? (
+              <div className="pt-4 h-48 border-b border-border pb-4 flex items-center justify-center text-xs text-slate-400">
+                No recorded study sessions over the past 7 days.
+              </div>
+            ) : (
+              <div className="pt-4 grid grid-cols-7 gap-3 items-end h-48 border-b border-border pb-4">
+                {weeklyActivity.map((day) => {
+                  const heightPercent = Math.min(100, Math.round((day.hours / 5) * 100));
+                  return (
+                    <div key={day.day} className="flex flex-col items-center gap-2 h-full justify-end group">
+                      <span className="text-[11px] font-semibold text-slate-600 group-hover:text-primary transition-colors">
+                        {day.hours}h
+                      </span>
+                      <div className="w-full max-w-[42px] bg-slate-100 rounded-t-lg h-full max-h-[140px] flex items-end">
+                        <div
+                          className="w-full bg-primary hover:bg-blue-700 transition-all rounded-t-lg"
+                          style={{ height: `${heightPercent}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-medium text-slate-500">{day.day}</span>
                     </div>
-                    <span className="text-xs font-medium text-slate-500">{day.day}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
               <span className="flex items-center gap-2">
@@ -165,24 +180,28 @@ export default function StudentProgressPage() {
             </div>
 
             <div className="space-y-4">
-              {skillMastery.map((skill) => (
-                <div key={skill.name} className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-slate-800">{skill.name}</span>
-                    <span className="text-slate-500 font-medium">{skill.progress}%</span>
+              {skillMastery.length === 0 ? (
+                <p className="text-xs text-slate-400 py-4 text-center">No skill evaluations recorded yet.</p>
+              ) : (
+                skillMastery.map((skill) => (
+                  <div key={skill.name} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold text-slate-800">{skill.name}</span>
+                      <span className="text-slate-500 font-medium">{skill.progress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${skill.color}`}
+                        style={{ width: `${skill.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-slate-400">
+                      <span>Level</span>
+                      <span className="font-medium text-slate-600">{skill.level}</span>
+                    </div>
                   </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${skill.color}`}
-                      style={{ width: `${skill.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-[11px] text-slate-400">
-                    <span>Level</span>
-                    <span className="font-medium text-slate-600">{skill.level}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
         </div>
@@ -213,7 +232,7 @@ export default function StudentProgressPage() {
                   filter === 'IN_PROGRESS' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                In Progress (2)
+                In Progress ({courseProgress.filter(c => c.badge === 'In Progress').length})
               </button>
               <button
                 type="button"
@@ -222,23 +241,34 @@ export default function StudentProgressPage() {
                   filter === 'COMPLETED' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Completed (1)
+                Completed ({courseProgress.filter(c => c.badge === 'Completed').length})
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
+            {filteredCourses.length === 0 ? (
+              <div className="col-span-full">
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No enrolled course tracks found matching criteria.
+                </Card>
+              </div>
+            ) : (
+              filteredCourses.map((course) => (
               <Card key={course.id} className="overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
-                  <div className="relative h-40 w-full bg-slate-100">
-                    <Image
-                      src={course.thumbnail}
-                      alt={course.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
+                  <div className="relative h-40 w-full bg-slate-100 flex items-center justify-center">
+                    {course.thumbnail ? (
+                      <Image
+                        src={course.thumbnail}
+                        alt={course.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <BookOpen className="w-10 h-10 text-primary" />
+                    )}
                     <div className="absolute top-3 right-3">
                       <Badge variant={course.badge === 'Completed' ? 'success' : 'primary'}>
                         {course.badge}
@@ -292,7 +322,7 @@ export default function StudentProgressPage() {
                   </Link>
                 </div>
               </Card>
-            ))}
+            )))}
           </div>
         </div>
 
@@ -304,26 +334,30 @@ export default function StudentProgressPage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {milestones.map((m) => (
-              <div
-                key={m.id}
-                className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
-                  m.unlocked
-                    ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950'
-                    : 'border-slate-200 bg-slate-50/50 text-slate-400 opacity-60'
-                }`}
-              >
+            {milestones.length === 0 ? (
+              <p className="text-xs text-slate-400 col-span-full text-center py-4">No milestone achievements earned yet.</p>
+            ) : (
+              milestones.map((m) => (
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    m.unlocked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'
+                  key={m.id}
+                  className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                    m.unlocked
+                      ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950'
+                      : 'border-slate-200 bg-slate-50/50 text-slate-400 opacity-60'
                   }`}
                 >
-                  {m.unlocked ? <CheckCircle2 className="w-6 h-6" /> : <Target className="w-6 h-6" />}
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      m.unlocked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'
+                    }`}
+                  >
+                    {m.unlocked ? <CheckCircle2 className="w-6 h-6" /> : <Target className="w-6 h-6" />}
+                  </div>
+                  <h4 className="font-bold text-xs leading-snug">{m.title}</h4>
+                  <p className="text-[10px] text-slate-500">{m.date}</p>
                 </div>
-                <h4 className="font-bold text-xs leading-snug">{m.title}</h4>
-                <p className="text-[10px] text-slate-500">{m.date}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </div>

@@ -8,7 +8,7 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockProfileDetails } from '@/lib/mockStudentData';
+import { useAuth } from '@/lib/auth';
 import {
   MapPin,
   Mail,
@@ -30,7 +30,30 @@ import {
 } from 'lucide-react';
 
 export default function StudentProfilePage() {
-  const [profile, setProfile] = useState(mockProfileDetails);
+  const { user } = useAuth();
+  const [profile] = useState({
+    name: user?.profile ? `${user.profile.firstName || ''} ${user.profile.lastName || ''}`.trim() || user.email : user?.email || 'Student Learner',
+    headline: user?.profile?.headline || 'Learner on Skillority',
+    bio: user?.profile?.bio || 'No bio provided yet.',
+    location: user?.profile?.location || 'Remote',
+    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+    avatar: user?.profile?.avatarUrl || null,
+    coverPhoto: null,
+    coinsBalance: 0,
+    streakDays: 0,
+    certificatesCount: 0,
+    featuredProject: null,
+    skills: [],
+    interests: [],
+    experience: [],
+    education: [],
+    email: user?.email || '',
+    phone: 'Not provided',
+    website: '',
+    github: '',
+    linkedin: '',
+    twitter: '',
+  });
   const [activeTab, setActiveTab] = useState('ABOUT');
 
   return (
@@ -39,14 +62,18 @@ export default function StudentProfilePage() {
         {/* Cover Photo & Hero Header */}
         <div className="relative rounded-2xl overflow-hidden bg-white border border-border shadow-sm">
           {/* Cover Photo */}
-          <div className="relative h-48 sm:h-64 w-full bg-slate-800">
-            <Image
-              src={profile.coverPhoto}
-              alt="Profile Cover"
-              fill
-              className="object-cover opacity-90"
-              unoptimized
-            />
+          <div className="relative h-48 sm:h-64 w-full bg-slate-800 flex items-center justify-center">
+            {profile.coverPhoto ? (
+              <Image
+                src={profile.coverPhoto}
+                alt="Profile Cover"
+                fill
+                className="object-cover opacity-90"
+                unoptimized
+              />
+            ) : (
+              <div className="text-slate-500 font-bold text-sm">Cover Banner</div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
           </div>
 
@@ -55,14 +82,18 @@ export default function StudentProfilePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-16 sm:-mt-20 gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
                 {/* Avatar */}
-                <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
-                  <Image
-                    src={profile.avatar}
-                    alt={profile.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white flex items-center justify-center">
+                  {profile.avatar ? (
+                    <Image
+                      src={profile.avatar}
+                      alt={profile.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <GraduationCap className="w-12 h-12 text-primary" />
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -202,36 +233,42 @@ export default function StudentProfilePage() {
                 </Card>
 
                 {/* Featured Project */}
-                <Card className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900">Featured Capstone Project</h2>
-                    <a
-                      href={profile.featuredProject.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                    >
-                      View Repository
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2">
-                    <h3 className="font-bold text-slate-900 text-base">
-                      {profile.featuredProject.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {profile.featuredProject.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {profile.featuredProject.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-[11px]">
-                          {tag}
-                        </Badge>
-                      ))}
+                {profile.featuredProject ? (
+                  <Card className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-slate-900">Featured Capstone Project</h2>
+                      <a
+                        href={profile.featuredProject.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        View Repository
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
                     </div>
-                  </div>
-                </Card>
+
+                    <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2">
+                      <h3 className="font-bold text-slate-900 text-base">
+                        {profile.featuredProject.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {profile.featuredProject.description}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        {profile.featuredProject.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-[11px]">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-6 text-center text-xs text-slate-400">
+                    No featured capstone project published.
+                  </Card>
+                )}
               </>
             )}
 
@@ -242,26 +279,34 @@ export default function StudentProfilePage() {
                   <p className="text-xs text-slate-500">Skills certified through course completions and assessments</p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                {profile.skills.length === 0 ? (
+                  <p className="text-xs text-slate-400">No skills added yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <h3 className="text-sm font-bold text-slate-900">Areas of Interest</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((interest) => (
-                      <Badge key={interest} variant="outline" className="text-xs font-medium">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
+                  {profile.interests.length === 0 ? (
+                    <p className="text-xs text-slate-400">No areas of interest added yet.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.interests.map((interest) => (
+                        <Badge key={interest} variant="outline" className="text-xs font-medium">
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -275,17 +320,21 @@ export default function StudentProfilePage() {
                     Work Experience
                   </h2>
 
-                  <div className="space-y-6">
-                    {profile.experience.map((exp, idx) => (
-                      <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
-                        <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-white" />
-                        <h3 className="text-sm font-bold text-slate-900">{exp.title}</h3>
-                        <p className="text-xs font-semibold text-primary">{exp.company} · {exp.location}</p>
-                        <p className="text-[11px] text-slate-400">{exp.period}</p>
-                        <p className="text-xs text-slate-600 pt-1 leading-relaxed">{exp.description}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {profile.experience.length === 0 ? (
+                    <p className="text-xs text-slate-400">No work experience listed.</p>
+                  ) : (
+                    <div className="space-y-6">
+                      {profile.experience.map((exp, idx) => (
+                        <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
+                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-white" />
+                          <h3 className="text-sm font-bold text-slate-900">{exp.title}</h3>
+                          <p className="text-xs font-semibold text-primary">{exp.company} · {exp.location}</p>
+                          <p className="text-[11px] text-slate-400">{exp.period}</p>
+                          <p className="text-xs text-slate-600 pt-1 leading-relaxed">{exp.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Education */}
@@ -295,17 +344,21 @@ export default function StudentProfilePage() {
                     Education
                   </h2>
 
-                  <div className="space-y-6">
-                    {profile.education.map((edu, idx) => (
-                      <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
-                        <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white" />
-                        <h3 className="text-sm font-bold text-slate-900">{edu.school}</h3>
-                        <p className="text-xs font-semibold text-emerald-700">{edu.degree}</p>
-                        <p className="text-[11px] text-slate-400">{edu.period}</p>
-                        <p className="text-xs text-slate-600 pt-1 leading-relaxed">{edu.description}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {profile.education.length === 0 ? (
+                    <p className="text-xs text-slate-400">No education history listed.</p>
+                  ) : (
+                    <div className="space-y-6">
+                      {profile.education.map((edu, idx) => (
+                        <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
+                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white" />
+                          <h3 className="text-sm font-bold text-slate-900">{edu.school}</h3>
+                          <p className="text-xs font-semibold text-emerald-700">{edu.degree}</p>
+                          <p className="text-[11px] text-slate-400">{edu.period}</p>
+                          <p className="text-xs text-slate-600 pt-1 leading-relaxed">{edu.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </div>
             )}
@@ -319,9 +372,13 @@ export default function StudentProfilePage() {
               <div className="space-y-3 text-xs">
                 <div className="flex items-center gap-3 text-slate-600">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  <a href={`mailto:${profile.email}`} className="hover:text-primary transition-colors">
-                    {profile.email}
-                  </a>
+                  {profile.email ? (
+                    <a href={`mailto:${profile.email}`} className="hover:text-primary transition-colors">
+                      {profile.email}
+                    </a>
+                  ) : (
+                    <span>Not provided</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
                   <Phone className="w-4 h-4 text-slate-400" />
@@ -329,9 +386,13 @@ export default function StudentProfilePage() {
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
                   <Globe className="w-4 h-4 text-slate-400" />
-                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    {profile.website.replace('https://', '')}
-                  </a>
+                  {profile.website ? (
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                      {profile.website.replace('https://', '')}
+                    </a>
+                  ) : (
+                    <span>Not provided</span>
+                  )}
                 </div>
               </div>
             </Card>
@@ -340,44 +401,74 @@ export default function StudentProfilePage() {
               <h2 className="text-base font-bold text-slate-900">Social & Code Profiles</h2>
 
               <div className="space-y-2">
-                <a
-                  href={profile.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Code2 className="w-4 h-4 text-slate-800" />
-                    GitHub Profile
-                  </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                </a>
+                {profile.github ? (
+                  <a
+                    href={profile.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Code2 className="w-4 h-4 text-slate-800" />
+                      GitHub Profile
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-2.5">
+                      <Code2 className="w-4 h-4 text-slate-400" />
+                      GitHub Profile
+                    </span>
+                    <span>Not linked</span>
+                  </div>
+                )}
 
-                <a
-                  href={profile.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Globe className="w-4 h-4 text-blue-600" />
-                    LinkedIn Network
-                  </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                </a>
+                {profile.linkedin ? (
+                  <a
+                    href={profile.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Globe className="w-4 h-4 text-blue-600" />
+                      LinkedIn Network
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-2.5">
+                      <Globe className="w-4 h-4 text-slate-400" />
+                      LinkedIn Network
+                    </span>
+                    <span>Not linked</span>
+                  </div>
+                )}
 
-                <a
-                  href={profile.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Share className="w-4 h-4 text-sky-500" />
-                    Twitter / X
-                  </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                </a>
+                {profile.twitter ? (
+                  <a
+                    href={profile.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Share className="w-4 h-4 text-sky-500" />
+                      Twitter / X
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </a>
+                ) : (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-2.5">
+                      <Share className="w-4 h-4 text-slate-400" />
+                      Twitter / X
+                    </span>
+                    <span>Not linked</span>
+                  </div>
+                )}
               </div>
             </Card>
           </div>

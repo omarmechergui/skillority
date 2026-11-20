@@ -8,7 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCompanyOpportunities, mockCandidates } from '@/lib/mockCompanyData';
 import {
   Briefcase,
   ArrowLeft,
@@ -23,8 +22,24 @@ import {
 } from 'lucide-react';
 
 export default function OpportunityDetailsPage({ params }) {
-  const opp = mockCompanyOpportunities.find((o) => o.id === params.id) || mockCompanyOpportunities[0];
-  const applicants = mockCandidates;
+  const [opp] = useState(null);
+  const [applicants] = useState([]);
+
+  if (!opp) {
+    return (
+      <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
+        <div className="space-y-6 max-w-7xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Opportunity Not Found</h2>
+            <p className="text-sm text-slate-500">The requested opportunity listing could not be found or has not been loaded.</p>
+            <Link href="/company/opportunities">
+              <Button variant="outline" className="text-xs">Back to Opportunities</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>

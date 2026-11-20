@@ -7,7 +7,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { mockCompanyOpportunities } from '@/lib/mockCompanyData';
 import { careerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -27,7 +26,7 @@ import {
 
 export default function CompanyOpportunitiesPage() {
   const { user } = useAuth();
-  const [opportunities, setOpportunities] = useState(mockCompanyOpportunities);
+  const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');

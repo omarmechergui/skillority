@@ -1,0 +1,58 @@
+[
+  {
+    "file": "frontend/src/app/(student)/student/messages/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport Badge from '@/components/ui/Badge';\nimport { mockConversations } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport Badge from '@/components/ui/Badge';\nimport { mockConversations"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/notifications/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockNotifications } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockNotifications"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/profile/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProfileDetails } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProfileDetails"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/progress/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProgressData } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockProgressData"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/progress/page.jsx",
+    "source": "@/lib/mockLearningData",
+    "rawImport": "import { mockStudentProfile } from '@/lib/mockLearningData'",
+    "items": [
+      "mockStudentProfile"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/settings/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockProfileDetails } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Input from '@/components/ui/Input';\nimport { mockProfileDetails"
+    ]
+  },
+  {
+    "file": "frontend/src/app/(student)/student/wallet/page.jsx",
+    "source": "@/lib/mockStudentData",
+    "rawImport": "import Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockWalletData } from '@/lib/mockStudentData'",
+    "items": [
+      "Card from '@/components/ui/Card';\nimport Button from '@/components/ui/Button';\nimport Badge from '@/components/ui/Badge';\nimport { mockWalletData"
+    ]
+  }
+]

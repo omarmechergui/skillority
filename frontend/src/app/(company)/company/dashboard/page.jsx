@@ -8,12 +8,6 @@ import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import {
-  mockCompanyProfile,
-  mockRecruiterUser,
-  mockCompanyOpportunities,
-  mockCandidates,
-} from '@/lib/mockCompanyData';
 import { useAuth } from '@/lib/auth';
 import { profileApi, careerApi } from '@/lib/api';
 import {
@@ -31,10 +25,23 @@ import {
 
 export default function CompanyDashboardPage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(mockCompanyProfile);
-  const [recruiter, setRecruiter] = useState(mockRecruiterUser);
-  const [opportunities, setOpportunities] = useState(mockCompanyOpportunities);
-  const [recentApplicants, setRecentApplicants] = useState(mockCandidates.slice(0, 3));
+  const [profile, setProfile] = useState({
+    name: 'Your Company',
+    industry: 'Technology',
+    location: '',
+    stats: {
+      activeListings: 0,
+      totalApplicants: 0,
+      interviewsScheduled: 0,
+      offersExtended: 0,
+    },
+  });
+  const [recruiter, setRecruiter] = useState({
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Recruiter',
+    role: 'Technical Recruiter',
+  });
+  const [opportunities, setOpportunities] = useState([]);
+  const [recentApplicants, setRecentApplicants] = useState([]);
 
   useEffect(() => {
     async function loadCompanyData() {
@@ -177,38 +184,44 @@ export default function CompanyDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {opportunities.map((opp) => (
-                <Card key={opp.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="primary" className="text-[10px]">
-                        {opp.type}
-                      </Badge>
-                      <span className="text-xs text-slate-400">•</span>
-                      <span className="text-xs text-slate-500 font-medium">{opp.location}</span>
-                    </div>
-                    <h3 className="font-bold text-slate-900 text-base leading-snug">
-                      {opp.title}
-                    </h3>
-                    <p className="text-xs text-slate-500">{opp.department}</p>
-                  </div>
-
-                  <div className="flex items-center gap-5 sm:text-right">
-                    <div>
-                      <div className="text-base font-extrabold text-slate-900">
-                        {opp.applicantsCount}
-                      </div>
-                      <div className="text-[11px] text-slate-400">Total Applicants</div>
-                    </div>
-                    <Link href={`/company/opportunities/${opp.id}`}>
-                      <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                        Manage
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </Link>
-                  </div>
+              {opportunities.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No active job or internship listings posted yet.
                 </Card>
-              ))}
+              ) : (
+                opportunities.map((opp) => (
+                  <Card key={opp.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary" className="text-[10px]">
+                          {opp.type}
+                        </Badge>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs text-slate-500 font-medium">{opp.location}</span>
+                      </div>
+                      <h3 className="font-bold text-slate-900 text-base leading-snug">
+                        {opp.title}
+                      </h3>
+                      <p className="text-xs text-slate-500">{opp.department}</p>
+                    </div>
+
+                    <div className="flex items-center gap-5 sm:text-right">
+                      <div>
+                        <div className="text-base font-extrabold text-slate-900">
+                          {opp.applicantsCount}
+                        </div>
+                        <div className="text-[11px] text-slate-400">Total Applicants</div>
+                      </div>
+                      <Link href={`/company/opportunities/${opp.id}`}>
+                        <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
+                          Manage
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -227,36 +240,48 @@ export default function CompanyDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {recentApplicants.map((cand) => (
-                <Card key={cand.id} className="p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border">
-                      <Image
-                        src={cand.avatar}
-                        alt={cand.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-xs text-slate-900 truncate">{cand.name}</h4>
-                      <p className="text-[11px] text-slate-500 truncate">{cand.appliedRole}</p>
-                    </div>
-                    <Badge variant="success" className="text-[10px]">
-                      {cand.matchScore}% Match
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-border text-[11px]">
-                    <span className="text-slate-400">Stage: <strong className="text-slate-700">{cand.stage}</strong></span>
-                    <Link href={`/company/talent/${cand.id}`} className="text-primary font-semibold hover:underline flex items-center gap-1">
-                      Review Profile
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
+              {recentApplicants.length === 0 ? (
+                <Card className="p-8 text-center text-slate-500 text-xs">
+                  No candidate applications received yet.
                 </Card>
-              ))}
+              ) : (
+                recentApplicants.map((cand) => (
+                  <Card key={cand.id} className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border">
+                        {cand.avatar ? (
+                          <Image
+                            src={cand.avatar}
+                            alt={cand.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold">
+                            {cand.name ? cand.name.charAt(0) : 'C'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-xs text-slate-900 truncate">{cand.name}</h4>
+                        <p className="text-[11px] text-slate-500 truncate">{cand.appliedRole}</p>
+                      </div>
+                      <Badge variant="success" className="text-[10px]">
+                        {cand.matchScore}% Match
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border text-[11px]">
+                      <span className="text-slate-400">Stage: <strong className="text-slate-700">{cand.stage}</strong></span>
+                      <Link href={`/company/talent/${cand.id}`} className="text-primary font-semibold hover:underline flex items-center gap-1">
+                        Review Profile
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>
