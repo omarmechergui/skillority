@@ -28,6 +28,12 @@ export async function sendMessage(req, res, next) {
     const msg = await messagingService.sendMessage(req.user.id, req.params.conversationId, recipientId, content);
     return res.status(201).json({ success: true, message: 'Message sent', data: msg });
   } catch (err) {
+    if (err.statusCode === 403 || err.message === 'FORBIDDEN_NOT_PARTICIPANT') {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You are not a participant in this conversation' } });
+    }
+    if (err.statusCode === 400 || err.message === 'CANNOT_MESSAGE_SELF') {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Cannot send message to yourself' } });
+    }
     next(err);
   }
 }

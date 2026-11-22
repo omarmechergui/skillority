@@ -90,29 +90,93 @@ export async function unlockChapterWithCoins(userId, courseId, chapterId) {
   });
   if (!enrollment) throw new Error('NOT_ENROLLED');
 
-  if (enrollment.unlockedChapterIds.includes(chapterId)) {
-    return { alreadyUnlocked: true, enrollment };
+  const chapter = await prisma.chapter.findUnique({ where: { id: chapterId } });
+  if (!chapter || chapter.courseId !== courseId) {
+    throw new Error('CHAPTER_NOT_FOUND');
   }
 
-  const chapter = await prisma.chapter.findUnique({ where: { id: chapterId } });
-  if (!chapter) throw new Error('CHAPTER_NOT_FOUND');
+  // Freemium rule: Free chapters (order <= 5 or isFree) cost 0 coins
+  const isFreeChapter = chapter.order <= 5 || chapter.isFree === true;
+  if (isFreeChapter) {
+    if (!enrollment.unlockedChapterIds.includes(chapterId)) {
+      const updated = await prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data: { unlockedChapterIds: { push: chapterId } },
+      });
+      return { alreadyUnlocked: true, isFree: true, remainingCoins: null, enrollment: updated };
+    }
+    return { alreadyUnlocked: true, isFree: true, remainingCoins: null, enrollment };
+  }
+
+  // Quick check outside transaction
+  if (enrollment.unlockedChapterIds.includes(chapterId)) {
+    const currentWallet = await prisma.wallet.findUnique({ where: { userId } });
+    return { alreadyUnlocked: true, remainingCoins: currentWallet?.balance, enrollment };
+  }
 
   const requiredCoins = chapter.coinsCost > 0 ? chapter.coinsCost : 50;
 
   // Atomic transaction: verify balance, deduct coins, record audit, update unlocked list
   return prisma.$transaction(async (tx) => {
-    const wallet = await tx.wallet.findUnique({ where: { userId } });
-    if (!wallet || wallet.balance < requiredCoins) {
+    // 1. Check if already unlocked inside transaction
+    const currentEnrollment = await tx.enrollment.findUnique({ where: { id: enrollment.id } });
+    if (!currentEnrollment) throw new Error('NOT_ENROLLED');
+
+    if (currentEnrollment.unlockedChapterIds.includes(chapterId)) {
+      const currentWallet = await tx.wallet.findUnique({ where: { userId } });
+      return { alreadyUnlocked: true, remainingCoins: currentWallet?.balance, enrollment: currentEnrollment };
+    }
+
+    let wallet = await tx.wallet.findUnique({ where: { userId } });
+    if (!wallet) {
+      wallet = await tx.wallet.create({ data: { userId, balance: 100 } });
+    }
+
+    if (wallet.balance < requiredCoins) {
       throw new Error('INSUFFICIENT_COINS');
     }
 
-    // Deduct coins
-    await tx.wallet.update({
-      where: { id: wallet.id },
-      data: { balance: { decrement: requiredCoins } },
+    // 2. Atomic conditional decrement on wallet: balance must be >= requiredCoins
+    const updateWalletResult = await tx.wallet.updateMany({
+      where: {
+        id: wallet.id,
+        balance: { gte: requiredCoins },
+      },
+      data: {
+        balance: { decrement: requiredCoins },
+      },
     });
 
-    // Record audit transaction
+    if (updateWalletResult.count === 0) {
+      throw new Error('INSUFFICIENT_COINS');
+    }
+
+    // 3. Conditional update on enrollment: ensure chapter is only unlocked once
+    const unlockResult = await tx.enrollment.updateMany({
+      where: {
+        id: enrollment.id,
+        NOT: {
+          unlockedChapterIds: { has: chapterId },
+        },
+      },
+      data: {
+        unlockedChapterIds: { push: chapterId },
+      },
+    });
+
+    if (unlockResult.count === 0) {
+      // Race condition: another concurrent transaction unlocked it at the same moment!
+      // Refund the coins we just decremented so the user is never double-charged
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { increment: requiredCoins } },
+      });
+      const currentWallet = await tx.wallet.findUnique({ where: { userId } });
+      const refreshedEnrollment = await tx.enrollment.findUnique({ where: { id: enrollment.id } });
+      return { alreadyUnlocked: true, remainingCoins: currentWallet?.balance, enrollment: refreshedEnrollment };
+    }
+
+    // 4. Record audit transaction
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
@@ -123,12 +187,13 @@ export async function unlockChapterWithCoins(userId, courseId, chapterId) {
       },
     });
 
-    // Add to unlocked list
-    const updated = await tx.enrollment.update({
-      where: { id: enrollment.id },
-      data: { unlockedChapterIds: { push: chapterId } },
-    });
-
-    return { alreadyUnlocked: false, remainingCoins: wallet.balance - requiredCoins, enrollment: updated };
+    const refreshedWallet = await tx.wallet.findUnique({ where: { id: wallet.id } });
+    const refreshedEnrollment = await tx.enrollment.findUnique({ where: { id: enrollment.id } });
+    return {
+      alreadyUnlocked: false,
+      remainingCoins: refreshedWallet.balance,
+      coinsDeducted: requiredCoins,
+      enrollment: refreshedEnrollment,
+    };
   });
 }

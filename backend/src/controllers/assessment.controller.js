@@ -8,6 +8,8 @@ export async function submitQuiz(req, res, next) {
     return res.status(200).json({ success: true, message: result.passed ? 'Quiz Passed!' : 'Quiz not passed', data: result });
   } catch (err) {
     if (err.message === 'CHAPTER_NOT_FOUND') return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: err.message } });
+    if (err.message?.startsWith('NOT_ENROLLED')) return res.status(403).json({ success: false, error: { code: 'NOT_ENROLLED', message: err.message } });
+    if (err.message?.startsWith('INVALID_QUIZ')) return res.status(400).json({ success: false, error: { code: 'INVALID_QUIZ', message: err.message } });
     next(err);
   }
 }
@@ -24,6 +26,8 @@ export async function submitAssessment(req, res, next) {
     });
   } catch (err) {
     if (err.message === 'COURSE_NOT_FOUND') return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: err.message } });
+    if (err.message?.startsWith('NOT_ENROLLED')) return res.status(403).json({ success: false, error: { code: 'NOT_ENROLLED', message: err.message } });
+    if (err.message?.startsWith('INVALID_ASSESSMENT')) return res.status(400).json({ success: false, error: { code: 'INVALID_ASSESSMENT', message: err.message } });
     next(err);
   }
 }

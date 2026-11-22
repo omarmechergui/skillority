@@ -44,6 +44,12 @@ export async function unlockChapter(req, res, next) {
     if (err.message === 'INSUFFICIENT_COINS') {
       return res.status(400).json({ success: false, error: { code: 'INSUFFICIENT_COINS', message: 'Wallet balance is insufficient' } });
     }
+    if (err.message === 'NOT_ENROLLED') {
+      return res.status(403).json({ success: false, error: { code: 'NOT_ENROLLED', message: 'You must be enrolled in the course to unlock chapters' } });
+    }
+    if (err.message === 'CHAPTER_NOT_FOUND') {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Chapter not found or does not belong to this course' } });
+    }
     next(err);
   }
 }

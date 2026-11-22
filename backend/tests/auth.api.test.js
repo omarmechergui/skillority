@@ -1,7 +1,21 @@
 import assert from 'assert';
 import http from 'http';
 import app from '../src/app.js';
+import prisma from '../src/config/database.js';
 import { signAccessToken } from '../src/utils/jwt.js';
+
+// Mock user lookup so fail-closed requireAuth finds valid active database user records during test
+const mockUsers = {
+  student_123: { id: 'student_123', email: 'student@example.com', role: 'STUDENT', tokenVersion: 0, isActive: true },
+  company_123: { id: 'company_123', email: 'recruiter@tech.com', role: 'COMPANY', tokenVersion: 0, isActive: true },
+  student_user_AAA: { id: 'student_user_AAA', email: 'userA@student.com', role: 'STUDENT', tokenVersion: 0, isActive: true },
+  student_user_BBB: { id: 'student_user_BBB', email: 'userB@student.com', role: 'STUDENT', tokenVersion: 0, isActive: true },
+  admin_master: { id: 'admin_master', email: 'admin@skillority.com', role: 'ADMIN', tokenVersion: 0, isActive: true },
+};
+
+prisma.user.findUnique = async ({ where }) => {
+  return mockUsers[where.id] || null;
+};
 
 // Custom simulated mock request runner using real http.ServerResponse to satisfy Helmet & Express
 function simulateRequest(app, { method, url, headers = {}, body = null }) {

@@ -1,5 +1,9 @@
 import 'dotenv/config';
 import app from './app.js';
+import { validateAuthConfig } from './utils/jwt.js';
+
+// Validate security secrets at application startup
+validateAuthConfig();
 
 const PORT = process.env.PORT || 5000;
 

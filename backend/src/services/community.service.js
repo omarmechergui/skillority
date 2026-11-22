@@ -1,6 +1,9 @@
 import prisma from '../config/database.js';
 
 export async function listPosts({ tag, search, page = 1, limit = 10 }) {
+  const safeLimit = Math.min(Math.max(1, parseInt(limit, 10) || 10), 50);
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+
   const where = {};
   if (tag) where.tags = { has: tag };
   if (search) {
@@ -14,8 +17,8 @@ export async function listPosts({ tag, search, page = 1, limit = 10 }) {
     prisma.communityPost.count({ where }),
     prisma.communityPost.findMany({
       where,
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
@@ -30,7 +33,7 @@ export async function listPosts({ tag, search, page = 1, limit = 10 }) {
     }),
   ]);
 
-  return { posts, total, page, limit, totalPages: Math.ceil(total / limit) };
+  return { posts, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) };
 }
 
 export async function getPostById(id) {
@@ -98,6 +101,13 @@ export async function togglePostLike(postId, userId) {
 }
 
 export async function addComment(postId, authorId, content) {
+  const post = await prisma.communityPost.findUnique({ where: { id: postId } });
+  if (!post) {
+    const err = new Error('POST_NOT_FOUND');
+    err.statusCode = 404;
+    throw err;
+  }
+
   return prisma.comment.create({
     data: {
       postId,

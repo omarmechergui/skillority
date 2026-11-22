@@ -244,16 +244,57 @@ prisma.enrollment = {
   },
 };
 
+prisma.wallet = {
+  findUnique: async ({ where }) => {
+    if (where.userId) return db.wallets[where.userId] || null;
+    if (where.id) return Object.values(db.wallets).find((w) => w.id === where.id) || null;
+    return null;
+  },
+  update: async ({ where, data }) => {
+    const wallet = Object.values(db.wallets).find((w) => w.id === where.id);
+    if (wallet && data.balance?.decrement) {
+      wallet.balance -= data.balance.decrement;
+    }
+    return wallet;
+  },
+  updateMany: async ({ where, data }) => {
+    let list = Object.values(db.wallets);
+    if (where.id) list = list.filter((w) => w.id === where.id);
+    if (where.userId) list = list.filter((w) => w.userId === where.userId);
+    if (where.balance?.gte !== undefined) list = list.filter((w) => w.balance >= where.balance.gte);
+    list.forEach((w) => {
+      if (data.balance?.decrement) w.balance -= data.balance.decrement;
+      if (data.balance?.increment) w.balance += data.balance.increment;
+    });
+    return { count: list.length };
+  },
+};
+
 prisma.$transaction = async (fn) => {
   const tx = {
     wallet: {
-      findUnique: async ({ where }) => db.wallets[where.userId] || null,
+      findUnique: async ({ where }) => {
+        if (where.userId) return db.wallets[where.userId] || null;
+        if (where.id) return Object.values(db.wallets).find((w) => w.id === where.id) || null;
+        return null;
+      },
       update: async ({ where, data }) => {
         const wallet = Object.values(db.wallets).find((w) => w.id === where.id);
         if (wallet && data.balance?.decrement) {
           wallet.balance -= data.balance.decrement;
         }
         return wallet;
+      },
+      updateMany: async ({ where, data }) => {
+        let list = Object.values(db.wallets);
+        if (where.id) list = list.filter((w) => w.id === where.id);
+        if (where.userId) list = list.filter((w) => w.userId === where.userId);
+        if (where.balance?.gte !== undefined) list = list.filter((w) => w.balance >= where.balance.gte);
+        list.forEach((w) => {
+          if (data.balance?.decrement) w.balance -= data.balance.decrement;
+          if (data.balance?.increment) w.balance += data.balance.increment;
+        });
+        return { count: list.length };
       },
     },
     walletTransaction: {
@@ -263,6 +304,37 @@ prisma.$transaction = async (fn) => {
       },
     },
     enrollment: {
+      findUnique: async ({ where }) => {
+        if (where.id) return db.enrollments.find((e) => e.id === where.id) || null;
+        if (where.userId_courseId) {
+          return (
+            db.enrollments.find(
+              (e) =>
+                e.userId === where.userId_courseId.userId &&
+                e.courseId === where.userId_courseId.courseId
+            ) || null
+          );
+        }
+        return null;
+      },
+      updateMany: async ({ where, data }) => {
+        let list = db.enrollments.filter((e) => {
+          if (where.id && e.id !== where.id) return false;
+          if (where.NOT?.unlockedChapterIds?.has && e.unlockedChapterIds?.includes(where.NOT.unlockedChapterIds.has)) {
+            return false;
+          }
+          return true;
+        });
+        list.forEach((e) => {
+          if (data.unlockedChapterIds?.push) {
+            if (!e.unlockedChapterIds.includes(data.unlockedChapterIds.push)) {
+              e.unlockedChapterIds.push(data.unlockedChapterIds.push);
+            }
+          }
+          e.updatedAt = new Date();
+        });
+        return { count: list.length };
+      },
       update: async ({ where, data }) => {
         const idx = db.enrollments.findIndex((e) => e.id === where.id);
         if (data.unlockedChapterIds?.push) {
@@ -280,6 +352,15 @@ const studentUser = { id: 'usr_stud_101', email: 'student@test.com', role: 'STUD
 const instructorUser = { id: 'usr_inst_202', email: 'instructor@test.com', role: 'INSTRUCTOR', tokenVersion: 0 };
 const otherInstructorUser = { id: 'usr_inst_999', email: 'other@test.com', role: 'INSTRUCTOR', tokenVersion: 0 };
 const adminUser = { id: 'usr_admin_303', email: 'admin@test.com', role: 'ADMIN', tokenVersion: 0 };
+
+const testUsers = [studentUser, instructorUser, otherInstructorUser, adminUser];
+prisma.user = {
+  findUnique: async ({ where }) => {
+    const u = testUsers.find((user) => user.id === where.id);
+    if (!u) return null;
+    return { isActive: true, tokenVersion: 0, ...u };
+  },
+};
 
 const studentToken = signAccessToken(studentUser);
 const instructorToken = signAccessToken(instructorUser);

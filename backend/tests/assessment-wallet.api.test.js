@@ -77,7 +77,11 @@ const db = {
 
 // Wire mock Prisma
 prisma.wallet = {
-  findUnique: async ({ where }) => db.wallets[where.userId] || null,
+  findUnique: async ({ where }) => {
+    if (where.userId) return db.wallets[where.userId] || null;
+    if (where.id) return Object.values(db.wallets).find((w) => w.id === where.id) || null;
+    return null;
+  },
   create: async ({ data }) => {
     const w = { id: `wal_${Date.now()}`, ...data, transactions: [] };
     db.wallets[data.userId] = w;
@@ -90,6 +94,28 @@ prisma.wallet = {
     if (data.balance?.decrement) w.balance -= data.balance.decrement;
     if (data.lastLoginBonus) w.lastLoginBonus = data.lastLoginBonus;
     return w;
+  },
+  updateMany: async ({ where, data }) => {
+    let matched = Object.values(db.wallets).filter((w) => {
+      if (where.id && w.id !== where.id) return false;
+      if (where.userId && w.userId !== where.userId) return false;
+      if (where.balance?.gte !== undefined && !(w.balance >= where.balance.gte)) return false;
+      if (where.OR) {
+        const matchesOr = where.OR.some((cond) => {
+          if (cond.lastLoginBonus === null && !w.lastLoginBonus) return true;
+          if (cond.lastLoginBonus?.lt && w.lastLoginBonus && w.lastLoginBonus < cond.lastLoginBonus.lt) return true;
+          return false;
+        });
+        if (!matchesOr) return false;
+      }
+      return true;
+    });
+    matched.forEach((w) => {
+      if (data.balance?.increment) w.balance += data.balance.increment;
+      if (data.balance?.decrement) w.balance -= data.balance.decrement;
+      if (data.lastLoginBonus) w.lastLoginBonus = data.lastLoginBonus;
+    });
+    return { count: matched.length };
   },
   upsert: async ({ where, update, create }) => {
     let w = db.wallets[where.userId];
@@ -105,8 +131,37 @@ prisma.wallet = {
 
 prisma.walletTransaction = {
   create: async ({ data }) => {
-    db.transactions.push(data);
-    return data;
+    const tx = { id: `wtx_${Date.now()}`, createdAt: new Date(), ...data };
+    db.transactions.push(tx);
+    return tx;
+  },
+  count: async ({ where } = {}) => {
+    let list = db.transactions;
+    if (where?.walletId) list = list.filter((t) => t.walletId === where.walletId);
+    if (where?.type) list = list.filter((t) => t.type === where.type);
+    if (where?.createdAt?.gte) list = list.filter((t) => new Date(t.createdAt) >= where.createdAt.gte);
+    return list.length;
+  },
+  findFirst: async ({ where, orderBy } = {}) => {
+    let list = [...db.transactions];
+    if (orderBy?.createdAt === 'desc') {
+      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    return (
+      list.find((t) => {
+        if (where?.walletId && t.walletId !== where.walletId) return false;
+        if (where?.type && t.type !== where.type) return false;
+        if (where?.referenceId && t.referenceId !== where.referenceId) return false;
+        return true;
+      }) || null
+    );
+  },
+  findMany: async ({ where } = {}) => {
+    let list = db.transactions;
+    if (where?.walletId) list = list.filter((t) => t.walletId === where.walletId);
+    if (where?.type) list = list.filter((t) => t.type === where.type);
+    if (where?.createdAt?.gte) list = list.filter((t) => new Date(t.createdAt) >= where.createdAt.gte);
+    return list;
   },
 };
 
@@ -129,6 +184,17 @@ prisma.quizAttempt = {
     db.quizAttempts.push(data);
     return { id: `qa_${Date.now()}`, ...data };
   },
+  findFirst: async ({ where }) => {
+    return (
+      db.quizAttempts.find((qa) => {
+        if (where.userId && qa.userId !== where.userId) return false;
+        if (where.chapterId && qa.chapterId !== where.chapterId) return false;
+        if (where.passed !== undefined && qa.passed !== where.passed) return false;
+        if (where.coinsAwarded?.gt !== undefined && !(qa.coinsAwarded > where.coinsAwarded.gt)) return false;
+        return true;
+      }) || null
+    );
+  },
 };
 
 prisma.assessmentAttempt = {
@@ -136,9 +202,23 @@ prisma.assessmentAttempt = {
     db.assessmentAttempts.push(data);
     return { id: `aa_${Date.now()}`, ...data };
   },
+  findFirst: async ({ where }) => {
+    return (
+      db.assessmentAttempts.find((aa) => {
+        if (where.userId && aa.userId !== where.userId) return false;
+        if (where.courseId && aa.courseId !== where.courseId) return false;
+        return true;
+      }) || null
+    );
+  },
 };
 
 prisma.certificate = {
+  create: async ({ data }) => {
+    const cert = { id: `cert_${Date.now()}`, ...data, issuedAt: new Date() };
+    db.certificates.push(cert);
+    return cert;
+  },
   upsert: async ({ where, create }) => {
     let cert = db.certificates.find((c) => c.credentialId === where.credentialId);
     if (!cert) {
@@ -146,6 +226,16 @@ prisma.certificate = {
       db.certificates.push(cert);
     }
     return cert;
+  },
+  findFirst: async ({ where }) => {
+    return (
+      db.certificates.find((c) => {
+        if (where.recipientId && c.recipientId !== where.recipientId) return false;
+        if (where.courseId && c.courseId !== where.courseId) return false;
+        if (where.type && c.type !== where.type) return false;
+        return true;
+      }) || null
+    );
   },
   findMany: async ({ where }) => db.certificates.filter((c) => c.recipientId === where.recipientId),
   findUnique: async ({ where }) => db.certificates.find((c) => c.credentialId === where.credentialId) || null,
@@ -155,6 +245,15 @@ prisma.$transaction = async (fn) => fn(prisma);
 
 const studentUser = { id: 'usr_stud_quiz_1', email: 'stud_quiz@test.com', role: 'STUDENT', tokenVersion: 0 };
 const studentToken = signAccessToken(studentUser);
+
+prisma.user = {
+  findUnique: async ({ where }) => {
+    if (where.id === studentUser.id) {
+      return { isActive: true, tokenVersion: 0, ...studentUser };
+    }
+    return null;
+  },
+};
 
 async function runAssessmentWalletTests() {
   console.log('=== STARTING ASSESSMENT, QUIZ, CERTIFICATES & WALLET TEST SUITE ===\n');
@@ -201,12 +300,20 @@ async function runAssessmentWalletTests() {
     report('3. Repeated daily login claim on same day is rejected with 400 ALREADY_CLAIMED', res.statusCode === 400 && res.body.error?.code === 'ALREADY_CLAIMED');
   }
 
-  // 4. Sponsored Ad Reward
+  // 4. Sponsored Ad Reward (with server-side session verification)
   {
+    const initRes = await simulateRequest(app, {
+      method: 'POST',
+      url: '/api/wallet/ad-session/initiate',
+      headers: { Authorization: `Bearer ${studentToken}` },
+    });
+    const adSessionToken = initRes.body?.data?.adSessionToken;
+
     const res = await simulateRequest(app, {
       method: 'POST',
       url: '/api/wallet/claim-ad-reward',
       headers: { Authorization: `Bearer ${studentToken}` },
+      body: { adSessionToken },
     });
     report('4. Claiming ad reward increments balance by 1-5 coins', res.statusCode === 200 && res.body.data?.coinsAwarded >= 1 && res.body.data?.coinsAwarded <= 5);
   }
@@ -242,6 +349,13 @@ async function runAssessmentWalletTests() {
   };
   db.chapters.push(testChapter);
 
+  db.enrollments.push({
+    userId: studentUser.id,
+    courseId: testCourse.id,
+    progressPercent: 75.0,
+    isCompleted: false,
+  });
+
   // 5. Submit Chapter Quiz (Passing)
   {
     const res = await simulateRequest(app, {
@@ -270,13 +384,6 @@ async function runAssessmentWalletTests() {
 
   // 7. Course Completion Certificate: Rejects if course is incomplete (< 100%)
   {
-    db.enrollments.push({
-      userId: studentUser.id,
-      courseId: testCourse.id,
-      progressPercent: 75.0,
-      isCompleted: false,
-    });
-
     const res = await simulateRequest(app, {
       method: 'POST',
       url: `/api/assessments/courses/${testCourse.id}/claim-completion`,

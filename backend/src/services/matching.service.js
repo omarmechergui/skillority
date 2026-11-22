@@ -4,6 +4,106 @@
  */
 
 /**
+ * Canonical dictionary mapping technology aliases and variants to standard canonical names.
+ */
+export const SKILL_ALIASES = {
+  // Programming Languages & Environments
+  'js': 'javascript',
+  'javascript': 'javascript',
+  'ts': 'typescript',
+  'typescript': 'typescript',
+  'py': 'python',
+  'python': 'python',
+  'golang': 'go',
+  'go': 'go',
+  'cpp': 'c++',
+  'c++': 'c++',
+  'csharp': 'c#',
+  'c#': 'c#',
+  'c sharp': 'c#',
+  'c': 'c',
+  'r': 'r',
+  'rb': 'ruby',
+  'ruby': 'ruby',
+  'php': 'php',
+  'java': 'java',
+  'rust': 'rust',
+  'kotlin': 'kotlin',
+  'swift': 'swift',
+
+  // Frontend & UI
+  'react': 'react',
+  'reactjs': 'react',
+  'react js': 'react',
+  'vue': 'vue',
+  'vuejs': 'vue',
+  'vue js': 'vue',
+  'angular': 'angular',
+  'angularjs': 'angular',
+  'next': 'nextjs',
+  'nextjs': 'nextjs',
+  'next js': 'nextjs',
+  'html': 'html',
+  'html5': 'html',
+  'css': 'css',
+  'css3': 'css',
+  'tailwind': 'tailwind css',
+  'tailwindcss': 'tailwind css',
+  'tailwind css': 'tailwind css',
+  'sass': 'sass',
+  'scss': 'sass',
+  'bootstrap': 'bootstrap',
+
+  // Backend & Databases
+  'node': 'nodejs',
+  'nodejs': 'nodejs',
+  'node js': 'nodejs',
+  'express': 'expressjs',
+  'expressjs': 'expressjs',
+  'express js': 'expressjs',
+  'postgres': 'postgresql',
+  'postgresql': 'postgresql',
+  'mongo': 'mongodb',
+  'mongodb': 'mongodb',
+  'sql': 'sql',
+  'mysql': 'mysql',
+  'redis': 'redis',
+  'graphql': 'graphql',
+  'rest': 'rest api',
+  'rest api': 'rest api',
+  'restful': 'rest api',
+
+  // DevOps, Cloud & Tools
+  'k8s': 'kubernetes',
+  'kubernetes': 'kubernetes',
+  'docker': 'docker',
+  'aws': 'amazon web services',
+  'amazon web services': 'amazon web services',
+  'gcp': 'google cloud',
+  'google cloud': 'google cloud',
+  'google cloud platform': 'google cloud',
+  'azure': 'microsoft azure',
+  'microsoft azure': 'microsoft azure',
+  'git': 'git',
+  'github': 'github',
+  'ci cd': 'ci/cd',
+  'cicd': 'ci/cd',
+
+  // AI, Data & CS
+  'ml': 'machine learning',
+  'machine learning': 'machine learning',
+  'ai': 'artificial intelligence',
+  'artificial intelligence': 'artificial intelligence',
+  'dl': 'deep learning',
+  'deep learning': 'deep learning',
+  'nlp': 'natural language processing',
+  'natural language processing': 'natural language processing',
+  'dsa': 'data structures and algorithms',
+  'data structures': 'data structures and algorithms',
+  'algorithms': 'data structures and algorithms',
+};
+
+/**
  * Normalizes a skill string for case-insensitive, punctuation-resilient matching.
  */
 export function normalizeSkill(skill) {
@@ -16,13 +116,42 @@ export function normalizeSkill(skill) {
 }
 
 /**
- * Checks whether a candidate's skill set contains a target skill.
+ * Checks whether a candidate's skill set contains a target skill using exact
+ * normalized tokens and verified aliases, avoiding unsafe substring matching.
  */
 export function hasSkillMatch(candidateSkills, targetSkill) {
+  if (!Array.isArray(candidateSkills) || candidateSkills.length === 0) return false;
   const normalizedTarget = normalizeSkill(targetSkill);
+  if (!normalizedTarget) return false;
+
+  const canonicalTarget = SKILL_ALIASES[normalizedTarget] || normalizedTarget;
+
   return candidateSkills.some((s) => {
     const norm = normalizeSkill(s);
-    return norm === normalizedTarget || norm.includes(normalizedTarget) || normalizedTarget.includes(norm);
+    if (!norm) return false;
+
+    // 1. Direct exact match
+    if (norm === normalizedTarget) return true;
+
+    // 2. Canonical alias match (e.g., 'golang' matches 'go', 'js' matches 'javascript')
+    const canonicalCandidate = SKILL_ALIASES[norm] || norm;
+    if (canonicalCandidate === canonicalTarget) return true;
+
+    // 3. Multi-word phrase matching with word boundaries (preventing substring collisions like 'c' in 'css')
+    // We only permit token containment if both tokens are multi-word phrases and all significant words match
+    if (normalizedTarget.length >= 4 && norm.length >= 4) {
+      const targetWords = normalizedTarget.split(' ');
+      const candidateWords = norm.split(' ');
+
+      if (targetWords.length > 1 && targetWords.every((tw) => candidateWords.includes(tw))) {
+        return true;
+      }
+      if (candidateWords.length > 1 && candidateWords.every((cw) => targetWords.includes(cw))) {
+        return true;
+      }
+    }
+
+    return false;
   });
 }
 

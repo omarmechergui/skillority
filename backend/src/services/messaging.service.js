@@ -1,12 +1,13 @@
 import prisma from '../config/database.js';
 
 export async function getUserConversations(userId) {
-  // Aggregate recent messages by conversationId
+  // Aggregate recent messages by conversationId with bounded limit to prevent memory exhaustion
   const messages = await prisma.message.findMany({
     where: {
       OR: [{ senderId: userId }, { recipientId: userId }],
     },
     orderBy: { createdAt: 'desc' },
+    take: 200,
     include: {
       sender: { select: { id: true, profile: true } },
     },
@@ -36,6 +37,26 @@ export async function getConversationMessages(userId, conversationId) {
 }
 
 export async function sendMessage(senderId, conversationId, recipientId, content) {
+  if (senderId === recipientId) {
+    const err = new Error('CANNOT_MESSAGE_SELF');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Prevent thread injection / IDOR: if conversation already exists, verify sender is participant
+  const existingMsg = await prisma.message.findFirst({
+    where: { conversationId },
+  });
+
+  if (existingMsg) {
+    const isParticipant = existingMsg.senderId === senderId || existingMsg.recipientId === senderId;
+    if (!isParticipant) {
+      const err = new Error('FORBIDDEN_NOT_PARTICIPANT');
+      err.statusCode = 403;
+      throw err;
+    }
+  }
+
   return prisma.message.create({
     data: {
       conversationId,

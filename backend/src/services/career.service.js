@@ -651,7 +651,14 @@ export async function getStudentApplications(studentId) {
           status: app.offer.status,
         }
       : null,
-    timeline: app.timeline,
+    timeline: (app.timeline || []).map((tl) => ({
+      id: tl.id,
+      action: tl.action,
+      fromStatus: tl.fromStatus,
+      toStatus: tl.toStatus,
+      note: tl.note,
+      createdAt: tl.createdAt,
+    })),
     createdAt: app.createdAt,
     updatedAt: app.updatedAt,
   }));
@@ -699,7 +706,8 @@ export async function withdrawApplication(studentId, applicationId, reason = '')
     linkUrl: `/company/opportunities/${app.opportunityId}`,
   });
 
-  return updated;
+  const { internalNotes, rating, ...safeApp } = updated;
+  return safeApp;
 }
 
 // ============================================================================
@@ -873,7 +881,7 @@ export async function evaluateCandidate(applicationId, companyId, { internalNote
   await recordTimeline({
     applicationId,
     action: 'CANDIDATE_EVALUATED',
-    note: rating ? `Rating: ${rating} stars. Evaluation recorded.` : 'Internal recruiter evaluation updated',
+    note: 'Application reviewed by hiring team',
     performedById: companyId,
     performedByRole: 'COMPANY',
   });
@@ -1014,7 +1022,7 @@ export async function updateInterview(interviewId, companyId, data) {
   await recordTimeline({
     applicationId: inv.applicationId,
     action: data.status ? `INTERVIEW_${data.status}` : 'INTERVIEW_UPDATED',
-    note: data.feedback || `Interview updated: ${data.status || 'rescheduled'}`,
+    note: data.status ? `Interview ${data.status.toLowerCase().replace(/_/g, ' ')}` : 'Interview details updated',
     performedById: companyId,
     performedByRole: 'COMPANY',
   });
@@ -1115,26 +1123,82 @@ export async function respondToOffer(studentId, offerId, { status, declinedReaso
       throw new Error('POSITIONS_FULL');
     }
 
-    // Atomically increment filled positions and update offer & application
-    const [updatedOffer] = await Promise.all([
-      prisma.offer.update({
-        where: { id: offerId },
+    const executeAcceptance = async (tx) => {
+      // 1. Atomically lock and transition offer status
+      const offerUpdate = await tx.offer.updateMany({
+        where: {
+          id: offerId,
+          studentId,
+          status: 'PENDING',
+        },
         data: {
           status: 'ACCEPTED',
           respondedAt: new Date(),
         },
-      }),
-      prisma.application.update({
-        where: { id: offer.applicationId },
-        data: { status: 'ACCEPTED' },
-      }),
-      prisma.opportunity.update({
-        where: { id: offer.opportunityId },
+      });
+
+      if (offerUpdate.count === 0) {
+        throw new Error('OFFER_ALREADY_RESOLVED');
+      }
+
+      // 2. Atomically increment filledPositions only if strictly under capacity limit
+      const oppUpdate = await tx.opportunity.updateMany({
+        where: {
+          id: offer.opportunityId,
+          filledPositions: { lt: offer.opportunity.positions },
+        },
         data: {
           filledPositions: { increment: 1 },
         },
-      }),
-    ]);
+      });
+
+      if (oppUpdate.count === 0) {
+        await tx.offer.update({
+          where: { id: offerId },
+          data: { status: 'PENDING', respondedAt: null },
+        });
+        throw new Error('POSITIONS_FULL');
+      }
+
+      // 3. Auto-close opportunity if capacity reached
+      const updatedOpp = await tx.opportunity.findUnique({
+        where: { id: offer.opportunityId },
+        select: { positions: true, filledPositions: true },
+      });
+      if (updatedOpp && updatedOpp.filledPositions >= updatedOpp.positions) {
+        await tx.opportunity.update({
+          where: { id: offer.opportunityId },
+          data: { isOpen: false, status: 'CLOSED' },
+        });
+      }
+
+      // 4. Update application status with rollback on failure
+      try {
+        await tx.application.update({
+          where: { id: offer.applicationId },
+          data: { status: 'ACCEPTED' },
+        });
+      } catch (appErr) {
+        await tx.opportunity.update({
+          where: { id: offer.opportunityId },
+          data: { filledPositions: { decrement: 1 } },
+        });
+        await tx.offer.update({
+          where: { id: offerId },
+          data: { status: 'PENDING', respondedAt: null },
+        });
+        throw appErr;
+      }
+
+      return tx.offer.findUnique({ where: { id: offerId } });
+    };
+
+    let updatedOffer;
+    if (typeof prisma.$transaction === 'function') {
+      updatedOffer = await prisma.$transaction(executeAcceptance);
+    } else {
+      updatedOffer = await executeAcceptance(prisma);
+    }
 
     await recordTimeline({
       applicationId: offer.applicationId,
@@ -1156,19 +1220,38 @@ export async function respondToOffer(studentId, offerId, { status, declinedReaso
 
     return updatedOffer;
   } else if (status === 'DECLINED') {
-    const updatedOffer = await prisma.offer.update({
-      where: { id: offerId },
-      data: {
-        status: 'DECLINED',
-        declinedReason: declinedReason || null,
-        respondedAt: new Date(),
-      },
-    });
+    const executeDecline = async (tx) => {
+      const offerUpdate = await tx.offer.updateMany({
+        where: {
+          id: offerId,
+          studentId,
+          status: 'PENDING',
+        },
+        data: {
+          status: 'DECLINED',
+          declinedReason: declinedReason || null,
+          respondedAt: new Date(),
+        },
+      });
 
-    await prisma.application.update({
-      where: { id: offer.applicationId },
-      data: { status: 'REJECTED' },
-    });
+      if (offerUpdate.count === 0) {
+        throw new Error('OFFER_ALREADY_RESOLVED');
+      }
+
+      await tx.application.update({
+        where: { id: offer.applicationId },
+        data: { status: 'REJECTED' },
+      });
+
+      return tx.offer.findUnique({ where: { id: offerId } });
+    };
+
+    let updatedOffer;
+    if (typeof prisma.$transaction === 'function') {
+      updatedOffer = await prisma.$transaction(executeDecline);
+    } else {
+      updatedOffer = await executeDecline(prisma);
+    }
 
     await recordTimeline({
       applicationId: offer.applicationId,

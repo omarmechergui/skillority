@@ -49,6 +49,9 @@ export async function addComment(req, res, next) {
     const comment = await communityService.addComment(req.params.id, req.user.id, req.validatedBody.content);
     return res.status(201).json({ success: true, message: 'Comment added', data: comment });
   } catch (err) {
+    if (err.message === 'POST_NOT_FOUND' || err.statusCode === 404) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Post not found' } });
+    }
     next(err);
   }
 }

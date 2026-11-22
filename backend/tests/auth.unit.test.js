@@ -19,6 +19,9 @@ import {
   inviteInstructorSchema,
 } from '../src/validators/auth.validators.js';
 
+process.env.JWT_ACCESS_SECRET = 'unit-test-access-secret-32-chars-long-secure';
+process.env.JWT_REFRESH_SECRET = 'unit-test-refresh-secret-32-chars-long-secure';
+
 async function runUnitTests() {
   console.log('--- STARTING PHASE 2 AUTHENTICATION UNIT TESTS ---');
   let passed = 0;

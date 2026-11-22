@@ -1,9 +1,39 @@
 import prisma from '../config/database.js';
 
-export async function listCourses({ category, level, status = 'PUBLISHED', instructorId, search, page = 1, limit = 10 }) {
+export async function listCourses({
+  category,
+  level,
+  status = 'PUBLISHED',
+  instructorId,
+  search,
+  page = 1,
+  limit = 10,
+  user = null,
+}) {
   const where = {};
-  if (status && status !== 'ALL') where.status = status;
-  if (instructorId) where.instructorId = instructorId;
+
+  // Status authorization:
+  // Non-admins and unauthenticated users can ONLY see PUBLISHED or APPROVED courses.
+  // Instructors can see their own courses in any status if querying with their own instructorId.
+  const isAdmin = user?.role === 'ADMIN';
+  const isOwnerInstructor = user?.role === 'INSTRUCTOR' && instructorId && instructorId === user.id;
+
+  if (isAdmin) {
+    if (status && status !== 'ALL') where.status = status;
+  } else if (isOwnerInstructor) {
+    if (status && status !== 'ALL') where.status = status;
+    where.instructorId = user.id;
+  } else {
+    // Public / student / company: strictly PUBLISHED (or APPROVED) courses only.
+    // status=ALL or status=DRAFT cannot expose unpublished courses to non-admins.
+    if (status === 'APPROVED') {
+      where.status = 'APPROVED';
+    } else {
+      where.status = { in: ['PUBLISHED', 'APPROVED'] };
+    }
+  }
+
+  if (instructorId && !where.instructorId) where.instructorId = instructorId;
   if (category) where.category = category;
   if (level) where.level = level;
   if (search) {
@@ -13,18 +43,22 @@ export async function listCourses({ category, level, status = 'PUBLISHED', instr
     ];
   }
 
+  // Cap limit between 1 and 100 to prevent denial of service
+  const boundedLimit = Math.max(1, Math.min(Number(limit) || 10, 100));
+  const boundedPage = Math.max(1, Number(page) || 1);
+
   const [total, courses] = await Promise.all([
     prisma.course.count({ where }),
     prisma.course.findMany({
       where,
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (boundedPage - 1) * boundedLimit,
+      take: boundedLimit,
       orderBy: { createdAt: 'desc' },
       include: {
         instructor: {
           select: {
             id: true,
-            email: true,
+            // Strictly omit email to protect instructor privacy in public responses
             profile: { select: { firstName: true, lastName: true, avatar: true } },
           },
         },
@@ -33,11 +67,24 @@ export async function listCourses({ category, level, status = 'PUBLISHED', instr
     }),
   ]);
 
-  return { courses, total, page, limit, totalPages: Math.ceil(total / limit) };
+  const sanitizedCourses = courses.map((course) => {
+    if (course.instructor && course.instructor.email) {
+      delete course.instructor.email;
+    }
+    return course;
+  });
+
+  return { courses: sanitizedCourses, total, page: boundedPage, limit: boundedLimit, totalPages: Math.ceil(total / boundedLimit) };
 }
 
-export async function getCourseById(courseId, includeFullCurriculum = false) {
-  return prisma.course.findUnique({
+export async function getCourseById(courseId, { user = null, includeContent = false } = {}) {
+  // Support legacy boolean invocation if passed directly
+  if (typeof user === 'boolean') {
+    includeContent = user;
+    user = null;
+  }
+
+  const course = await prisma.course.findUnique({
     where: { id: courseId },
     include: {
       instructor: {
@@ -50,13 +97,99 @@ export async function getCourseById(courseId, includeFullCurriculum = false) {
       chapters: {
         orderBy: { order: 'asc' },
         include: {
-          lessons: includeFullCurriculum
-            ? { orderBy: { order: 'asc' } }
-            : { select: { id: true, title: true, order: true, duration: true } },
+          lessons: {
+            orderBy: { order: 'asc' },
+          },
         },
       },
     },
   });
+
+  if (!course) return null;
+
+  const isAdmin = user?.role === 'ADMIN';
+  const isOwner = user?.role === 'INSTRUCTOR' && course.instructorId === user.id;
+  const isPrivileged = isAdmin || isOwner;
+
+  // 1. Unpublished courses (DRAFT, PENDING_REVIEW, REJECTED) are strictly restricted to Admin & Owner
+  const isAvailablePublicly = course.status === 'PUBLISHED' || course.status === 'APPROVED';
+  if (!isAvailablePublicly && !isPrivileged) {
+    return null;
+  }
+
+  // 2. Strip instructor email for non-privileged users
+  if (!isPrivileged && course.instructor) {
+    delete course.instructor.email;
+  }
+
+  // 3. Check enrollment if student is requesting content
+  let enrollment = null;
+  if (user && user.role === 'STUDENT' && includeContent) {
+    enrollment = await prisma.enrollment.findUnique({
+      where: { userId_courseId: { userId: user.id, courseId } },
+    });
+  }
+
+  // 4. Sanitize chapters, lessons, and quizzes
+  const sanitizedChapters = (course.chapters || []).map((chapter) => {
+    // Freemium rules: Chapters 0-5 are free; Chapter 6+ requires coins / unlock
+    const isFreeChapter = chapter.order <= 5;
+    const isUnlocked = isPrivileged || Boolean(enrollment && enrollment.unlockedChapterIds?.includes(chapter.id));
+    const canAccessContent = isPrivileged || (isFreeChapter && enrollment) || isUnlocked;
+
+    // Sanitize chapter quiz: Strip correctAnswer and explanation for non-privileged users
+    let sanitizedQuiz = chapter.quiz;
+    if (sanitizedQuiz && typeof sanitizedQuiz === 'object' && !isPrivileged) {
+      const questions = Array.isArray(sanitizedQuiz.questions)
+        ? sanitizedQuiz.questions.map((q) => {
+            const { correctAnswer, explanation, ...safeQ } = q;
+            return safeQ;
+          })
+        : [];
+      sanitizedQuiz = {
+        ...sanitizedQuiz,
+        questions,
+      };
+    }
+
+    // Process lessons
+    const sanitizedLessons = (chapter.lessons || []).map((lesson) => {
+      if (includeContent && canAccessContent) {
+        return lesson;
+      }
+      // If content not requested or access denied, strip content payload
+      const { content, ...metaLesson } = lesson;
+      return metaLesson;
+    });
+
+    return {
+      ...chapter,
+      quiz: sanitizedQuiz,
+      lessons: sanitizedLessons,
+      isLocked: !isFreeChapter && !isUnlocked,
+    };
+  });
+
+  // 5. Sanitize finalAssessment: Strip correctAnswer and explanation for non-privileged users
+  let sanitizedFinalAssessment = course.finalAssessment;
+  if (sanitizedFinalAssessment && typeof sanitizedFinalAssessment === 'object' && !isPrivileged) {
+    const questions = Array.isArray(sanitizedFinalAssessment.questions)
+      ? sanitizedFinalAssessment.questions.map((q) => {
+          const { correctAnswer, explanation, ...safeQ } = q;
+          return safeQ;
+        })
+      : [];
+    sanitizedFinalAssessment = {
+      ...sanitizedFinalAssessment,
+      questions,
+    };
+  }
+
+  return {
+    ...course,
+    finalAssessment: sanitizedFinalAssessment,
+    chapters: sanitizedChapters,
+  };
 }
 
 export async function createCourse(instructorId, data) {

@@ -34,81 +34,71 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({
         success: false,
         error: {
-          code: 'INVALID_TOKEN',
+          code: error === 'TokenExpiredError' ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN',
           message: error === 'TokenExpiredError' ? 'Access token has expired' : 'Invalid access token',
         },
       });
     }
 
     // Database lookup: verify user existence, active status, and tokenVersion
-    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder_user')) {
-      try {
-        const currentUser = await prisma.user.findUnique({
-          where: { id: payload.id },
-          select: {
-            id: true,
-            email: true,
-            role: true,
-            isActive: true,
-            tokenVersion: true,
-            isVerified: true,
+    // Fail-Closed: Never trust unverified JWT claims or bypass DB checks
+    try {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: payload.id },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          tokenVersion: true,
+          isVerified: true,
+        },
+      });
+
+      if (!currentUser) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'The user account associated with this token no longer exists',
           },
         });
-
-        if (!currentUser) {
-          return res.status(401).json({
-            success: false,
-            error: {
-              code: 'USER_NOT_FOUND',
-              message: 'The user account associated with this token no longer exists',
-            },
-          });
-        }
-
-        if (!currentUser.isActive) {
-          return res.status(403).json({
-            success: false,
-            error: {
-              code: 'ACCOUNT_DISABLED',
-              message: 'Your account has been deactivated or suspended',
-            },
-          });
-        }
-
-        if (currentUser.tokenVersion !== payload.tokenVersion) {
-          return res.status(401).json({
-            success: false,
-            error: {
-              code: 'SESSION_REVOKED',
-              message: 'Session has been invalidated. Please log in again.',
-            },
-          });
-        }
-
-        req.user = currentUser;
-        return next();
-      } catch (dbErr) {
-        if (process.env.NODE_ENV === 'production') {
-          return res.status(503).json({
-            success: false,
-            error: {
-              code: 'SERVICE_UNAVAILABLE',
-              message: 'Authentication service temporarily unavailable',
-            },
-          });
-        }
       }
-    }
 
-    // In isolated test/offline simulation environments:
-    req.user = {
-      id: payload.id,
-      email: payload.email,
-      role: payload.role,
-      tokenVersion: payload.tokenVersion ?? 0,
-      isActive: true,
-    };
-    return next();
+      if (!currentUser.isActive) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'ACCOUNT_DISABLED',
+            message: 'Your account has been deactivated or suspended',
+          },
+        });
+      }
+
+      const userTokenVersion = currentUser.tokenVersion ?? 0;
+      const payloadTokenVersion = payload.tokenVersion ?? 0;
+      if (userTokenVersion !== payloadTokenVersion) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'SESSION_REVOKED',
+            message: 'Session has been invalidated. Please log in again.',
+          },
+        });
+      }
+
+      req.user = currentUser;
+      return next();
+    } catch (dbErr) {
+      // Fail closed: Database lookup failure must reject token
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Authentication service temporarily unavailable',
+        },
+      });
+    }
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -122,7 +112,8 @@ export async function requireAuth(req, res, next) {
 
 /**
  * Optional Authentication Middleware
- * Attaches user to req.user if a valid token is present; otherwise continues anonymously.
+ * Attaches user to req.user if a valid token and verified active DB account are present;
+ * otherwise continues anonymously.
  */
 export async function optionalAuth(req, res, next) {
   try {
@@ -139,14 +130,27 @@ export async function optionalAuth(req, res, next) {
     }
 
     const { valid, payload } = verifyAccessToken(token);
-    if (valid && payload) {
-      req.user = {
-        id: payload.id,
-        email: payload.email,
-        role: payload.role,
-        tokenVersion: payload.tokenVersion ?? 0,
-        isActive: true,
-      };
+    if (valid && payload?.id) {
+      try {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: payload.id },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            isActive: true,
+            tokenVersion: true,
+            isVerified: true,
+          },
+        });
+        const userTokenVersion = currentUser.tokenVersion ?? 0;
+        const payloadTokenVersion = payload.tokenVersion ?? 0;
+        if (currentUser && currentUser.isActive && userTokenVersion === payloadTokenVersion) {
+          req.user = currentUser;
+        }
+      } catch {
+        // Database lookup failure: do not attach user, proceed anonymously
+      }
     }
   } catch {
     // Continue anonymously

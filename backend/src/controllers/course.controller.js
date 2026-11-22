@@ -11,6 +11,7 @@ export async function listCourses(req, res, next) {
       instructorId,
       page: Number(page) || 1,
       limit: Number(limit) || 10,
+      user: req.user || null,
     });
     return res.status(200).json({ success: true, data: result.courses, meta: result });
   } catch (err) {
@@ -21,7 +22,10 @@ export async function listCourses(req, res, next) {
 export async function getCourse(req, res, next) {
   try {
     const includeFull = req.query.includeContent === 'true' || req.query.includeCurriculum === 'true';
-    const course = await courseService.getCourseById(req.params.id, includeFull);
+    const course = await courseService.getCourseById(req.params.id, {
+      user: req.user || null,
+      includeContent: includeFull,
+    });
     if (!course) {
       return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
     }

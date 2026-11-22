@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
+import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.middleware.js';
 import { validate } from '../validators/auth.validators.js';
 import {
   createCourseSchema,
@@ -26,9 +26,9 @@ import {
 
 const router = Router();
 
-// Public course browsing
-router.get('/', listCourses);
-router.get('/:id', getCourse);
+// Public course browsing (optionalAuth attaches verified user if authenticated)
+router.get('/', optionalAuth, listCourses);
+router.get('/:id', optionalAuth, getCourse);
 
 // Instructor authoring routes
 router.post('/', requireAuth, requireRole('INSTRUCTOR', 'ADMIN'), validate(createCourseSchema), createCourse);

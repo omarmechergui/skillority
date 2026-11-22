@@ -1,11 +1,22 @@
 import assert from 'assert';
 import http from 'http';
 import app from '../src/app.js';
+import prisma from '../src/config/database.js';
 import { requireRole } from '../src/middleware/auth.middleware.js';
 import { signAccessToken } from '../src/utils/jwt.js';
 
-// Set offline placeholder so requireAuth uses token claims directly without remote network calls
-process.env.DATABASE_URL = 'mongodb://placeholder_user:dummy@localhost:27017/test';
+// Mock user lookup so fail-closed requireAuth finds valid active database user records during test
+const mockUsers = {
+  u_student_1: { id: 'u_student_1', email: 's@test.com', role: 'STUDENT', tokenVersion: 0, isActive: true },
+  u_company_1: { id: 'u_company_1', email: 'c@test.com', role: 'COMPANY', tokenVersion: 0, isActive: true },
+  u_instructor_1: { id: 'u_instructor_1', email: 'i@test.com', role: 'INSTRUCTOR', tokenVersion: 0, isActive: true },
+  u_admin_1: { id: 'u_admin_1', email: 'a@test.com', role: 'ADMIN', tokenVersion: 0, isActive: true },
+  u_hacker_1: { id: 'u_hacker_1', email: 'h@test.com', role: 'ANONYMOUS', tokenVersion: 0, isActive: true },
+};
+
+prisma.user.findUnique = async ({ where }) => {
+  return mockUsers[where.id] || null;
+};
 
 function simulateRequest(app, { method, url, headers = {}, body = null }) {
   return new Promise((resolve) => {
