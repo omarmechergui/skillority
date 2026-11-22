@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
@@ -16,32 +15,44 @@ import {
   User,
   Clock,
   CheckCircle,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 
-const STAGES = ['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED'];
+const STAGES = ['PENDING', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'ACCEPTED'];
 
 export default function RecruitmentPipelinePage() {
   const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadPipeline = async () => {
+    setLoading(true);
+    try {
+      const res = await careerApi.getCompanyApplications();
+      const rawApps = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
+      if (rawApps.length > 0) {
+        const liveApps = rawApps.map((app) => ({
+          id: app.id,
+          name:
+            [app.student?.profile?.firstName, app.student?.profile?.lastName]
+              .filter(Boolean)
+              .join(' ') || app.student?.email || 'Candidate',
+          appliedRole: app.opportunity?.title || 'Position',
+          stage: app.status || 'PENDING',
+          matchScore: app.matchScore || 85,
+        }));
+        setCandidates(liveApps);
+      } else {
+        setCandidates([]);
+      }
+    } catch (err) {
+      console.error('Failed to load recruitment pipeline:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadPipeline() {
-      try {
-        const res = await careerApi.getCompanyApplications();
-        if (res.data?.data && res.data.data.length > 0) {
-          const liveApps = res.data.data.map(app => ({
-            id: app.id,
-            name: [app.student?.profile?.firstName, app.student?.profile?.lastName].filter(Boolean).join(' ') || 'Candidate',
-            avatar: app.student?.profile?.avatar || null,
-            appliedRole: app.opportunity?.title || 'Position',
-            stage: app.status === 'PENDING' ? 'APPLIED' : app.status,
-            matchScore: 85,
-          }));
-          setCandidates(liveApps);
-        }
-      } catch {
-        // Safe fallback
-      }
-    }
     loadPipeline();
   }, []);
 
@@ -51,19 +62,10 @@ export default function RecruitmentPipelinePage() {
       prev.map((c) => (c.id === id ? { ...c, stage: newStage } : c))
     );
 
-    // Map pipeline stages to backend status enum
-    const stageToStatus = {
-      APPLIED: 'PENDING',
-      SCREENING: 'REVIEWING',
-      INTERVIEW: 'INTERVIEW',
-      OFFER: 'OFFERED',
-      HIRED: 'OFFERED',
-    };
-
     try {
-      await careerApi.updateApplicationStatus(id, stageToStatus[newStage] || newStage);
+      await careerApi.updateApplicationStatus(id, newStage);
     } catch {
-      // Keep optimistic update — user can retry
+      await loadPipeline();
     }
   };
 
@@ -81,7 +83,7 @@ export default function RecruitmentPipelinePage() {
               Recruitment Pipeline
             </h1>
             <p className="text-sm text-slate-500 max-w-xl">
-              Track candidate progression across hiring stages from initial application to final offer extension.
+              Track candidate progression across hiring stages from initial application to final offer acceptance.
             </p>
           </div>
 
@@ -93,82 +95,71 @@ export default function RecruitmentPipelinePage() {
         </div>
 
         {/* Kanban Board */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
-          {STAGES.map((st) => {
-            const stageCandidates = candidates.filter((c) => c.stage === st);
-            return (
-              <div key={st} className="bg-slate-50/70 border border-border rounded-xl p-3 flex flex-col min-w-[220px]">
-                {/* Column Header */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-border">
-                  <h3 className="font-bold text-xs text-slate-800 tracking-wider">{st}</h3>
-                  <span className="w-5 h-5 rounded-full bg-white text-slate-600 text-[10px] font-bold flex items-center justify-center border border-border">
-                    {stageCandidates.length}
-                  </span>
-                </div>
+        {loading ? (
+          <div className="p-16 text-center space-y-3 bg-white rounded-xl border border-border">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-xs text-slate-500">Loading pipeline board...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 overflow-x-auto pb-4">
+            {STAGES.map((st) => {
+              const stageCandidates = candidates.filter((c) => c.stage === st);
+              return (
+                <div key={st} className="bg-slate-50/70 border border-border rounded-xl p-3 flex flex-col min-w-[200px]">
+                  {/* Column Header */}
+                  <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-border">
+                    <h3 className="font-bold text-[11px] text-slate-800 tracking-wider truncate">{st}</h3>
+                    <span className="w-5 h-5 rounded-full bg-white text-slate-600 text-[10px] font-bold flex items-center justify-center border border-border">
+                      {stageCandidates.length}
+                    </span>
+                  </div>
 
-                {/* Candidate Cards */}
-                <div className="space-y-2.5 flex-1">
-                  {stageCandidates.map((c) => (
-                    <Card key={c.id} className="p-3.5 space-y-2.5 bg-white hover:shadow-md transition-shadow">
-                      <div className="flex items-start gap-2.5">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-slate-100 flex items-center justify-center">
-                          {c.avatar ? (
-                            <Image
-                              src={c.avatar}
-                              alt={c.name}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <span className="text-slate-400 font-bold text-[10px]">
-                              {c.name ? c.name.charAt(0) : 'C'}
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
+                  {/* Candidate Cards */}
+                  <div className="space-y-2 flex-1">
+                    {stageCandidates.map((c) => (
+                      <Card key={c.id} className="p-3 space-y-2 bg-white hover:shadow-xs transition-shadow border-border">
+                        <div>
                           <h4 className="font-bold text-xs text-slate-900 truncate">{c.name}</h4>
                           <p className="text-[10px] text-slate-500 truncate">{c.appliedRole}</p>
                         </div>
+
+                        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-100">
+                          <span className="text-emerald-700 font-bold">{c.matchScore}% Match</span>
+                          <Link href={`/company/applications/${c.id}`} className="text-primary hover:underline font-semibold">
+                            Review
+                          </Link>
+                        </div>
+
+                        {/* Move to next stage button */}
+                        {st !== 'ACCEPTED' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextIdx = STAGES.indexOf(st) + 1;
+                              if (nextIdx < STAGES.length) {
+                                moveCandidate(c.id, STAGES[nextIdx]);
+                              }
+                            }}
+                            className="w-full py-1 text-[10px] font-semibold text-slate-600 hover:text-primary bg-slate-50 hover:bg-blue-50 rounded border border-border transition-colors flex items-center justify-center gap-1"
+                          >
+                            Advance <ArrowRight className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                      </Card>
+                    ))}
+
+                    {stageCandidates.length === 0 && (
+                      <div className="text-center py-6 text-[10px] text-slate-400">
+                        No candidates
                       </div>
-
-                      <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-100">
-                        <span className="text-emerald-700 font-bold">{c.matchScore}% Match</span>
-                        <Link href={`/company/talent/${c.id}`} className="text-primary hover:underline">
-                          View
-                        </Link>
-                      </div>
-
-                      {/* Move to next stage button */}
-                      {st !== 'HIRED' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextIdx = STAGES.indexOf(st) + 1;
-                            if (nextIdx < STAGES.length) {
-                              moveCandidate(c.id, STAGES[nextIdx]);
-                            }
-                          }}
-                          className="w-full py-1 text-[10px] font-semibold text-slate-600 hover:text-primary bg-slate-50 hover:bg-blue-50 rounded border border-border transition-colors flex items-center justify-center gap-1"
-                        >
-                          Advance <ArrowRight className="w-2.5 h-2.5" />
-                        </button>
-                      )}
-                    </Card>
-                  ))}
-
-                  {stageCandidates.length === 0 && (
-                    <div className="text-center py-8 text-[11px] text-slate-400">
-                      Empty stage
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </DashboardShell>
   );
 }
-

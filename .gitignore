@@ -1,15 +1,12 @@
-# Backup outside the project
-Copy-Item .gitignore "$env:TEMP\skillority-gitignore-backup"
-
-# Clean .gitignore
-@'
 # Dependencies
 node_modules/
 .pnpm-store/
 
-# Next.js
+# Next.js build output
 .next/
 out/
+frontend/.next/
+frontend/out/
 
 # Production builds
 dist/
@@ -31,21 +28,25 @@ pnpm-debug.log*
 backend/prisma/*.db
 backend/prisma/*.db-journal
 
-# Test artifacts
+# Test artifacts and Playwright reports
 coverage/
 test-results/
 playwright-report/
 playwright/.cache/
+docs/playwright-report/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Local database diagnostic scripts
 /diagnose-db.js
 /test-atlas-tcp.js
 /test-prisma-live.js
 /test-real-crud.js
-'@ | Set-Content -LiteralPath .gitignore -Encoding UTF8
-
-Write-Host "Gitignore cleaned successfully." -ForegroundColor Green

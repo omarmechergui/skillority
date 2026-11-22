@@ -22,6 +22,9 @@ import {
   Eye,
   Trash2,
   Loader2,
+  CheckCircle2,
+  XCircle,
+  Building2,
 } from 'lucide-react';
 
 export default function CompanyOpportunitiesPage() {
@@ -30,46 +33,48 @@ export default function CompanyOpportunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [notification, setNotification] = useState(null);
+
+  const loadOpportunities = async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (user?.id) params.companyId = user.id;
+      const res = await careerApi.getOpportunities(params);
+      if (res.data?.opportunities) {
+        setOpportunities(res.data.opportunities);
+      } else if (Array.isArray(res.data)) {
+        setOpportunities(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load company opportunities:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadOpportunities() {
-      setLoading(true);
-      try {
-        const params = {};
-        if (user?.id) params.companyId = user.id;
-        const res = await careerApi.getOpportunities(params);
-        if (res.data?.opportunities && res.data.opportunities.length > 0) {
-          const liveList = res.data.opportunities.map((opp) => ({
-            id: opp.id,
-            title: opp.title,
-            department: 'Core Operations',
-            location: opp.location || 'Remote',
-            type: opp.type === 'FULL_TIME' ? 'Full-Time' : opp.type,
-            status: opp.isOpen ? 'ACTIVE' : 'CLOSED',
-            description: opp.description,
-            requiredSkills: opp.skills || [],
-            applicantsCount: opp._count?.applications || 0,
-            viewsCount: 120,
-            postedDate: new Date(opp.createdAt).toLocaleDateString(),
-          }));
-          setOpportunities(liveList);
-        } else if (res.data?.opportunities && res.data.opportunities.length === 0) {
-          setOpportunities([]);
-        }
-      } catch (err) {
-        // Safe fallback
-      } finally {
-        setLoading(false);
-      }
-    }
     loadOpportunities();
   }, [user]);
+
+  const handleCloseOpportunity = async (oppId) => {
+    try {
+      await careerApi.closeOpportunity(oppId);
+      setNotification({ type: 'success', message: 'Opportunity marked as closed.' });
+      await loadOpportunities();
+    } catch (err) {
+      setNotification({ type: 'error', message: err.message || 'Failed to close opportunity.' });
+    }
+  };
 
   const filteredOpps = opportunities.filter((opp) => {
     const matchesSearch =
       opp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opp.department?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || opp.status === statusFilter;
+      (opp.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'ALL' ||
+      (statusFilter === 'OPEN' ? opp.isOpen : !opp.isOpen) ||
+      opp.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -94,114 +99,165 @@ export default function CompanyOpportunitiesPage() {
           <Link href="/company/opportunities/create">
             <Button className="text-xs font-semibold flex items-center gap-1.5">
               <Plus className="w-4 h-4" />
-              Create New Opportunity
+              Post New Opportunity
             </Button>
           </Link>
         </div>
 
-        {/* Filters and Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        {notification && (
+          <div
+            className={`p-4 rounded-xl text-xs font-semibold flex items-center justify-between border ${
+              notification.type === 'success'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+          >
+            <span>{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-slate-700">
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-border shadow-sm">
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by role or department..."
+              placeholder="Search by title or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-border bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
-          <div className="inline-flex rounded-lg border border-border p-1 bg-slate-50 text-xs w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('ALL')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md font-medium transition-colors ${
-                statusFilter === 'ALL' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Listings ({opportunities.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('ACTIVE')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-md font-medium transition-colors ${
-                statusFilter === 'ACTIVE' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Active ({opportunities.filter((o) => o.status === 'ACTIVE').length})
-            </button>
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+            {['ALL', 'OPEN', 'CLOSED', 'DRAFT'].map((st) => (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  statusFilter === st
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'bg-slate-50 border border-border text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {st}
+              </button>
+            ))}
           </div>
         </div>
 
-        {opportunities.length === 0 && !loading && (
-          <Card className="p-8 text-center space-y-3">
-            <Briefcase className="w-10 h-10 text-slate-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-900">No opportunities posted yet</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Publish your first internship or full-time position to discover verified talent.
+        {/* Opportunities Table / Card Feed */}
+        {loading ? (
+          <div className="p-16 text-center space-y-3 bg-white rounded-xl border border-border">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-xs text-slate-500">Loading opportunities...</p>
+          </div>
+        ) : filteredOpps.length === 0 ? (
+          <Card className="p-12 text-center space-y-3 border-border">
+            <Briefcase className="w-12 h-12 text-slate-300 mx-auto" />
+            <h3 className="text-base font-bold text-slate-800">No opportunities found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Get started by creating your first internship or job opportunity to receive verified applicants.
             </p>
             <Link href="/company/opportunities/create">
-              <Button size="sm" className="text-xs">Post an Opportunity</Button>
+              <Button size="sm" className="text-xs mt-2">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Post First Opportunity
+              </Button>
             </Link>
           </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredOpps.map((opp) => {
+              const applicantsCount = opp._count?.applications || 0;
+              const isClosed = !opp.isOpen || opp.status === 'CLOSED';
+
+              return (
+                <Card
+                  key={opp.id}
+                  className="p-6 bg-white border-border hover:shadow-xs transition-all space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">
+                          {opp.type || 'INTERNSHIP'}
+                        </Badge>
+                        <Badge
+                          variant={isClosed ? 'error' : 'success'}
+                          className="text-[10px] font-bold"
+                        >
+                          {isClosed ? 'CLOSED' : 'ACTIVE'}
+                        </Badge>
+                        <span className="text-xs text-slate-500">{opp.category || 'Engineering'}</span>
+                        <span className="text-xs text-slate-400">· {opp.workplaceType || 'Remote'}</span>
+                      </div>
+
+                      <h3 className="text-lg font-bold text-slate-900">
+                        <Link href={`/company/opportunities/${opp.id}`}>{opp.title}</Link>
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-0.5">
+                        <span>{opp.location}</span>
+                        <span>·</span>
+                        <span>Stipend: {opp.stipend || 'Competitive'}</span>
+                        <span>·</span>
+                        <span className="font-semibold text-slate-700">
+                          Capacity: {opp.filledPositions || 0} / {opp.positions || 1} filled
+                        </span>
+                        <span>·</span>
+                        <span>Posted {new Date(opp.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right px-3 py-1 bg-slate-50 rounded-lg border border-border">
+                        <div className="text-base font-extrabold text-slate-900">{applicantsCount}</div>
+                        <div className="text-[10px] text-slate-400">Applicants</div>
+                      </div>
+
+                      <Link href={`/company/applications?opportunityId=${opp.id}`}>
+                        <Button variant="primary" size="sm" className="text-xs">
+                          <Users className="w-3.5 h-3.5 mr-1" />
+                          View Candidates
+                        </Button>
+                      </Link>
+
+                      {!isClosed && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCloseOpportunity(opp.id)}
+                          className="text-xs text-slate-500 hover:text-rose-600"
+                        >
+                          Close Role
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {opp.skills && opp.skills.length > 0 && (
+                    <div className="pt-2 border-t border-border flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[11px] font-semibold text-slate-400 mr-1">Skills:</span>
+                      {opp.skills.map((s, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-800 rounded-md border border-blue-200/60 font-medium"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         )}
-
-        {/* Opportunities List */}
-        <div className="space-y-4">
-          {filteredOpps.map((opp) => (
-            <Card key={opp.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-sm transition-shadow">
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2.5">
-                  <Badge variant="primary" className="text-[10px]">
-                    {opp.type}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px]">
-                    {opp.status}
-                  </Badge>
-                  <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs text-slate-500 font-medium">{opp.location}</span>
-                </div>
-
-                <h3 className="text-lg font-bold text-slate-900 leading-snug">
-                  {opp.title}
-                </h3>
-                <p className="text-xs text-slate-500 line-clamp-1">{opp.description}</p>
-
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {opp.requiredSkills?.map((sk) => (
-                    <span key={sk} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
-                      {sk}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6">
-                <div className="text-center sm:text-right">
-                  <div className="text-xl font-black text-slate-900">{opp.applicantsCount}</div>
-                  <div className="text-[11px] text-slate-400">Applicants</div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Link href={`/company/opportunities/${opp.id}`}>
-                    <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" />
-                      View
-                    </Button>
-                  </Link>
-                  <Link href={`/company/opportunities/${opp.id}/edit`}>
-                    <Button variant="ghost" className="text-xs font-semibold p-2">
-                      <Edit className="w-4 h-4 text-slate-600" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
       </div>
     </DashboardShell>
   );
 }
-

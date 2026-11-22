@@ -443,6 +443,7 @@ test.describe('Skillority Route Authorization & Multi-Role Navigation E2E', () =
                 lastName: 'Recruiter',
                 companyName: 'TechCorp International',
                 industry: 'Cloud Infrastructure',
+                companySize: '51-200',
               },
             },
             accessToken: 'mock-comp-company-token',
@@ -580,6 +581,7 @@ test.describe('Skillority Route Authorization & Multi-Role Navigation E2E', () =
         lastName: 'Recruiter',
         companyName: 'TechCorp International',
         industry: 'Cloud Infrastructure',
+        companySize: '51-200',
       },
     });
 

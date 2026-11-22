@@ -37,9 +37,13 @@ enum OpportunityType {
 enum ApplicationStatus {
   PENDING
   REVIEWING
+  SHORTLISTED
   INTERVIEW
   OFFERED
+  ACCEPTED
   REJECTED
+  WITHDRAWN
+  CANCELLED
 }
 
 enum TransactionType {
@@ -75,6 +79,12 @@ model User {
   coursesAuthored  Course[]        @relation("InstructorCourses")
   enrollments      Enrollment[]
   applications     Application[]
+  careerGoals      StudentCareerGoal[] @relation("StudentCareerGoals")
+  companyOpportunities Opportunity[]    @relation("CompanyOpportunities")
+  studentInterviews  Interview[]         @relation("StudentInterviews")
+  companyInterviews  Interview[]         @relation("CompanyInterviews")
+  studentOffers      Offer[]             @relation("StudentOffers")
+  companyOffers      Offer[]             @relation("CompanyOffers")
   posts            CommunityPost[]
   comments         Comment[]
   quizAttempts     QuizAttempt[]
@@ -280,32 +290,165 @@ model WalletTransaction {
 // CAREERS, OPPORTUNITIES & RECRUITMENT
 // -------------------------------------------------------------
 
+model CareerPath {
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  slug                    String              @unique
+  description             String
+  category                String
+  industry                String?
+  difficultyLevel         String              @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, ADVANCED
+  estimatedDuration       String?             // e.g. "6-9 months"
+  requiredSkills          Json                // [{ name, proficiency, importance, description, relatedCourses }]
+  recommendedSkills       Json?               // [{ name, proficiency }]
+  optionalSkills          Json?
+  learningResources       Json?               // [{ title, url, type, isFree }]
+  recommendedCourseIds    String[]            @default([])
+  relatedCareerSlugs      String[]            @default([])
+  salaryRange             String?
+  jobOutlook              String?
+  employmentOpportunities String?
+  isActive                Boolean             @default(true)
+  studentGoals            StudentCareerGoal[]
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+}
+
+model StudentCareerGoal {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  studentId    String      @db.ObjectId
+  student      User        @relation("StudentCareerGoals", fields: [studentId], references: [id], onDelete: Cascade)
+  careerPathId String      @db.ObjectId
+  careerPath   CareerPath  @relation(fields: [careerPathId], references: [id], onDelete: Cascade)
+  isPrimary    Boolean     @default(true)
+  targetDate   DateTime?
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([studentId, careerPathId])
+}
+
 model Opportunity {
-  id           String          @id @default(auto()) @map("_id") @db.ObjectId
-  companyId    String          @db.ObjectId
-  title        String
-  description  String
-  type         OpportunityType @default(INTERNSHIP)
-  location     String
-  skills       String[]        @default([])
-  isOpen       Boolean         @default(true)
-  applications Application[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                      String          @id @default(auto()) @map("_id") @db.ObjectId
+  companyId               String          @db.ObjectId
+  company                 User?           @relation("CompanyOpportunities", fields: [companyId], references: [id], onDelete: Cascade)
+  title                   String
+  description             String
+  type                    OpportunityType @default(INTERNSHIP)
+  category                String?
+  industry                String?
+  location                String
+  workplaceType           String          @default("REMOTE") // REMOTE, ONSITE, HYBRID
+  duration                String?
+  startDate               DateTime?
+  deadline                DateTime?
+  positions               Int             @default(1)
+  filledPositions         Int             @default(0)
+  skills                  String[]        @default([])
+  optionalSkills          String[]        @default([])
+  educationalRequirements String?
+  experienceLevel         String?
+  responsibilities        String[]        @default([])
+  benefits                String[]        @default([])
+  stipend                 String?
+  eligibility             String?
+  status                  String          @default("PUBLISHED") // DRAFT, PUBLISHED, CLOSED
+  isOpen                  Boolean         @default(true)
+  publishedAt             DateTime?
+  applications            Application[]
+  interviews              Interview[]
+  offers                  Offer[]
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
 }
 
 model Application {
-  id            String            @id @default(auto()) @map("_id") @db.ObjectId
-  opportunityId String            @db.ObjectId
-  opportunity   Opportunity       @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  studentId     String            @db.ObjectId
-  student       User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status        ApplicationStatus @default(PENDING)
-  notes         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
+  opportunityId   String                @db.ObjectId
+  opportunity     Opportunity           @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId       String                @db.ObjectId
+  student         User                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status          ApplicationStatus     @default(PENDING)
+  notes           String?
+  resumeUrl       String?
+  coverLetter     String?
+  portfolioUrl    String?
+  githubUrl       String?
+  linkedinUrl     String?
+  answers         Json?
+  candidateSkills String[]              @default([])
+  matchScore      Int?
+  matchAnalysis   Json?
+  internalNotes   String?               // Strictly company-private notes
+  rating          Int?                  // 1-5 rating by company
+  rejectionReason String?
+  withdrawnAt     DateTime?
+  interviews      Interview[]
+  offer           Offer?
+  timeline        ApplicationTimeline[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 
   @@unique([opportunityId, studentId])
+}
+
+model Interview {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId String      @db.ObjectId
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  opportunityId String      @db.ObjectId
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId     String      @db.ObjectId
+  student       User        @relation("StudentInterviews", fields: [studentId], references: [id], onDelete: Cascade)
+  companyId     String      @db.ObjectId
+  company       User        @relation("CompanyInterviews", fields: [companyId], references: [id], onDelete: Cascade)
+  scheduledAt   DateTime
+  timezone      String      @default("UTC")
+  interviewType String      @default("TECHNICAL") // SCREENING, TECHNICAL, BEHAVIORAL, FINAL
+  meetingLink   String?
+  location      String?
+  instructions  String?
+  status        String      @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, RESCHEDULED
+  feedback      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Offer {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId  String      @unique @db.ObjectId
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  opportunityId  String      @db.ObjectId
+  opportunity    Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId      String      @db.ObjectId
+  student        User        @relation("StudentOffers", fields: [studentId], references: [id], onDelete: Cascade)
+  companyId      String      @db.ObjectId
+  company        User        @relation("CompanyOffers", fields: [companyId], references: [id], onDelete: Cascade)
+  title          String
+  stipend        String?
+  startDate      DateTime?
+  duration       String?
+  conditions     String?
+  expiresAt      DateTime?
+  status         String      @default("PENDING") // PENDING, ACCEPTED, DECLINED, CANCELLED, EXPIRED
+  declinedReason String?
+  respondedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model ApplicationTimeline {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId   String      @db.ObjectId
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  action          String
+  fromStatus      String?
+  toStatus        String?
+  note            String?
+  performedById   String?     @db.ObjectId
+  performedByRole String?
+  createdAt       DateTime    @default(now())
 }
 
 // -------------------------------------------------------------

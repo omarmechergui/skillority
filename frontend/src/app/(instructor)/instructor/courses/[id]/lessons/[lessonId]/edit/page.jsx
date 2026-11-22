@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { instructorNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import { coursesApi } from '@/lib/api';
 import {
   ArrowLeft,
   Save,
@@ -20,19 +22,27 @@ import {
   Video,
   ListPlus,
   CheckCircle,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
-export default function HybridLessonBuilderPage({ params }) {
-  const [lessonTitle, setLessonTitle] = useState('Server Actions & Cache Invalidation');
-  const [duration, setDuration] = useState('25 min');
+export default function HybridLessonBuilderPage() {
+  const params = useParams();
+  const courseId = params?.id || '';
+  const lessonId = params?.lessonId || '';
+
+  const [lessonTitle, setLessonTitle] = useState('Lesson Title');
+  const [duration, setDuration] = useState('20');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [showBlockModal, setShowBlockModal] = useState(false);
 
   const [blocks, setBlocks] = useState([
     {
       id: 'b1',
       type: 'TEXT',
-      content: 'Server Actions in Next.js 14 allow direct mutation calls without manual API route scaffolding. In this lesson, we dissect progressive enhancement and cache tag revalidation.',
+      content: 'Server Actions in Next.js allow direct mutation calls without manual API route scaffolding. In this lesson, we dissect progressive enhancement and cache tag revalidation.',
     },
     {
       id: 'b2',
@@ -46,6 +56,31 @@ export default function HybridLessonBuilderPage({ params }) {
       content: 'Key takeaway: Always invoke revalidateTag() inside the action handler after database writes complete.',
     },
   ]);
+
+  useEffect(() => {
+    async function loadLesson() {
+      if (!courseId || !lessonId) return;
+      try {
+        const res = await coursesApi.getCourse(courseId, { includeContent: 'true' });
+        if (res?.data?.chapters) {
+          for (const ch of res.data.chapters) {
+            const found = ch.lessons?.find((l) => l.id === lessonId);
+            if (found) {
+              setLessonTitle(found.title);
+              if (found.duration) setDuration(String(found.duration));
+              if (found.content?.blocks && Array.isArray(found.content.blocks) && found.content.blocks.length > 0) {
+                setBlocks(found.content.blocks);
+              }
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    }
+    loadLesson();
+  }, [courseId, lessonId]);
 
   const addBlock = (type) => {
     const newBlock = {
@@ -66,9 +101,33 @@ export default function HybridLessonBuilderPage({ params }) {
     setBlocks(blocks.filter((b) => b.id !== id));
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    if (!lessonId) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const leadBlock = blocks.find((b) => b.type === 'TEXT');
+      const codeBlock = blocks.find((b) => b.type === 'CODE');
+      const calloutBlocks = blocks.filter((b) => b.type === 'CALLOUT').map((b) => b.content);
+
+      await coursesApi.updateLesson(lessonId, {
+        title: lessonTitle.trim(),
+        duration: parseInt(duration) || 15,
+        content: {
+          blocks,
+          lead: leadBlock?.content || '',
+          codeSnippet: codeBlock?.content || '',
+          keyTakeaways: calloutBlocks.length > 0 ? calloutBlocks : undefined,
+        },
+      });
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err?.message || 'Failed to save lesson');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -95,12 +154,19 @@ export default function HybridLessonBuilderPage({ params }) {
                 Preview Mode
               </Button>
             </Link>
-            <Button onClick={handleSave} className="text-xs font-semibold flex items-center gap-1.5">
-              <Save className="w-4 h-4" />
-              Save Lesson Draft
+            <Button onClick={handleSave} disabled={saving} className="text-xs font-semibold flex items-center gap-1.5">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'Saving...' : 'Save Lesson Draft'}
             </Button>
           </div>
         </div>
+
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {saved && (
           <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">

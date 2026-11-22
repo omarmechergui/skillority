@@ -121,10 +121,45 @@ export async function requireAuth(req, res, next) {
 }
 
 /**
+ * Optional Authentication Middleware
+ * Attaches user to req.user if a valid token is present; otherwise continues anonymously.
+ */
+export async function optionalAuth(req, res, next) {
+  try {
+    let token = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+    }
+
+    if (!token) {
+      return next();
+    }
+
+    const { valid, payload } = verifyAccessToken(token);
+    if (valid && payload) {
+      req.user = {
+        id: payload.id,
+        email: payload.email,
+        role: payload.role,
+        tokenVersion: payload.tokenVersion ?? 0,
+        isActive: true,
+      };
+    }
+  } catch {
+    // Continue anonymously
+  }
+  return next();
+}
+
+/**
  * Role-Based Access Control (RBAC) Guard
  * Ensures req.user possesses at least one of the allowed roles.
  */
 export function requireRole(...allowedRoles) {
+  const roles = allowedRoles.flat();
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -136,12 +171,12 @@ export function requireRole(...allowedRoles) {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: `Access denied. Requires one of roles: [${allowedRoles.join(', ')}]`,
+          message: `Access denied. Requires one of roles: [${roles.join(', ')}]`,
         },
       });
     }

@@ -19,6 +19,7 @@ import {
 import {
   completeStudentOnboarding,
   completeCompanyOnboarding,
+  completeInstructorOnboarding,
 } from '../controllers/onboarding.controller.js';
 import { requireAuth, requireRole, requireOwnershipOrAdmin } from '../middleware/auth.middleware.js';
 import {
@@ -32,6 +33,7 @@ import {
   acceptInstructorInviteSchema,
   studentOnboardingSchema,
   companyOnboardingSchema,
+  instructorOnboardingSchema,
 } from '../validators/auth.validators.js';
 
 const router = Router();
@@ -71,7 +73,7 @@ router.post('/reset-password', authLimiter, validate(resetPasswordSchema), reset
 router.post(
   '/admin/instructors/invite',
   requireAuth,
-  requireRole(['ADMIN']),
+  requireRole('ADMIN'),
   validate(inviteInstructorSchema),
   inviteInstructor
 );
@@ -91,7 +93,7 @@ router.post(
 router.put(
   '/admin/instructors/:instructorId/revoke',
   requireAuth,
-  requireRole(['ADMIN']),
+  requireRole('ADMIN'),
   revokeInstructor
 );
 
@@ -105,7 +107,7 @@ router.get('/me', requireAuth, getMe);
 router.post(
   '/onboarding/student',
   requireAuth,
-  requireRole(['STUDENT']),
+  requireRole('STUDENT'),
   validate(studentOnboardingSchema),
   completeStudentOnboarding
 );
@@ -114,9 +116,18 @@ router.post(
 router.post(
   '/onboarding/company',
   requireAuth,
-  requireRole(['COMPANY']),
+  requireRole('COMPANY'),
   validate(companyOnboardingSchema),
   completeCompanyOnboarding
+);
+
+// Instructor Onboarding
+router.post(
+  '/onboarding/instructor',
+  requireAuth,
+  requireRole('INSTRUCTOR'),
+  validate(instructorOnboardingSchema),
+  completeInstructorOnboarding
 );
 
 // Ownership / Protected test route for RBAC testing

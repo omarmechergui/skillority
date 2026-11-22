@@ -77,8 +77,39 @@ export const companyOnboardingSchema = z.object({
   bio: z.string().max(500).optional(),
 });
 
-export function validate(schema) {
+export const instructorOnboardingSchema = z
+  .object({
+    name: z.string().trim().max(100).optional(),
+    firstName: z.string().trim().max(50).optional(),
+    lastName: z.string().trim().max(50).optional(),
+    headline: z.string().trim().max(500).optional(),
+    experience: z.string().trim().max(500).optional(),
+    expertise: z.preprocess((val) => {
+      if (typeof val === 'string') {
+        return Array.from(new Set(val.split(',').map((s) => s.trim()).filter(Boolean)));
+      }
+      if (Array.isArray(val)) {
+        return Array.from(new Set(val.map((s) => String(s).trim()).filter(Boolean)));
+      }
+      return val;
+    }, z.array(z.string().min(1, 'Expertise item cannot be empty').max(100)).min(1, 'At least one domain expertise item is required').max(20)),
+    bio: z.string().trim().max(500, 'Bio cannot exceed 500 characters').optional().or(z.literal('')),
+    courseIdea: z.string().trim().max(200).optional().or(z.literal('')),
+  })
+  .refine(
+    (data) => {
+      const exp = (data.experience || data.headline || '').trim();
+      return exp.length > 0;
+    },
+    {
+      message: 'Professional headline or experience is required',
+      path: ['headline'],
+    }
+  );
+
+export function validate(schemaOrFn) {
   return (req, res, next) => {
+    const schema = typeof schemaOrFn === 'function' ? schemaOrFn(req) : schemaOrFn;
     const result = schema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({

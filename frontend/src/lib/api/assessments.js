@@ -1,4 +1,4 @@
-import api from '../apiClient';
+import api from '../apiClient.js';
 
 export const assessmentApi = {
   submitQuiz: (chapterId, answers) =>

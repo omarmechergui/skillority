@@ -51,33 +51,45 @@ export default function LearnHubPage() {
           user ? learningApi.getMyEnrollments() : Promise.resolve({ data: [] }),
         ]);
 
+        const map = {};
         if (enrollmentsRes.status === 'fulfilled' && enrollmentsRes.value?.data) {
-          const map = {};
-          enrollmentsRes.value.data.forEach((e) => {
+          const enrollmentsList = Array.isArray(enrollmentsRes.value.data) ? enrollmentsRes.value.data : [];
+          enrollmentsList.forEach((e) => {
             map[e.courseId] = e;
           });
           setEnrolledMap(map);
         }
 
-        if (catalogRes.status === 'fulfilled' && catalogRes.value?.data?.courses && catalogRes.value.data.courses.length > 0) {
-          const liveCourses = catalogRes.value.data.courses.map((c) => ({
-            id: c.id,
-            title: c.title,
-            description: c.description || 'Comprehensive curriculum with practical exercises.',
-            category: c.category || 'Web Development',
-            level: c.level || 'Intermediate',
-            duration: '12 Hours',
-            rating: 4.8,
-            enrolledCount: c._count?.enrollments || 0,
-            totalChapters: c.chapters?.length || c._count?.chapters || 6,
-            thumbnail: c.thumbnail || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80',
-            instructor: {
-              name: c.instructor?.profile ? `${c.instructor.profile.firstName} ${c.instructor.profile.lastName || ''}`.trim() : c.instructor?.email || 'Lead Architect',
-              title: 'Verified Instructor',
-              avatar: c.instructor?.profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-            },
-          }));
-          setCourses(liveCourses);
+        if (catalogRes.status === 'fulfilled') {
+          const rawCourses = Array.isArray(catalogRes.value?.data)
+            ? catalogRes.value.data
+            : Array.isArray(catalogRes.value?.data?.courses)
+            ? catalogRes.value.data.courses
+            : [];
+
+          if (rawCourses.length > 0) {
+            const liveCourses = rawCourses.map((c) => ({
+              id: c.id,
+              title: c.title,
+              description: c.description || 'Comprehensive curriculum with practical exercises.',
+              category: c.category || 'Web Development',
+              level: c.level || 'Intermediate',
+              duration: '12 Hours',
+              rating: 4.8,
+              enrolledCount: c._count?.enrollments || 0,
+              totalChapters: c.chapters?.length || c._count?.chapters || 6,
+              thumbnail: c.thumbnail || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80',
+              isEnrolled: Boolean(map[c.id]),
+              instructor: {
+                name: c.instructor?.profile ? `${c.instructor.profile.firstName} ${c.instructor.profile.lastName || ''}`.trim() : c.instructor?.email || 'Lead Architect',
+                title: 'Verified Instructor',
+                avatar: c.instructor?.profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+              },
+            }));
+            setCourses(liveCourses);
+          } else {
+            setCourses([]);
+          }
         }
       } catch (err) {
         // Safe fallback

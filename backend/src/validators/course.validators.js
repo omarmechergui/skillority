@@ -16,7 +16,10 @@ export const createChapterSchema = z.object({
   order: z.number().int().min(0, 'Chapter order must be >= 0'),
   isFree: z.boolean().default(true),
   coinsCost: z.number().int().min(0).default(0),
+  quiz: z.any().optional(),
 });
+
+export const updateChapterSchema = createChapterSchema.partial();
 
 export const createLessonSchema = z.object({
   title: z.string().min(3, 'Lesson title must be at least 3 characters').max(100),
@@ -24,6 +27,8 @@ export const createLessonSchema = z.object({
   duration: z.number().int().min(1).optional(),
   content: z.any(), // Flexible rich JSON blocks (text, code, video, callout)
 });
+
+export const updateLessonSchema = createLessonSchema.partial();
 
 export const reviewDecisionSchema = z.object({
   status: z.enum(['APPROVED', 'REJECTED']),

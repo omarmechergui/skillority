@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -8,72 +8,88 @@ import { studentNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { LoadingState } from '@/components/ui/LoadingState';
 import { useAuth } from '@/lib/auth';
+import { profileApi } from '@/lib/api/profiles';
 import {
   MapPin,
   Mail,
-  Phone,
-  Globe,
   Calendar,
   Coins,
   Flame,
   Award,
-  BookOpen,
   Briefcase,
   GraduationCap,
-  ExternalLink,
   Edit3,
   Share2,
   CheckCircle,
-  Code2,
-  Share,
+  ExternalLink,
+  Target,
+  Sparkles,
 } from 'lucide-react';
 
 export default function StudentProfilePage() {
   const { user } = useAuth();
-  const [profile] = useState({
-    name: user?.profile ? `${user.profile.firstName || ''} ${user.profile.lastName || ''}`.trim() || user.email : user?.email || 'Student Learner',
-    headline: user?.profile?.headline || 'Learner on Skillority',
-    bio: user?.profile?.bio || 'No bio provided yet.',
-    location: user?.profile?.location || 'Remote',
-    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
-    avatar: user?.profile?.avatarUrl || null,
-    coverPhoto: null,
-    coinsBalance: 0,
-    streakDays: 0,
-    certificatesCount: 0,
-    featuredProject: null,
-    skills: [],
-    interests: [],
-    experience: [],
-    education: [],
-    email: user?.email || '',
-    phone: 'Not provided',
-    website: '',
-    github: '',
-    linkedin: '',
-    twitter: '',
-  });
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ABOUT');
+
+  // Load real profile from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLiveProfile() {
+      try {
+        const res = await profileApi.getMyProfile();
+        if (isMounted && res.data) {
+          setProfileData(res.data);
+        }
+      } catch {
+        // Fall back safely to AuthContext profile
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadLiveProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Merge live profile data with AuthContext state
+  const live = profileData || user?.profile || {};
+  const firstName = live.firstName || user?.profile?.firstName || '';
+  const lastName = live.lastName || user?.profile?.lastName || '';
+  const fullName = `${firstName} ${lastName}`.trim() || user?.email || 'Student Learner';
+  const email = user?.email || '';
+  const avatar = live.avatar || user?.profile?.avatar || null;
+  const bio = live.bio || user?.profile?.bio || '';
+  const university = live.university || user?.profile?.university || '';
+  const major = live.major || user?.profile?.major || '';
+  const graduationYear = live.graduationYear || user?.profile?.graduationYear || null;
+  const skills = Array.isArray(live.skills) ? live.skills : user?.profile?.skills || [];
+  const interests = Array.isArray(live.interests) ? live.interests : user?.profile?.interests || [];
+  const learningGoals = live.learningGoals || user?.profile?.learningGoals || '';
+  const coinsBalance = user?.wallet?.balance ?? 0;
+  const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently';
+
+  const headline = major && university
+    ? `${major} Student at ${university}`
+    : major
+    ? `${major} Student`
+    : 'Learner on Skillority';
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>
       <div className="space-y-8 max-w-7xl mx-auto">
         {/* Cover Photo & Hero Header */}
         <div className="relative rounded-2xl overflow-hidden bg-white border border-border shadow-sm">
-          {/* Cover Photo */}
-          <div className="relative h-48 sm:h-64 w-full bg-slate-800 flex items-center justify-center">
-            {profile.coverPhoto ? (
-              <Image
-                src={profile.coverPhoto}
-                alt="Profile Cover"
-                fill
-                className="object-cover opacity-90"
-                unoptimized
-              />
-            ) : (
-              <div className="text-slate-500 font-bold text-sm">Cover Banner</div>
-            )}
+          {/* Cover Banner */}
+          <div className="relative h-48 sm:h-64 w-full bg-slate-900 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 via-slate-900 to-indigo-950/80" />
+            <div className="relative text-slate-400 font-semibold text-sm flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-400" />
+              <span>Student Academic & Skill Portfolio</span>
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
           </div>
 
@@ -83,39 +99,43 @@ export default function StudentProfilePage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
                 {/* Avatar */}
                 <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white flex items-center justify-center">
-                  {profile.avatar ? (
+                  {avatar ? (
                     <Image
-                      src={profile.avatar}
-                      alt={profile.name}
+                      src={avatar}
+                      alt={fullName}
                       fill
                       className="object-cover"
                       unoptimized
                     />
                   ) : (
-                    <GraduationCap className="w-12 h-12 text-primary" />
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">
+                      {firstName ? firstName[0].toUpperCase() : 'S'}
+                    </div>
                   )}
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                      {profile.name}
+                      {fullName}
                     </h1>
                     <span className="p-0.5 rounded-full bg-blue-500 text-white" title="Verified Learner">
                       <CheckCircle className="w-4 h-4 fill-blue-500 text-white" />
                     </span>
                   </div>
                   <p className="text-sm font-medium text-slate-600 max-w-xl">
-                    {profile.headline}
+                    {headline}
                   </p>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                      {profile.location}
-                    </span>
+                    {university && (
+                      <span className="flex items-center gap-1 font-medium text-slate-700">
+                        <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                        {university}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      Joined {profile.joinedDate}
+                      Joined {joinedDate}
                     </span>
                   </div>
                 </div>
@@ -144,7 +164,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div>
                   <p className="text-[11px] font-medium text-amber-800 uppercase tracking-wider">Coin Balance</p>
-                  <p className="text-base font-extrabold text-amber-950">{profile.coinsBalance} Coins</p>
+                  <p className="text-base font-extrabold text-amber-950">{coinsBalance} Coins</p>
                 </div>
               </div>
 
@@ -154,7 +174,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div>
                   <p className="text-[11px] font-medium text-orange-800 uppercase tracking-wider">Study Streak</p>
-                  <p className="text-base font-extrabold text-orange-950">{profile.streakDays} Days</p>
+                  <p className="text-base font-extrabold text-orange-950">Active Streak</p>
                 </div>
               </div>
 
@@ -163,8 +183,8 @@ export default function StudentProfilePage() {
                   <Award className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium text-blue-800 uppercase tracking-wider">Certificates</p>
-                  <p className="text-base font-extrabold text-blue-950">{profile.certificatesCount} Verified</p>
+                  <p className="text-[11px] font-medium text-blue-800 uppercase tracking-wider">Verified Skills</p>
+                  <p className="text-base font-extrabold text-blue-950">{skills.length} Skills</p>
                 </div>
               </div>
 
@@ -173,7 +193,7 @@ export default function StudentProfilePage() {
                   <Briefcase className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider">Career Status</p>
+                  <p className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider">Status</p>
                   <p className="text-base font-extrabold text-emerald-950">Active Candidate</p>
                 </div>
               </div>
@@ -192,7 +212,7 @@ export default function StudentProfilePage() {
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Overview & Bio
+            Overview & Goals
           </button>
           <button
             type="button"
@@ -203,18 +223,18 @@ export default function StudentProfilePage() {
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Projects & Skills
+            Skills & Interests
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('EXPERIENCE')}
+            onClick={() => setActiveTab('EDUCATION')}
             className={`pb-3 transition-colors border-b-2 -mb-px ${
-              activeTab === 'EXPERIENCE'
+              activeTab === 'EDUCATION'
                 ? 'border-primary text-primary font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Experience & Education
+            Education & Academic Info
           </button>
         </div>
 
@@ -227,48 +247,39 @@ export default function StudentProfilePage() {
                 {/* Bio Card */}
                 <Card className="p-6 space-y-4">
                   <h2 className="text-lg font-bold text-slate-900">About Me</h2>
-                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                    {profile.bio}
-                  </p>
+                  {bio ? (
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                      {bio}
+                    </p>
+                  ) : (
+                    <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-border">
+                      <p>No bio provided yet.</p>
+                      <Link href="/student/settings" className="text-primary font-semibold hover:underline mt-1 inline-block">
+                        Add a bio in Account Settings
+                      </Link>
+                    </div>
+                  )}
                 </Card>
 
-                {/* Featured Project */}
-                {profile.featuredProject ? (
-                  <Card className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-900">Featured Capstone Project</h2>
-                      <a
-                        href={profile.featuredProject.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                      >
-                        View Repository
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
+                {/* Learning Goals Card */}
+                <Card className="p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg font-bold text-slate-900">Learning Goals & Aspirations</h2>
+                  </div>
+                  {learningGoals ? (
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+                      {learningGoals}
+                    </p>
+                  ) : (
+                    <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-border">
+                      <p>No learning goals specified yet.</p>
+                      <Link href="/student/settings" className="text-primary font-semibold hover:underline mt-1 inline-block">
+                        Set your goals in Account Settings
+                      </Link>
                     </div>
-
-                    <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2">
-                      <h3 className="font-bold text-slate-900 text-base">
-                        {profile.featuredProject.title}
-                      </h3>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        {profile.featuredProject.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5 pt-2">
-                        {profile.featuredProject.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-[11px]">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </Card>
-                ) : (
-                  <Card className="p-6 text-center text-xs text-slate-400">
-                    No featured capstone project published.
-                  </Card>
-                )}
+                  )}
+                </Card>
               </>
             )}
 
@@ -276,14 +287,19 @@ export default function StudentProfilePage() {
               <Card className="p-6 space-y-6">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Technical Skills</h2>
-                  <p className="text-xs text-slate-500">Skills certified through course completions and assessments</p>
+                  <p className="text-xs text-slate-500">Skills certified through course completions and profile updates</p>
                 </div>
 
-                {profile.skills.length === 0 ? (
-                  <p className="text-xs text-slate-400">No skills added yet.</p>
+                {skills.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-border">
+                    <p>No skills added yet.</p>
+                    <Link href="/student/settings" className="text-primary font-semibold hover:underline mt-1 inline-block">
+                      Add skills in Account Settings
+                    </Link>
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {profile.skills.map((skill) => (
+                    {skills.map((skill) => (
                       <span
                         key={skill}
                         className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100"
@@ -296,11 +312,11 @@ export default function StudentProfilePage() {
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <h3 className="text-sm font-bold text-slate-900">Areas of Interest</h3>
-                  {profile.interests.length === 0 ? (
+                  {interests.length === 0 ? (
                     <p className="text-xs text-slate-400">No areas of interest added yet.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {profile.interests.map((interest) => (
+                      {interests.map((interest) => (
                         <Badge key={interest} variant="outline" className="text-xs font-medium">
                           {interest}
                         </Badge>
@@ -311,164 +327,72 @@ export default function StudentProfilePage() {
               </Card>
             )}
 
-            {activeTab === 'EXPERIENCE' && (
-              <div className="space-y-6">
-                {/* Work Experience */}
-                <Card className="p-6 space-y-5">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    Work Experience
-                  </h2>
+            {activeTab === 'EDUCATION' && (
+              <Card className="p-6 space-y-6">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-primary" />
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Academic Education</h2>
+                    <p className="text-xs text-slate-500">Verified higher education credentials</p>
+                  </div>
+                </div>
 
-                  {profile.experience.length === 0 ? (
-                    <p className="text-xs text-slate-400">No work experience listed.</p>
-                  ) : (
-                    <div className="space-y-6">
-                      {profile.experience.map((exp, idx) => (
-                        <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
-                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-white" />
-                          <h3 className="text-sm font-bold text-slate-900">{exp.title}</h3>
-                          <p className="text-xs font-semibold text-primary">{exp.company} · {exp.location}</p>
-                          <p className="text-[11px] text-slate-400">{exp.period}</p>
-                          <p className="text-xs text-slate-600 pt-1 leading-relaxed">{exp.description}</p>
-                        </div>
-                      ))}
+                {university || major ? (
+                  <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-base">{university || 'University not specified'}</h3>
+                        <p className="text-sm font-semibold text-primary">{major || 'Major not specified'}</p>
+                      </div>
+                      {graduationYear && (
+                        <Badge variant="secondary" className="text-xs font-semibold">
+                          Class of {graduationYear}
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                </Card>
-
-                {/* Education */}
-                <Card className="p-6 space-y-5">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-primary" />
-                    Education
-                  </h2>
-
-                  {profile.education.length === 0 ? (
-                    <p className="text-xs text-slate-400">No education history listed.</p>
-                  ) : (
-                    <div className="space-y-6">
-                      {profile.education.map((edu, idx) => (
-                        <div key={idx} className="relative pl-6 border-l-2 border-slate-200 space-y-1">
-                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white" />
-                          <h3 className="text-sm font-bold text-slate-900">{edu.school}</h3>
-                          <p className="text-xs font-semibold text-emerald-700">{edu.degree}</p>
-                          <p className="text-[11px] text-slate-400">{edu.period}</p>
-                          <p className="text-xs text-slate-600 pt-1 leading-relaxed">{edu.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-border">
+                    <p>No educational credentials recorded yet.</p>
+                    <Link href="/student/settings" className="text-primary font-semibold hover:underline mt-1 inline-block">
+                      Update your education in Account Settings
+                    </Link>
+                  </div>
+                )}
+              </Card>
             )}
           </div>
 
-          {/* Sidebar (1 col): Contact & Social Links */}
+          {/* Sidebar (1 col): Contact Details */}
           <div className="space-y-6">
             <Card className="p-6 space-y-4">
-              <h2 className="text-base font-bold text-slate-900">Contact Details</h2>
+              <h2 className="text-base font-bold text-slate-900">Account & Identity</h2>
 
               <div className="space-y-3 text-xs">
                 <div className="flex items-center gap-3 text-slate-600">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  {profile.email ? (
-                    <a href={`mailto:${profile.email}`} className="hover:text-primary transition-colors">
-                      {profile.email}
-                    </a>
-                  ) : (
-                    <span>Not provided</span>
-                  )}
+                  <span className="font-medium text-slate-900">{email}</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600">
-                  <Phone className="w-4 h-4 text-slate-400" />
-                  <span>{profile.phone}</span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-600">
-                  <Globe className="w-4 h-4 text-slate-400" />
-                  {profile.website ? (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                      {profile.website.replace('https://', '')}
-                    </a>
-                  ) : (
-                    <span>Not provided</span>
-                  )}
-                </div>
+                {university && (
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <GraduationCap className="w-4 h-4 text-slate-400" />
+                    <span>{university}</span>
+                  </div>
+                )}
+                {graduationYear && (
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <span>Graduation: {graduationYear}</span>
+                  </div>
+                )}
               </div>
-            </Card>
 
-            <Card className="p-6 space-y-4">
-              <h2 className="text-base font-bold text-slate-900">Social & Code Profiles</h2>
-
-              <div className="space-y-2">
-                {profile.github ? (
-                  <a
-                    href={profile.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Code2 className="w-4 h-4 text-slate-800" />
-                      GitHub Profile
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                  </a>
-                ) : (
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
-                    <span className="flex items-center gap-2.5">
-                      <Code2 className="w-4 h-4 text-slate-400" />
-                      GitHub Profile
-                    </span>
-                    <span>Not linked</span>
-                  </div>
-                )}
-
-                {profile.linkedin ? (
-                  <a
-                    href={profile.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Globe className="w-4 h-4 text-blue-600" />
-                      LinkedIn Network
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                  </a>
-                ) : (
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
-                    <span className="flex items-center gap-2.5">
-                      <Globe className="w-4 h-4 text-slate-400" />
-                      LinkedIn Network
-                    </span>
-                    <span>Not linked</span>
-                  </div>
-                )}
-
-                {profile.twitter ? (
-                  <a
-                    href={profile.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-border hover:bg-slate-50 transition-colors text-xs font-medium text-slate-700"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Share className="w-4 h-4 text-sky-500" />
-                      Twitter / X
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                  </a>
-                ) : (
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-slate-50/50 text-xs font-medium text-slate-400">
-                    <span className="flex items-center gap-2.5">
-                      <Share className="w-4 h-4 text-slate-400" />
-                      Twitter / X
-                    </span>
-                    <span>Not linked</span>
-                  </div>
-                )}
+              <div className="pt-3 border-t border-border">
+                <Link href="/student/settings">
+                  <Button variant="outline" className="w-full text-xs font-semibold">
+                    Manage Settings
+                  </Button>
+                </Link>
               </div>
             </Card>
           </div>

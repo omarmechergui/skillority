@@ -1,45 +1,60 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { adminNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { adminApi } from '@/lib/api';
+import { adminApi, coursesApi } from '@/lib/api';
 import { ArrowLeft, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function CourseApprovalDecisionPage({ params }) {
+export default function CourseApprovalDecisionPage() {
   const router = useRouter();
-  const [review] = useState(null);
+  const params = useParams();
+  const courseId = params?.id || '';
+
+  const [review, setReview] = useState(null);
   const [decisionNotes, setDecisionNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
-  if (!review) {
-    return (
-      <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
-        <div className="space-y-6 max-w-3xl mx-auto py-12 text-center">
-          <Card className="p-8 text-center space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">Course Review Not Found</h2>
-            <p className="text-sm text-slate-500">The requested course review could not be found or has not been loaded.</p>
-            <Link href="/admin/courses/reviews">
-              <Button variant="outline" className="text-xs">Back to Reviews</Button>
-            </Link>
-          </Card>
-        </div>
-      </DashboardShell>
-    );
-  }
+  useEffect(() => {
+    async function loadCourse() {
+      if (!courseId) return;
+      setFetching(true);
+      try {
+        const res = await coursesApi.getCourse(courseId);
+        if (res?.data) {
+          const raw = res.data;
+          setReview({
+            id: raw.id,
+            title: raw.title,
+            instructor: raw.instructor?.profile ? `${raw.instructor.profile.firstName} ${raw.instructor.profile.lastName || ''}`.trim() : raw.instructor?.email || 'Instructor',
+            totalChapters: raw.chapters?.length || 0,
+            status: raw.status,
+          });
+        } else {
+          setError('Course review not found');
+        }
+      } catch (err) {
+        setError(err?.message || 'Failed to load course review');
+      } finally {
+        setFetching(false);
+      }
+    }
+    loadCourse();
+  }, [courseId]);
 
   const handleDecision = async (outcome) => {
     setLoading(true);
     setError(null);
     try {
-      await adminApi.decideCourseReview(params.id, outcome, decisionNotes.trim() || undefined);
+      await adminApi.decideCourseReview(courseId, outcome, decisionNotes.trim() || undefined);
       setSubmitted(outcome);
       setTimeout(() => {
         router.push('/admin/courses/reviews');
@@ -51,11 +66,38 @@ export default function CourseApprovalDecisionPage({ params }) {
     }
   };
 
+  if (fetching) {
+    return (
+      <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-xs text-slate-500">Loading accreditation decision portal...</p>
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  if (error && !review) {
+    return (
+      <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
+        <div className="space-y-6 max-w-3xl mx-auto py-12 text-center">
+          <Card className="p-8 text-center space-y-4">
+            <h2 className="text-lg font-bold text-slate-900">Course Review Not Found</h2>
+            <p className="text-sm text-slate-500">{error || 'The requested course review could not be found.'}</p>
+            <Link href="/admin/courses/reviews">
+              <Button variant="outline" className="text-xs">Back to Reviews</Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell roleTitle="Platform Admin" navItems={adminNav}>
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center gap-3">
-          <Link href={`/admin/courses/reviews/${params.id}`}>
+          <Link href={`/admin/courses/reviews/${courseId}`}>
             <Button variant="ghost" className="p-2 text-slate-500 hover:text-slate-900" disabled={loading}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -98,32 +140,27 @@ export default function CourseApprovalDecisionPage({ params }) {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+          <div className="pt-4 border-t border-border flex flex-col sm:flex-row justify-end gap-3">
             <Button
-              onClick={() => handleDecision('REJECTED')}
               variant="outline"
+              size="sm"
+              onClick={() => handleDecision('REJECTED')}
               disabled={loading || Boolean(submitted)}
-              className="text-xs text-rose-600 border-rose-300 hover:bg-rose-50 flex items-center gap-1.5"
+              className="text-xs border-rose-300 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
             >
-              <XCircle className="w-4 h-4" />
-              Reject Course Submission
+              <XCircle className="w-4 h-4 mr-1 text-rose-600" />
+              Reject with Feedback
             </Button>
+
             <Button
+              variant="primary"
+              size="sm"
               onClick={() => handleDecision('APPROVED')}
               disabled={loading || Boolean(submitted)}
-              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Recording Decision...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  Approve for Publication
-                </>
-              )}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+              Approve & Authorize Publishing
             </Button>
           </div>
         </Card>
@@ -131,4 +168,3 @@ export default function CourseApprovalDecisionPage({ params }) {
     </DashboardShell>
   );
 }
-

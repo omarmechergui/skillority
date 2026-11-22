@@ -1,4 +1,4 @@
-import api from '../apiClient';
+import api from '../apiClient.js';
 
 export const messagingApi = {
   getConversations: () => api.get('/messages/conversations'),

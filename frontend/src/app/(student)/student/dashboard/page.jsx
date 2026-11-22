@@ -50,15 +50,15 @@ export default function StudentDashboardPage() {
         const [profRes, wallRes, crsRes] = await Promise.allSettled([
           profileApi.getMyProfile(),
           walletApi.getWallet(),
-          coursesApi.getCourses({ published: 'true' })
+          coursesApi.getCourses({ status: 'PUBLISHED' }),
         ]);
 
-        if (profRes.status === 'fulfilled' && profRes.value?.data?.profile) {
-          const live = profRes.value.data.profile;
+        const liveProf = profRes.value?.data?.profile || profRes.value?.data;
+        if (profRes.status === 'fulfilled' && liveProf && (liveProf.firstName || liveProf.id)) {
           setProfile(prev => ({
             ...prev,
-            name: `${live.firstName || ''} ${live.lastName || ''}`.trim() || prev.name,
-            currentStreakDays: live.currentStreakDays ?? prev.currentStreakDays,
+            name: `${liveProf.firstName || ''} ${liveProf.lastName || ''}`.trim() || prev.name,
+            currentStreakDays: liveProf.currentStreakDays ?? prev.currentStreakDays,
           }));
         } else if (user) {
           setProfile(prev => ({
@@ -67,36 +67,36 @@ export default function StudentDashboardPage() {
           }));
         }
 
-        if (wallRes.status === 'fulfilled' && wallRes.value?.data?.wallet) {
-          const w = wallRes.value.data.wallet;
+        const w = wallRes.value?.data?.wallet || wallRes.value?.data;
+        if (wallRes.status === 'fulfilled' && w && typeof w.balance === 'number') {
           setWalletInfo({ balance: w.balance });
-          setProfile(prev => ({ ...prev, coinBalance: w.balance }));
+          setProfile(prev => ({ ...prev, coinBalance: w.balance, coinsBalance: w.balance }));
         }
 
-        if (crsRes.status === 'fulfilled' && crsRes.value?.data?.courses?.length > 0) {
-          // Merge live courses
-          const liveList = crsRes.value.data.courses;
-          if (Array.isArray(liveList) && liveList.length > 0) {
-            setCoursesList(prev => {
-              const mapped = liveList.map(c => ({
-                id: c.id,
-                title: c.title,
-                category: c.category || 'Development',
-                level: c.level || 'Intermediate',
-                description: c.description,
-                image: c.thumbnailUrl || '/images/course-card.png',
-                instructor: {
-                  name: c.instructor ? `${c.instructor.user?.firstName || 'Instructor'} ${c.instructor.user?.lastName || ''}` : 'Skillority Faculty',
-                  role: 'Course Author',
-                  avatar: '/images/avatar-default.png'
-                },
-                progressPercent: 0,
-                isEnrolled: false,
-                chapters: c.chapters || []
-              }));
-              return mapped.length ? mapped : prev;
-            });
-          }
+        const rawCourses = crsRes.value?.data?.courses || crsRes.value?.data;
+        const liveList = Array.isArray(rawCourses) ? rawCourses : [];
+        if (crsRes.status === 'fulfilled' && liveList.length > 0) {
+          setCoursesList(prev => {
+            const mapped = liveList.map(c => ({
+              id: c.id,
+              title: c.title,
+              category: c.category || 'Development',
+              level: c.level || 'Intermediate',
+              description: c.description,
+              image: c.thumbnail || c.thumbnailUrl || '/images/course-card.png',
+              instructor: {
+                name: c.instructor?.profile
+                  ? `${c.instructor.profile.firstName || ''} ${c.instructor.profile.lastName || ''}`.trim()
+                  : (c.instructor?.email || 'Skillority Faculty'),
+                role: 'Course Author',
+                avatar: c.instructor?.profile?.avatar || '/images/avatar-default.png',
+              },
+              progressPercent: 0,
+              isEnrolled: false,
+              chapters: c.chapters || [],
+            }));
+            return mapped.length ? mapped : prev;
+          });
         }
       } catch {
         // Safe graceful fallback to initial empty state

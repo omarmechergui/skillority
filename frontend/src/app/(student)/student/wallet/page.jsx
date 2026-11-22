@@ -50,14 +50,17 @@ export default function StudentWalletPage() {
     async function loadWallet() {
       try {
         const res = await walletApi.getWallet();
-        if (res.data?.wallet) {
-          const liveW = res.data.wallet;
+        const liveW = res.data?.wallet || res.data;
+        if (liveW && typeof liveW.balance === 'number') {
+          const txs = Array.isArray(liveW.transactions) ? liveW.transactions : [];
+          const earned = txs.filter(t => t.amount > 0).reduce((acc, t) => acc + t.amount, 0);
+          const spent = txs.filter(t => t.amount < 0).reduce((acc, t) => acc + Math.abs(t.amount), 0);
           setWallet(prev => ({
             ...prev,
             balance: liveW.balance,
-            totalEarned: liveW.totalEarned ?? prev.totalEarned,
-            totalSpent: liveW.totalSpent ?? prev.totalSpent,
-            transactions: liveW.transactions && liveW.transactions.length > 0 ? liveW.transactions.map(t => ({
+            totalEarned: earned || (liveW.totalEarned ?? prev.totalEarned),
+            totalSpent: spent || (liveW.totalSpent ?? prev.totalSpent),
+            transactions: txs.length > 0 ? txs.map(t => ({
               id: t.id,
               type: t.amount > 0 ? 'EARNED' : 'SPENT',
               amount: t.amount > 0 ? `+${t.amount}` : `${t.amount}`,
@@ -75,19 +78,24 @@ export default function StudentWalletPage() {
   }, []);
 
   const handleClaimDaily = async () => {
+    if (claimingDaily) return;
     setClaimingDaily(true);
     setClaimFeedback(null);
     try {
       const res = await walletApi.claimDailyLogin();
-      if (res.data?.awardedCoins) {
+      const coinsAwarded = res.data?.coinsAwarded ?? res.data?.awardedCoins;
+      const newBalance = res.data?.balance ?? res.data?.newBalance;
+
+      if (coinsAwarded !== undefined && newBalance !== undefined) {
         setWallet(prev => ({
           ...prev,
-          balance: res.data.newBalance,
-          totalEarned: prev.totalEarned + res.data.awardedCoins
+          balance: newBalance,
+          totalEarned: prev.totalEarned + coinsAwarded
         }));
-        setClaimFeedback(`Success: Claimed ${res.data.awardedCoins} Coins for daily check-in!`);
+        setClaimFeedback(`Success: Claimed ${coinsAwarded} Coins for daily check-in!`);
       } else {
-        setClaimFeedback(res.error?.message || 'Daily reward already claimed today.');
+        const errMsg = res.error?.message || res.error?.details?.message || 'Daily reward already claimed today.';
+        setClaimFeedback(errMsg);
       }
     } catch (err) {
       setClaimFeedback(err.message || 'Could not claim daily reward.');
@@ -97,19 +105,24 @@ export default function StudentWalletPage() {
   };
 
   const handleClaimAd = async () => {
+    if (claimingAd) return;
     setClaimingAd(true);
     setClaimFeedback(null);
     try {
       const res = await walletApi.claimAdReward();
-      if (res.data?.awardedCoins) {
+      const coinsAwarded = res.data?.coinsAwarded ?? res.data?.awardedCoins;
+      const newBalance = res.data?.balance ?? res.data?.newBalance;
+
+      if (coinsAwarded !== undefined && newBalance !== undefined) {
         setWallet(prev => ({
           ...prev,
-          balance: res.data.newBalance,
-          totalEarned: prev.totalEarned + res.data.awardedCoins
+          balance: newBalance,
+          totalEarned: prev.totalEarned + coinsAwarded
         }));
-        setClaimFeedback(`Success: Claimed ${res.data.awardedCoins} Coins from rewarded video!`);
+        setClaimFeedback(`Success: Claimed ${coinsAwarded} Coins from rewarded video!`);
       } else {
-        setClaimFeedback(res.error?.message || 'Could not claim ad reward.');
+        const errMsg = res.error?.message || res.error?.details?.message || 'Could not claim ad reward.';
+        setClaimFeedback(errMsg);
       }
     } catch (err) {
       setClaimFeedback(err.message || 'Error claiming ad reward.');

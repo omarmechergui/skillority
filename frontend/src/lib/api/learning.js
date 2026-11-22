@@ -1,4 +1,4 @@
-import api from '../apiClient';
+import api from '../apiClient.js';
 
 export const learningApi = {
   enroll: (courseId) => api.post(`/learning/enroll/${courseId}`, {}),

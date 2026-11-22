@@ -21,7 +21,11 @@ export async function getMyProfile(req, res, next) {
 
 export async function updateMyProfile(req, res, next) {
   try {
-    const updated = await profileService.updateProfile(req.user.id, req.validatedBody);
+    const updated = await profileService.updateProfile(
+      req.user.id,
+      req.validatedBody,
+      req.user.role
+    );
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',

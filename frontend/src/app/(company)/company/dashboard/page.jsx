@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { companyNav } from '@/components/layout/navigationConfig';
 import Card from '@/components/ui/Card';
@@ -21,6 +20,9 @@ import {
   Eye,
   Calendar,
   Sparkles,
+  MapPin,
+  Building2,
+  Loader2,
 } from 'lucide-react';
 
 export default function CompanyDashboardPage() {
@@ -29,64 +31,65 @@ export default function CompanyDashboardPage() {
     name: 'Your Company',
     industry: 'Technology',
     location: '',
-    stats: {
-      activeListings: 0,
-      totalApplicants: 0,
-      interviewsScheduled: 0,
-      offersExtended: 0,
-    },
   });
-  const [recruiter, setRecruiter] = useState({
-    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Recruiter',
-    role: 'Technical Recruiter',
+  const [metrics, setMetrics] = useState({
+    totalOpportunities: 0,
+    publishedOpportunities: 0,
+    totalApplications: 0,
+    pendingReviewCount: 0,
+    shortlistedCount: 0,
+    upcomingInterviewsCount: 0,
+    acceptedCount: 0,
   });
   const [opportunities, setOpportunities] = useState([]);
   const [recentApplicants, setRecentApplicants] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadCompanyData() {
+      setLoading(true);
       try {
-        const [profRes, appsRes] = await Promise.allSettled([
+        const [profRes, metricsRes, oppsRes, appsRes] = await Promise.allSettled([
           profileApi.getMyProfile(),
-          careerApi.getCompanyApplications()
+          careerApi.getCompanyDashboardMetrics(),
+          careerApi.getOpportunities({ companyId: user?.id, limit: 5 }),
+          careerApi.getCompanyApplications({ limit: 5 }),
         ]);
 
-        if (profRes.status === 'fulfilled' && profRes.value?.data?.profile) {
-          const live = profRes.value.data.profile;
-          setProfile(prev => ({
-            ...prev,
-            name: live.companyName || prev.name,
-            industry: live.industry || prev.industry,
-            location: live.location || prev.location
-          }));
+        const liveProf = profRes.value?.data?.profile || profRes.value?.data;
+        if (profRes.status === 'fulfilled' && liveProf) {
+          setProfile({
+            name: liveProf.companyName || 'Your Company',
+            industry: liveProf.industry || 'Technology',
+            location: liveProf.location || '',
+          });
         }
 
-        if (user) {
-          setRecruiter(prev => ({
-            ...prev,
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || prev.name,
-            role: user.role === 'COMPANY' ? 'Lead Technical Recruiter' : prev.role
-          }));
+        if (metricsRes.status === 'fulfilled' && metricsRes.value?.data) {
+          setMetrics(metricsRes.value.data);
         }
 
-        if (appsRes.status === 'fulfilled' && appsRes.value?.data?.applications?.length > 0) {
-          const liveApps = appsRes.value.data.applications.map(a => ({
-            id: a.id,
-            name: `${a.applicant?.firstName || 'Candidate'} ${a.applicant?.lastName || ''}`.trim(),
-            role: a.opportunity?.title || 'Applicant',
-            matchScore: 92,
-            avatar: a.applicant?.avatarUrl || '/images/avatar-default.png',
-            status: a.status,
-            appliedDate: new Date(a.createdAt).toLocaleDateString()
-          }));
-          setRecentApplicants(liveApps.slice(0, 3));
+        if (oppsRes.status === 'fulfilled') {
+          const rawOpps = oppsRes.value?.data?.opportunities || oppsRes.value?.data;
+          setOpportunities(Array.isArray(rawOpps) ? rawOpps : []);
         }
-      } catch {
-        // Safe fallback
+
+        if (appsRes.status === 'fulfilled') {
+          const rawApps = appsRes.value?.data || [];
+          setRecentApplicants(Array.isArray(rawApps) ? rawApps.slice(0, 4) : []);
+        }
+      } catch (err) {
+        console.error('Failed to load company dashboard:', err);
+      } finally {
+        setLoading(false);
       }
     }
     loadCompanyData();
   }, [user]);
+
+  const recruiterName = user
+    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
+    : 'Recruiter';
 
   return (
     <DashboardShell roleTitle="Recruiter Portal" navItems={companyNav}>
@@ -101,7 +104,7 @@ export default function CompanyDashboardPage() {
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Welcome back, {recruiter.name}
+              Welcome back, {recruiterName}
             </h1>
             <p className="text-sm text-slate-500 max-w-xl">
               Track your active job listings, review newly submitted candidate applications, and discover verified learners.
@@ -109,10 +112,10 @@ export default function CompanyDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/company/talent">
+            <Link href="/company/applications">
               <Button variant="outline" className="text-xs font-semibold flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-slate-500" />
-                Discover Talent
+                Applications Inbox
               </Button>
             </Link>
             <Link href="/company/opportunities/create">
@@ -124,45 +127,49 @@ export default function CompanyDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Row */}
+        {/* Real Data Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-5 flex items-center gap-4">
+          <Card className="p-5 flex items-center gap-4 bg-white border-border">
             <div className="p-3 bg-blue-50 text-primary rounded-xl">
               <Briefcase className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Listings</p>
-              <p className="text-2xl font-extrabold text-slate-900">{profile.stats.activeListings}</p>
+              <p className="text-2xl font-extrabold text-slate-900">
+                {metrics.publishedOpportunities}
+              </p>
             </div>
           </Card>
 
-          <Card className="p-5 flex items-center gap-4">
+          <Card className="p-5 flex items-center gap-4 bg-white border-border">
             <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
               <Users className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Applicants</p>
-              <p className="text-2xl font-extrabold text-slate-900">{profile.stats.totalApplicants}</p>
+              <p className="text-2xl font-extrabold text-slate-900">{metrics.totalApplications}</p>
             </div>
           </Card>
 
-          <Card className="p-5 flex items-center gap-4">
+          <Card className="p-5 flex items-center gap-4 bg-white border-border">
             <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
               <Clock className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Interviews</p>
-              <p className="text-2xl font-extrabold text-slate-900">{profile.stats.interviewsScheduled}</p>
+              <p className="text-2xl font-extrabold text-slate-900">
+                {metrics.upcomingInterviewsCount}
+              </p>
             </div>
           </Card>
 
-          <Card className="p-5 flex items-center gap-4">
+          <Card className="p-5 flex items-center gap-4 bg-white border-border">
             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Offers Extended</p>
-              <p className="text-2xl font-extrabold text-slate-900">{profile.stats.offersExtended}</p>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Hires Accepted</p>
+              <p className="text-2xl font-extrabold text-slate-900">{metrics.acceptedCount}</p>
             </div>
           </Card>
         </div>
@@ -178,44 +185,55 @@ export default function CompanyDashboardPage() {
               </div>
               <Link href="/company/opportunities">
                 <Button variant="ghost" className="text-xs text-primary font-semibold">
-                  View All ({opportunities.length})
+                  View All ({metrics.totalOpportunities})
                 </Button>
               </Link>
             </div>
 
             <div className="space-y-3">
               {opportunities.length === 0 ? (
-                <Card className="p-8 text-center text-slate-500 text-xs">
-                  No active job or internship listings posted yet.
+                <Card className="p-8 text-center text-slate-500 text-xs border-border">
+                  No active job or internship listings posted yet. Post your first opportunity to receive verified applicants.
                 </Card>
               ) : (
                 opportunities.map((opp) => (
-                  <Card key={opp.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition-shadow">
+                  <Card
+                    key={opp.id}
+                    className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-xs transition-shadow bg-white border-border"
+                  >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant="primary" className="text-[10px]">
-                          {opp.type}
+                        <Badge variant="outline" className="text-[10px]">
+                          {opp.type || 'INTERNSHIP'}
                         </Badge>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500 font-medium">{opp.location}</span>
+                        <Badge
+                          variant={opp.isOpen ? 'success' : 'error'}
+                          className="text-[10px]"
+                        >
+                          {opp.isOpen ? 'OPEN' : 'CLOSED'}
+                        </Badge>
+                        <span className="text-xs text-slate-400">· {opp.workplaceType || 'Remote'}</span>
                       </div>
-                      <h3 className="font-bold text-slate-900 text-base leading-snug">
-                        {opp.title}
+                      <h3 className="text-sm font-bold text-slate-900 hover:text-primary transition-colors">
+                        <Link href={`/company/opportunities/${opp.id}`}>{opp.title}</Link>
                       </h3>
-                      <p className="text-xs text-slate-500">{opp.department}</p>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span>{opp.location || 'Remote'}</span>
+                        <span>·</span>
+                        <span>Capacity: {opp.filledPositions || 0} / {opp.positions || 1} filled</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-5 sm:text-right">
-                      <div>
-                        <div className="text-base font-extrabold text-slate-900">
-                          {opp.applicantsCount}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-slate-900">
+                          {opp._count?.applications || 0}
                         </div>
-                        <div className="text-[11px] text-slate-400">Total Applicants</div>
+                        <div className="text-[11px] text-slate-400">Applicants</div>
                       </div>
-                      <Link href={`/company/opportunities/${opp.id}`}>
-                        <Button variant="outline" className="text-xs font-semibold flex items-center gap-1">
-                          Manage
-                          <ArrowRight className="w-3.5 h-3.5" />
+                      <Link href={`/company/applications?opportunityId=${opp.id}`}>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          Review
                         </Button>
                       </Link>
                     </div>
@@ -225,12 +243,12 @@ export default function CompanyDashboardPage() {
             </div>
           </div>
 
-          {/* Recent Candidate Applications (1 col) */}
+          {/* Recent Candidates (1 col) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
-                <p className="text-xs text-slate-500">Skillority certified candidates</p>
+                <h3 className="text-lg font-bold text-slate-900">Recent Applicants</h3>
+                <p className="text-xs text-slate-500">Candidates awaiting screening</p>
               </div>
               <Link href="/company/applications">
                 <Button variant="ghost" className="text-xs text-primary font-semibold">
@@ -241,46 +259,42 @@ export default function CompanyDashboardPage() {
 
             <div className="space-y-3">
               {recentApplicants.length === 0 ? (
-                <Card className="p-8 text-center text-slate-500 text-xs">
-                  No candidate applications received yet.
+                <Card className="p-6 text-center text-slate-500 text-xs border-border">
+                  No applicants received yet.
                 </Card>
               ) : (
-                recentApplicants.map((cand) => (
-                  <Card key={cand.id} className="p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border">
-                        {cand.avatar ? (
-                          <Image
-                            src={cand.avatar}
-                            alt={cand.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold">
-                            {cand.name ? cand.name.charAt(0) : 'C'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-xs text-slate-900 truncate">{cand.name}</h4>
-                        <p className="text-[11px] text-slate-500 truncate">{cand.appliedRole}</p>
-                      </div>
-                      <Badge variant="success" className="text-[10px]">
-                        {cand.matchScore}% Match
-                      </Badge>
-                    </div>
+                recentApplicants.map((app) => {
+                  const candidateName = [app.student?.profile?.firstName, app.student?.profile?.lastName]
+                    .filter(Boolean)
+                    .join(' ') || app.student?.email || 'Candidate';
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border text-[11px]">
-                      <span className="text-slate-400">Stage: <strong className="text-slate-700">{cand.stage}</strong></span>
-                      <Link href={`/company/talent/${cand.id}`} className="text-primary font-semibold hover:underline flex items-center gap-1">
-                        Review Profile
-                        <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </div>
-                  </Card>
-                ))
+                  return (
+                    <Card key={app.id} className="p-4 space-y-2 bg-white border-border hover:shadow-xs transition-shadow">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900">{candidateName}</div>
+                          <div className="text-[11px] text-slate-500 truncate max-w-[180px]">
+                            {app.opportunity?.title || 'Applied Position'}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">
+                          {app.status}
+                        </Badge>
+                      </div>
+
+                      <div className="pt-2 border-t border-border flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-emerald-600">
+                          {app.matchScore || 85}% Match
+                        </span>
+                        <Link href={`/company/applications/${app.id}`}>
+                          <span className="text-primary hover:underline font-semibold flex items-center gap-0.5">
+                            Screen <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </Link>
+                      </div>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </div>
@@ -289,4 +303,3 @@ export default function CompanyDashboardPage() {
     </DashboardShell>
   );
 }
-

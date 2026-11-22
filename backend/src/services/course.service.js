@@ -121,6 +121,57 @@ export async function addLesson(chapterId, instructorId, lessonData) {
   });
 }
 
+export async function deleteCourse(courseId, instructorId, isAdmin = false) {
+  const course = await prisma.course.findUnique({ where: { id: courseId } });
+  if (!course) return null;
+  if (!isAdmin && course.instructorId !== instructorId) {
+    throw new Error('FORBIDDEN_NOT_OWNER');
+  }
+
+  return prisma.course.delete({
+    where: { id: courseId },
+  });
+}
+
+export async function updateChapter(chapterId, instructorId, chapterData, isAdmin = false) {
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
+    include: { course: true },
+  });
+  if (!chapter) return null;
+  if (!isAdmin && chapter.course.instructorId !== instructorId) {
+    throw new Error('FORBIDDEN_NOT_OWNER');
+  }
+
+  const dataToUpdate = { ...chapterData };
+  if (dataToUpdate.order !== undefined) {
+    const isFree = dataToUpdate.order <= 5 ? true : Boolean(dataToUpdate.isFree === false ? false : dataToUpdate.order <= 5);
+    dataToUpdate.isFree = isFree;
+    if (isFree) dataToUpdate.coinsCost = 0;
+  }
+
+  return prisma.chapter.update({
+    where: { id: chapterId },
+    data: dataToUpdate,
+  });
+}
+
+export async function updateLesson(lessonId, instructorId, lessonData, isAdmin = false) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: { chapter: { include: { course: true } } },
+  });
+  if (!lesson || !lesson.chapter || !lesson.chapter.course) return null;
+  if (!isAdmin && lesson.chapter.course.instructorId !== instructorId) {
+    throw new Error('FORBIDDEN_NOT_OWNER');
+  }
+
+  return prisma.lesson.update({
+    where: { id: lessonId },
+    data: lessonData,
+  });
+}
+
 export async function submitForReview(courseId, instructorId) {
   const course = await prisma.course.findUnique({
     where: { id: courseId },

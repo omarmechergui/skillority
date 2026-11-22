@@ -33,8 +33,8 @@ export const ROLE_ONBOARDING = {
  *
  * Uses the same fields that each onboarding form requires:
  * - STUDENT  → university + major  (required fields in the student onboarding form)
- * - COMPANY  → companyName         (required field in the company onboarding form)
- * - INSTRUCTOR → expertise array populated OR experience text filled
+ * - COMPANY  → companyName + industry + companySize (required fields in the company onboarding form)
+ * - INSTRUCTOR → expertise array populated AND experience text filled (required fields in the instructor onboarding form)
  * - ADMIN    → no onboarding exists, always considered complete
  */
 export function isOnboardingComplete(user) {
@@ -47,11 +47,13 @@ export function isOnboardingComplete(user) {
     case 'STUDENT':
       return !!(profile.university && profile.major);
     case 'COMPANY':
-      return !!profile.companyName;
+      return !!(profile.companyName && profile.industry && profile.companySize);
     case 'INSTRUCTOR':
       return !!(
-        (Array.isArray(profile.expertise) && profile.expertise.length > 0) ||
-        profile.experience
+        Array.isArray(profile.expertise) &&
+        profile.expertise.length > 0 &&
+        typeof profile.experience === 'string' &&
+        profile.experience.trim().length > 0
       );
     case 'ADMIN':
       return true;

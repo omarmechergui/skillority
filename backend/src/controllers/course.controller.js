@@ -20,7 +20,8 @@ export async function listCourses(req, res, next) {
 
 export async function getCourse(req, res, next) {
   try {
-    const course = await courseService.getCourseById(req.params.id, false);
+    const includeFull = req.query.includeContent === 'true' || req.query.includeCurriculum === 'true';
+    const course = await courseService.getCourseById(req.params.id, includeFull);
     if (!course) {
       return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
     }
@@ -52,6 +53,59 @@ export async function updateCourse(req, res, next) {
   } catch (err) {
     if (err.message === 'FORBIDDEN_NOT_OWNER') {
       return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to edit this course' } });
+    }
+    next(err);
+  }
+}
+
+export async function deleteCourse(req, res, next) {
+  try {
+    const result = await courseService.deleteCourse(
+      req.params.id,
+      req.user.id,
+      req.user.role === 'ADMIN'
+    );
+    if (!result) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
+    return res.status(200).json({ success: true, message: 'Course deleted successfully' });
+  } catch (err) {
+    if (err.message === 'FORBIDDEN_NOT_OWNER') {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to delete this course' } });
+    }
+    next(err);
+  }
+}
+
+export async function updateChapter(req, res, next) {
+  try {
+    const chapter = await courseService.updateChapter(
+      req.params.chapterId,
+      req.user.id,
+      req.validatedBody,
+      req.user.role === 'ADMIN'
+    );
+    if (!chapter) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Chapter not found' } });
+    return res.status(200).json({ success: true, message: 'Chapter updated', data: chapter });
+  } catch (err) {
+    if (err.message === 'FORBIDDEN_NOT_OWNER') {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to modify this chapter' } });
+    }
+    next(err);
+  }
+}
+
+export async function updateLesson(req, res, next) {
+  try {
+    const lesson = await courseService.updateLesson(
+      req.params.lessonId,
+      req.user.id,
+      req.validatedBody,
+      req.user.role === 'ADMIN'
+    );
+    if (!lesson) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+    return res.status(200).json({ success: true, message: 'Lesson updated', data: lesson });
+  } catch (err) {
+    if (err.message === 'FORBIDDEN_NOT_OWNER') {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to modify this lesson' } });
     }
     next(err);
   }

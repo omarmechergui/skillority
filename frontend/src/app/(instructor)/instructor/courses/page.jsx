@@ -25,8 +25,14 @@ export default function InstructorCoursesPage() {
         const params = { status: 'ALL' };
         if (user?.id) params.instructorId = user.id;
         const res = await coursesApi.getCourses(params);
-        if (res.data?.courses && res.data.courses.length > 0) {
-          const liveList = res.data.courses.map((c) => ({
+        const rawList = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.courses)
+          ? res.data.courses
+          : [];
+
+        if (rawList.length > 0) {
+          const liveList = rawList.map((c) => ({
             id: c.id,
             title: c.title,
             description: c.description || 'No description provided.',
@@ -39,7 +45,7 @@ export default function InstructorCoursesPage() {
             enrolledStudents: c._count?.enrollments || 0,
           }));
           setCourses(liveList);
-        } else if (res.data?.courses && res.data.courses.length === 0) {
+        } else {
           setCourses([]);
         }
       } catch (err) {
