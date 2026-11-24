@@ -1,35 +1,35 @@
 import { z } from 'zod';
 
 export const registerStudentSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  firstName: z.string().min(1, 'First name is required').max(50),
-  lastName: z.string().min(1, 'Last name is required').max(50),
+  firstName: z.string().trim().min(1, 'First name is required').max(50),
+  lastName: z.string().trim().min(1, 'Last name is required').max(50),
 });
 
 export const registerCompanySchema = z.object({
-  email: z.string().email('Please enter a valid work email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid work email address'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  firstName: z.string().min(1, 'Contact first name is required').max(50),
-  lastName: z.string().min(1, 'Contact last name is required').max(50),
-  companyName: z.string().min(2, 'Company name is required').max(100),
+  firstName: z.string().trim().min(1, 'Contact first name is required').max(50),
+  lastName: z.string().trim().min(1, 'Contact last name is required').max(50),
+  companyName: z.string().trim().min(2, 'Company name is required').max(100),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address'),
 });
 
 export const resetPasswordSchema = z.object({
@@ -42,7 +42,7 @@ export const resetPasswordSchema = z.object({
 });
 
 export const inviteInstructorSchema = z.object({
-  email: z.string().email('Please enter a valid email address for the instructor'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address for the instructor'),
 });
 
 export const acceptInstructorInviteSchema = z.object({

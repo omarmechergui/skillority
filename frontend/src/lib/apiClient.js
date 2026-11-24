@@ -12,16 +12,19 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-let isRefreshing = false;
-let refreshSubscribers = [];
+let activeRefreshPromise = null;
 
-function subscribeTokenRefresh(cb) {
-  refreshSubscribers.push(cb);
-}
-
-function onRefreshed(token) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
+/**
+ * Returns the currently active token refresh promise, or starts a single-flight refresh.
+ * Guarantees that concurrent 401 requests share a single refresh call and never deadlock.
+ */
+function getOrRefreshAccessToken() {
+  if (!activeRefreshPromise) {
+    activeRefreshPromise = refreshAccessToken().finally(() => {
+      activeRefreshPromise = null;
+    });
+  }
+  return activeRefreshPromise;
 }
 
 /**
@@ -120,36 +123,25 @@ export async function apiRequest(endpoint, options = {}) {
   try {
     let response = await fetch(url, config);
 
-    // If 401 Unauthorized, attempt refresh once
-    if (response.status === 401 && requiresAuth) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        const newToken = await refreshAccessToken();
-        isRefreshing = false;
-
-        if (newToken) {
-          onRefreshed(newToken);
-        } else {
-          onRefreshed(null);
-          const errorJson = await response.json().catch(() => ({}));
-          throw new ApiError(
-            errorJson?.error?.message || 'Session expired. Please log in again.',
-            401,
-            errorJson
-          );
-        }
-      }
-
-      // Wait for the active refresh to complete
-      const retryToken = await new Promise((resolve) => {
-        subscribeTokenRefresh((token) => resolve(token));
-      });
-
+    // If 401 Unauthorized, attempt token refresh once (single-flight mutex, no infinite loop)
+    if (response.status === 401 && requiresAuth && !customConfig._isRetry) {
+      const retryToken = await getOrRefreshAccessToken();
       if (retryToken) {
-        config.headers['Authorization'] = `Bearer ${retryToken}`;
-        response = await fetch(url, config);
+        return apiRequest(endpoint, {
+          ...options,
+          _isRetry: true,
+          headers: {
+            ...headers,
+            Authorization: `Bearer ${retryToken}`,
+          },
+        });
       } else {
-        throw new ApiError('Authentication required', 401);
+        const errorJson = await response.json().catch(() => ({}));
+        throw new ApiError(
+          errorJson?.error?.message || 'Session expired. Please log in again.',
+          401,
+          errorJson
+        );
       }
     }
 

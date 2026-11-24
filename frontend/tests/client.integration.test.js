@@ -49,6 +49,60 @@ async function runClientIntegrationTests() {
   };
   assert(fakeRes.data.user.id === 'usr-1', 'API Client data extraction pattern matches contract');
 
+  // Test 4: Regression for AUTH-001 - Token refresh single-flight mutex does not deadlock
+  try {
+    const originalFetch = global.fetch;
+    const originalWindow = global.window;
+    const originalLocalStorage = global.localStorage;
+
+    global.window = {};
+    let storedToken = 'expired-token';
+    global.localStorage = {
+      getItem: (k) => (k === 'skillority_token' ? storedToken : null),
+      setItem: (k, v) => { if (k === 'skillority_token') storedToken = v; },
+      removeItem: (k) => { if (k === 'skillority_token') storedToken = null; },
+    };
+
+    let refreshCalled = 0;
+    global.fetch = async (url, config) => {
+      if (url.includes('/auth/refresh')) {
+        refreshCalled++;
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: () => 'application/json' },
+          json: async () => ({ data: { accessToken: 'refreshed-valid-token' } }),
+        };
+      }
+      if (config?.headers?.Authorization === 'Bearer refreshed-valid-token') {
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: () => 'application/json' },
+          json: async () => ({ success: true, data: { status: 'retry-succeeded' } }),
+        };
+      }
+      return {
+        ok: false,
+        status: 401,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ error: { message: 'Token expired' } }),
+      };
+    };
+
+    const res = await apiRequest('http://localhost:5000/api/protected-sample', { requiresAuth: true });
+    assert(
+      res.data?.status === 'retry-succeeded' && refreshCalled === 1,
+      'API Client automatically recovers from 401 using refreshed token without deadlocking (AUTH-001)'
+    );
+
+    global.fetch = originalFetch;
+    global.window = originalWindow;
+    global.localStorage = originalLocalStorage;
+  } catch (err) {
+    assert(false, `AUTH-001 regression check failed: ${err.message}`);
+  }
+
   console.log(`\nCLIENT INTEGRATION SUMMARY: ${passed} Passed, ${failed} Failed`);
 }
 

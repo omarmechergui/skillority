@@ -24,7 +24,8 @@ const COOKIE_OPTIONS = {
  */
 export async function registerStudent(req, res, next) {
   try {
-    const { email, password, firstName, lastName } = req.validatedBody;
+    const { password, firstName, lastName } = req.validatedBody;
+    const email = (req.validatedBody.email || '').trim().toLowerCase();
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -108,7 +109,8 @@ export async function registerStudent(req, res, next) {
  */
 export async function registerCompany(req, res, next) {
   try {
-    const { email, password, firstName, lastName, companyName } = req.validatedBody;
+    const { password, firstName, lastName, companyName } = req.validatedBody;
+    const email = (req.validatedBody.email || '').trim().toLowerCase();
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -187,7 +189,8 @@ export async function registerCompany(req, res, next) {
  */
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.validatedBody;
+    const { password } = req.validatedBody;
+    const email = (req.validatedBody.email || '').trim().toLowerCase();
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -355,25 +358,26 @@ export async function refresh(req, res, next) {
       });
     }
 
-    // Rotate refresh token atomically
+    // Rotate refresh token atomically via transaction
     const newRefreshToken = signRefreshToken({
       id: payload.id,
       tokenVersion: payload.tokenVersion,
     });
     const newHashed = hashCryptoToken(newRefreshToken);
 
-    await prisma.refreshToken.update({
-      where: { id: storedToken.id },
-      data: { revoked: true },
-    });
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: payload.id,
-        tokenHash: newHashed,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
+    await prisma.$transaction([
+      prisma.refreshToken.update({
+        where: { id: storedToken.id },
+        data: { revoked: true },
+      }),
+      prisma.refreshToken.create({
+        data: {
+          userId: payload.id,
+          tokenHash: newHashed,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      }),
+    ]);
 
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
@@ -422,7 +426,7 @@ export async function refresh(req, res, next) {
  */
 export async function forgotPassword(req, res, next) {
   try {
-    const { email } = req.validatedBody;
+    const email = (req.validatedBody.email || '').trim().toLowerCase();
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
@@ -481,7 +485,8 @@ export async function resetPassword(req, res, next) {
       });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: resetRecord.email } });
+    const normalizedEmail = (resetRecord.email || '').trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(404).json({
         success: false,

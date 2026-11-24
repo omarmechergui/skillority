@@ -141,6 +141,42 @@ async function runUnitTests() {
     assert.strictEqual(invalidResult.success, false);
   });
 
+  // 9. Email Normalization (AUTH-003)
+  test('Email Normalization: schema trims whitespace and converts uppercase to lowercase', () => {
+    const rawData = {
+      email: '   Student.Alice@Example.COM   ',
+      password: 'SecurePassword1',
+      firstName: 'Alice',
+      lastName: 'Smith',
+    };
+    const result = registerStudentSchema.safeParse(rawData);
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.data.email, 'student.alice@example.com');
+
+    const loginResult = loginSchema.safeParse({
+      email: '  USER@DOMAIN.COM  ',
+      password: 'Password123',
+    });
+    assert.strictEqual(loginResult.success, true);
+    assert.strictEqual(loginResult.data.email, 'user@domain.com');
+  });
+
+  // 10. JWT Uniqueness & Nonce (AUTH-002)
+  test('JWT Uniqueness: consecutively signed refresh tokens have unique jti and distinct hashes', () => {
+    const payload = { id: 'usr_507f1f77bcf86cd799439011', tokenVersion: 0 };
+    const token1 = signRefreshToken(payload);
+    const token2 = signRefreshToken(payload);
+
+    assert.notStrictEqual(token1, token2, 'Two tokens generated in same second must not be identical');
+    const hash1 = hashCryptoToken(token1);
+    const hash2 = hashCryptoToken(token2);
+    assert.notStrictEqual(hash1, hash2, 'Hashes must be unique to avoid unique constraint collisions');
+
+    const verified = verifyRefreshToken(token1);
+    assert.strictEqual(verified.valid, true);
+    assert(verified.payload.jti, 'Token must contain a unique jti claim');
+  });
+
   console.log(`\nUNIT TEST SUMMARY: ${passed} Passed, ${failed} Failed`);
   if (failed > 0) {
     process.exit(1);

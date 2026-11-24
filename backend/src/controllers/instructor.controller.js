@@ -18,7 +18,7 @@ const COOKIE_OPTIONS = {
  */
 export async function inviteInstructor(req, res, next) {
   try {
-    const { email } = req.validatedBody;
+    const email = (req.validatedBody.email || '').trim().toLowerCase();
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -131,7 +131,7 @@ export async function acceptInstructorInvite(req, res, next) {
     // Atomic creation of instructor user and mark invitation accepted
     const user = await prisma.user.create({
       data: {
-        email: invite.email,
+        email: (invite.email || '').trim().toLowerCase(),
         passwordHash,
         role: 'INSTRUCTOR',
         isVerified: true,

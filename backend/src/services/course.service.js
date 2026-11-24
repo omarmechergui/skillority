@@ -209,9 +209,16 @@ export async function updateCourse(courseId, instructorId, data, isAdmin = false
     throw new Error('FORBIDDEN_NOT_OWNER');
   }
 
+  const updatePayload = { ...data };
+  // If an instructor modifies an approved/published course, reset status to PENDING_REVIEW
+  if (!isAdmin && (course.status === 'APPROVED' || course.status === 'PUBLISHED')) {
+    updatePayload.status = 'PENDING_REVIEW';
+    updatePayload.reviewNote = 'Course modified by instructor; awaiting re-review.';
+  }
+
   return prisma.course.update({
     where: { id: courseId },
-    data,
+    data: updatePayload,
   });
 }
 
@@ -224,7 +231,7 @@ export async function addChapter(courseId, instructorId, chapterData) {
   const isFree = chapterData.order <= 5 ? true : Boolean(chapterData.isFree === false ? false : chapterData.order <= 5);
   const coinsCost = isFree ? 0 : (chapterData.coinsCost > 0 ? chapterData.coinsCost : 50);
 
-  return prisma.chapter.create({
+  const chapter = await prisma.chapter.create({
     data: {
       courseId,
       title: chapterData.title,
@@ -233,6 +240,19 @@ export async function addChapter(courseId, instructorId, chapterData) {
       coinsCost,
     },
   });
+
+  // Revert course status to PENDING_REVIEW if previously approved/published
+  if (course.status === 'APPROVED' || course.status === 'PUBLISHED') {
+    await prisma.course.update({
+      where: { id: courseId },
+      data: {
+        status: 'PENDING_REVIEW',
+        reviewNote: 'New chapter added by instructor; awaiting re-review.',
+      },
+    });
+  }
+
+  return chapter;
 }
 
 export async function addLesson(chapterId, instructorId, lessonData) {
@@ -243,7 +263,7 @@ export async function addLesson(chapterId, instructorId, lessonData) {
   if (!chapter) return null;
   if (chapter.course.instructorId !== instructorId) throw new Error('FORBIDDEN_NOT_OWNER');
 
-  return prisma.lesson.create({
+  const lesson = await prisma.lesson.create({
     data: {
       chapterId,
       title: lessonData.title,
@@ -252,6 +272,18 @@ export async function addLesson(chapterId, instructorId, lessonData) {
       content: lessonData.content || {},
     },
   });
+
+  if (chapter.course.status === 'APPROVED' || chapter.course.status === 'PUBLISHED') {
+    await prisma.course.update({
+      where: { id: chapter.course.id },
+      data: {
+        status: 'PENDING_REVIEW',
+        reviewNote: 'New lesson added by instructor; awaiting re-review.',
+      },
+    });
+  }
+
+  return lesson;
 }
 
 export async function deleteCourse(courseId, instructorId, isAdmin = false) {
@@ -283,10 +315,22 @@ export async function updateChapter(chapterId, instructorId, chapterData, isAdmi
     if (isFree) dataToUpdate.coinsCost = 0;
   }
 
-  return prisma.chapter.update({
+  const updatedChapter = await prisma.chapter.update({
     where: { id: chapterId },
     data: dataToUpdate,
   });
+
+  if (!isAdmin && (chapter.course.status === 'APPROVED' || chapter.course.status === 'PUBLISHED')) {
+    await prisma.course.update({
+      where: { id: chapter.course.id },
+      data: {
+        status: 'PENDING_REVIEW',
+        reviewNote: 'Chapter modified by instructor; awaiting re-review.',
+      },
+    });
+  }
+
+  return updatedChapter;
 }
 
 export async function updateLesson(lessonId, instructorId, lessonData, isAdmin = false) {
@@ -299,10 +343,22 @@ export async function updateLesson(lessonId, instructorId, lessonData, isAdmin =
     throw new Error('FORBIDDEN_NOT_OWNER');
   }
 
-  return prisma.lesson.update({
+  const updatedLesson = await prisma.lesson.update({
     where: { id: lessonId },
     data: lessonData,
   });
+
+  if (!isAdmin && (lesson.chapter.course.status === 'APPROVED' || lesson.chapter.course.status === 'PUBLISHED')) {
+    await prisma.course.update({
+      where: { id: lesson.chapter.course.id },
+      data: {
+        status: 'PENDING_REVIEW',
+        reviewNote: 'Lesson modified by instructor; awaiting re-review.',
+      },
+    });
+  }
+
+  return updatedLesson;
 }
 
 export async function submitForReview(courseId, instructorId) {

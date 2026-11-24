@@ -99,6 +99,14 @@ export function verifyAdSessionToken(token, expectedUserId) {
       return { valid: false, error: 'EXPIRED_SESSION' };
     }
 
+    // Anti-cheat verification: enforce minimum 15-second viewing duration in production
+    const minWatchTime = process.env.NODE_ENV === 'production'
+      ? 15000
+      : (process.env.AD_MIN_WATCH_TIME_MS ? parseInt(process.env.AD_MIN_WATCH_TIME_MS, 10) : 0);
+    if (age < minWatchTime) {
+      return { valid: false, error: 'AD_PLAYBACK_INCOMPLETE: Please finish watching the entire video' };
+    }
+
     const expectedPayload = `${userId}:${sessionId}:${timestamp}`;
     const expectedSig = crypto.createHmac('sha256', getAdSecret()).update(expectedPayload).digest('hex');
 
@@ -514,7 +522,13 @@ export async function getDailyMissionsStatus(userId) {
   });
 
   const claimedMissionIds = new Set(
-    todayMissionTxs.map((t) => (t.referenceId ? t.referenceId.split('_')[1] : null)).filter(Boolean)
+    todayMissionTxs
+      .map((t) => {
+        if (!t.referenceId) return null;
+        const match = t.referenceId.match(/^mission_(.+)_\d{4}-\d{2}-\d{2}$/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean)
   );
 
   const totalCoinsClaimedToday = todayMissionTxs.reduce((sum, t) => sum + t.amount, 0);
@@ -539,11 +553,15 @@ export async function getDailyMissionsStatus(userId) {
           });
           isCompleted = Boolean(quizPassToday);
         } else if (mission.id === 'MISSION_DAILY_STUDY') {
-          // Check for multi-lesson completion or active goal
-          const goals = await prisma.studentCareerGoal.findFirst({ where: { studentId: userId } });
-          const enrollments = await prisma.enrollment.findMany({ where: { userId } });
-          const totalCompletedLessons = enrollments.reduce((acc, e) => acc + (e.completedLessonIds?.length || 0), 0);
-          isCompleted = totalCompletedLessons >= 2 || Boolean(goals);
+          // Check for multi-lesson completion today or active goal updated today
+          const goalsToday = await prisma.studentCareerGoal.findFirst({
+            where: { studentId: userId, updatedAt: { gte: startOfDay } },
+          });
+          const todayEnrollments = await prisma.enrollment.findMany({
+            where: { userId, updatedAt: { gte: startOfDay } },
+          });
+          const totalCompletedLessons = todayEnrollments.reduce((acc, e) => acc + (e.completedLessonIds?.length || 0), 0);
+          isCompleted = totalCompletedLessons >= 2 || Boolean(goalsToday);
         }
       }
 
@@ -614,10 +632,14 @@ export async function claimDailyMission(userId, missionId) {
       });
       isCompleted = Boolean(quizPassToday);
     } else if (mission.id === 'MISSION_DAILY_STUDY') {
-      const goals = await tx.studentCareerGoal.findFirst({ where: { studentId: userId } });
-      const enrollments = await tx.enrollment.findMany({ where: { userId } });
-      const totalCompletedLessons = enrollments.reduce((acc, e) => acc + (e.completedLessonIds?.length || 0), 0);
-      isCompleted = totalCompletedLessons >= 2 || Boolean(goals);
+      const goalsToday = await tx.studentCareerGoal.findFirst({
+        where: { studentId: userId, updatedAt: { gte: startOfDay } },
+      });
+      const todayEnrollments = await tx.enrollment.findMany({
+        where: { userId, updatedAt: { gte: startOfDay } },
+      });
+      const totalCompletedLessons = todayEnrollments.reduce((acc, e) => acc + (e.completedLessonIds?.length || 0), 0);
+      isCompleted = totalCompletedLessons >= 2 || Boolean(goalsToday);
     }
 
     if (!isCompleted) {

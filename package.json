@@ -8,6 +8,8 @@
     "dev:backend": "pnpm --filter backend dev",
     "dev": "pnpm --parallel --filter frontend --filter backend dev",
     "build:frontend": "pnpm --filter frontend build",
+    "seed": "pnpm --filter backend seed",
+    "test:db": "pnpm --filter backend test:db",
     "lint": "pnpm --filter frontend lint && pnpm --filter backend lint"
   },
   "packageManager": "pnpm@12.6.0",

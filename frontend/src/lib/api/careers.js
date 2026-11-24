@@ -18,6 +18,12 @@ export const careerApi = {
     api.delete(`/careers/goals/${careerPathId}`),
   getCareerProgress: (careerPathId) =>
     api.get(`/careers/progress/${careerPathId}`),
+  createCareerPath: (data) =>
+    api.post('/careers/paths', data),
+  updateCareerPath: (id, data) =>
+    api.patch(`/careers/paths/${id}`, data),
+  deleteCareerPath: (id) =>
+    api.delete(`/careers/paths/${id}`),
 
   // --------------------------------------------------------------------------
   // MODULE 3B: INTERNSHIPS & OPPORTUNITIES MARKETPLACE

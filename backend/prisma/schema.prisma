@@ -140,6 +140,8 @@ model RefreshToken {
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model AdminInvitation {
@@ -175,6 +177,9 @@ model Course {
   finalAssessment Json?           // Final assessment definitions & questions
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  @@index([status, category])
+  @@index([instructorId])
 }
 
 model Chapter {
@@ -284,6 +289,10 @@ model WalletTransaction {
   description String
   referenceId String?
   createdAt   DateTime        @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([referenceId])
+  @@index([walletId, type, createdAt])
 }
 
 // -------------------------------------------------------------
@@ -489,6 +498,9 @@ model Message {
   content        String
   isRead         Boolean  @default(false)
   createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([recipientId, createdAt])
 }
 
 model Notification {
@@ -501,4 +513,6 @@ model Notification {
   linkUrl   String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

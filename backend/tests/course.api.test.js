@@ -643,6 +643,20 @@ async function runTests() {
     report('18. Unlocking already-unlocked chapter is idempotent and does not deduct additional coins', res.statusCode === 200 && res.body.data?.alreadyUnlocked === true && walletAfter === 50);
   }
 
+  // 19. CRSE-001: Instructor modifying an APPROVED course resets status to PENDING_REVIEW
+  {
+    const res = await simulateRequest(app, {
+      method: 'PATCH',
+      url: `/api/courses/${createdCourseId}`,
+      headers: { Authorization: `Bearer ${instructorToken}` },
+      body: {
+        title: 'Next.js 15 Masterclass - Post-Approval Modification',
+      },
+    });
+    const updated = db.courses.find((c) => c.id === createdCourseId);
+    report('19. Modifying approved course resets status to PENDING_REVIEW', res.statusCode === 200 && updated?.status === 'PENDING_REVIEW');
+  }
+
   console.log(`\n=== COURSE PLATFORM TEST SUMMARY: ${passed} Passed, ${failed} Failed ===`);
   if (failed > 0) process.exit(1);
 }

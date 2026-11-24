@@ -53,6 +53,21 @@ const authLimiter = rateLimit({
   },
 });
 
+// Dedicated refresh limiter allowing normal session lifecycles while blocking automated replay
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many token refresh requests. Please try again later.',
+    },
+  },
+});
+
 // -------------------------------------------------------------
 // PUBLIC AUTHENTICATION ROUTES
 // -------------------------------------------------------------
@@ -61,7 +76,7 @@ router.post('/signup/student', authLimiter, validate(registerStudentSchema), reg
 router.post('/signup/company', authLimiter, validate(registerCompanySchema), registerCompany);
 router.post('/login', authLimiter, validate(loginSchema), login);
 router.post('/logout', logout);
-router.post('/refresh', refresh);
+router.post('/refresh', refreshLimiter, refresh);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.post('/reset-password', authLimiter, validate(resetPasswordSchema), resetPassword);
 

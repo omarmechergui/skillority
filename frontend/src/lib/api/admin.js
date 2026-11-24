@@ -14,6 +14,8 @@ export const adminApi = {
   },
   decideCourseReview: (courseId, status, reviewNote) =>
     api.post(`/courses/${courseId}/review-decision`, { status, reviewNote }),
+  inviteInstructor: (email) =>
+    api.post('/auth/admin/instructors/invite', { email }),
 };
 
 export default adminApi;

@@ -109,49 +109,23 @@ export default function ChapterQuizPage() {
     }
   };
 
-  const calculateClientScore = () => {
-    let correctCount = 0;
-    quiz.questions.forEach((q) => {
-      const userAns = selectedAnswers[q.id];
-      if (q.type === 'multiple') {
-        const sortedUser = Array.isArray(userAns) ? [...userAns].sort() : [];
-        const sortedCorrect = Array.isArray(q.correctAnswer) ? [...q.correctAnswer].sort() : [];
-        if (JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect)) {
-          correctCount++;
-        }
-      } else {
-        if (userAns === q.correctAnswer) {
-          correctCount++;
-        }
-      }
-    });
-    return Math.round((correctCount / quiz.questions.length) * 100);
-  };
-
   const handleSubmitQuiz = async () => {
     setSubmitting(true);
     setError(null);
     try {
       const res = await assessmentApi.submitQuiz(chapterId, selectedAnswers);
-      if (res.data) {
-        setBackendResult(res.data);
+      const data = res.data;
+      if (data) {
+        setBackendResult(data);
         setIsSubmitted(true);
-        if (res.data.passed && res.data.coinsAwarded > 0) {
+        if (data.passed && data.coinsAwarded > 0) {
           setCoinsAwarded(true);
         }
       } else {
-        const clientScore = calculateClientScore();
-        const clientPassed = clientScore >= (quiz.passingScore || 70);
-        setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });
-        setIsSubmitted(true);
-        if (clientPassed) setCoinsAwarded(true);
+        throw new Error(res.error?.message || 'Failed to evaluate quiz submission');
       }
     } catch (err) {
-      const clientScore = calculateClientScore();
-      const clientPassed = clientScore >= (quiz.passingScore || 70);
-      setBackendResult({ score: clientScore, passed: clientPassed, coinsAwarded: clientPassed ? 20 : 0 });
-      setIsSubmitted(true);
-      if (clientPassed) setCoinsAwarded(true);
+      setError(err.response?.data?.error?.message || err.message || 'Failed to submit quiz. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -163,10 +137,11 @@ export default function ChapterQuizPage() {
     setBackendResult(null);
     setCurrentQuestionIndex(0);
     setCoinsAwarded(false);
+    setError(null);
   };
 
-  const displayScore = backendResult?.score ?? (isSubmitted ? calculateClientScore() : 0);
-  const isPassed = backendResult?.passed ?? (displayScore >= (quiz.passingScore || 70));
+  const displayScore = backendResult?.score ?? 0;
+  const isPassed = Boolean(backendResult?.passed);
 
   return (
     <DashboardShell role="STUDENT" navItems={studentNav}>

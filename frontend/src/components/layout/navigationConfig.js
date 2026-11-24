@@ -49,7 +49,9 @@ export const instructorNav = [
 export const adminNav = [
   { label: 'Admin Overview', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'User Directory', href: '/admin/users', icon: UserCheck },
+  { label: 'Invite Instructors', href: '/admin/instructors', icon: GraduationCap },
   { label: 'Course Approvals', href: '/admin/courses/reviews', icon: FileCheck },
+  { label: 'Career Paths', href: '/admin/careers', icon: Compass },
   { label: 'Platform Activity', href: '/admin/activity', icon: ShieldCheck },
   { label: 'Reports & Analytics', href: '/admin/reports', icon: BarChart3 },
   { label: 'Platform Settings', href: '/admin/settings', icon: Settings },

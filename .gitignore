@@ -50,3 +50,8 @@ Thumbs.db
 /test-atlas-tcp.js
 /test-prisma-live.js
 /test-real-crud.js
+
+# Development credentials
+test-credentials.dev.json
+backend/prisma/test-credentials.dev.json
+

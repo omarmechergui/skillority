@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import DashboardShell from '@/components/layout/DashboardShell';
@@ -9,13 +9,12 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { assessmentApi } from '@/lib/api';
+import { assessmentApi, coursesApi } from '@/lib/api';
 import {
   Award,
   Clock,
   CheckCircle2,
   AlertCircle,
-  FileText,
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
@@ -28,7 +27,47 @@ import {
 export default function FinalAssessmentPage() {
   const params = useParams();
   const courseId = params?.id || '';
-  const [course] = useState(null);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitError, setSubmitError] = useState(null);
+
+  const [hasStarted, setHasStarted] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [backendResult, setBackendResult] = useState(null);
+
+  useEffect(() => {
+    async function loadCourse() {
+      if (!courseId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await coursesApi.getCourse(courseId);
+        if (res.data) {
+          setCourse(res.data);
+        }
+      } catch {
+        // Safe fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCourse();
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <DashboardShell roleTitle="Student Portal" navItems={studentNav}>
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardShell>
+    );
+  }
 
   if (!course) {
     return (
@@ -47,7 +86,7 @@ export default function FinalAssessmentPage() {
   }
 
   const assessment = course.finalAssessment || {
-    id: 'fa-fallback',
+    id: 'fa-default',
     title: `${course.title} Final Certification`,
     durationMinutes: 45,
     totalQuestions: 5,
@@ -55,7 +94,7 @@ export default function FinalAssessmentPage() {
     instructions: [
       'Answer all comprehensive domain questions.',
       'Achieve 80% or higher to earn the official verified credential.',
-      'Review answers before final confirmation.'
+      'Review answers before final confirmation.',
     ],
     questions: [
       {
@@ -65,72 +104,40 @@ export default function FinalAssessmentPage() {
           'Type safety and declarative schema models with automated client generation',
           'Eliminates the need for indexing permanently',
           'Enforces MySQL tables in MongoDB',
-          'Prevents network requests from Express'
+          'Prevents network requests from Express',
         ],
-        correctAnswer: 'Type safety and declarative schema models with automated client generation'
-      }
-    ]
+      },
+    ],
   };
 
-  const [hasStarted, setHasStarted] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [backendResult, setBackendResult] = useState(null);
-
-  const currentQ = assessment.questions[currentIdx];
+  const currentQ = assessment.questions?.[currentIdx];
 
   const handleSelect = (option) => {
-    if (isCompleted || submitting) return;
+    if (isCompleted || submitting || !currentQ) return;
     setAnswers({ ...answers, [currentQ.id]: option });
-  };
-
-  const calculateClientScore = () => {
-    let correct = 0;
-    assessment.questions.forEach((q) => {
-      if (answers[q.id] === q.correctAnswer) {
-        correct++;
-      }
-    });
-    return Math.round((correct / assessment.questions.length) * 100);
   };
 
   const handleConfirmSubmit = async () => {
     setIsSubmitDialogOpen(false);
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await assessmentApi.submitAssessment(courseId, answers);
       if (res.data) {
         setBackendResult(res.data);
         setIsCompleted(true);
       } else {
-        const clientScore = calculateClientScore();
-        const clientPassed = clientScore >= assessment.passingPercentage;
-        setBackendResult({
-          score: clientScore,
-          passed: clientPassed,
-          certificate: clientPassed ? { credentialId: 'SKL-ASSESS-PROTOTYPE', type: 'FINAL_ASSESSMENT' } : null,
-        });
-        setIsCompleted(true);
+        throw new Error(res.error?.message || 'Failed to submit assessment');
       }
-    } catch {
-      const clientScore = calculateClientScore();
-      const clientPassed = clientScore >= assessment.passingPercentage;
-      setBackendResult({
-        score: clientScore,
-        passed: clientPassed,
-        certificate: clientPassed ? { credentialId: 'SKL-ASSESS-PROTOTYPE', type: 'FINAL_ASSESSMENT' } : null,
-      });
-      setIsCompleted(true);
+    } catch (err) {
+      setSubmitError(err.response?.data?.error?.message || err.message || 'Failed to evaluate final assessment. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const finalScore = backendResult?.score ?? (isCompleted ? calculateClientScore() : 0);
-  const isCertified = backendResult?.passed ?? (finalScore >= assessment.passingPercentage);
+  const finalScore = backendResult?.score ?? 0;
+  const isCertified = Boolean(backendResult?.passed);
   const certificateData = backendResult?.certificate;
 
   return (
@@ -145,6 +152,14 @@ export default function FinalAssessmentPage() {
             <ArrowLeft className="w-4 h-4" /> Back to {course.title}
           </Link>
         </div>
+
+        {/* Error Alert */}
+        {submitError && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
+            <span>{submitError}</span>
+          </div>
+        )}
 
         {/* Phase 1: Intro / Rules Screen */}
         {!hasStarted && !isCompleted && (
@@ -167,17 +182,17 @@ export default function FinalAssessmentPage() {
 
               <div className="flex items-center gap-4 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 shrink-0">
                 <div className="text-center">
-                  <div className="text-base font-bold text-slate-900">{assessment.durationMinutes} min</div>
+                  <div className="text-base font-bold text-slate-900">{assessment.durationMinutes || 45} min</div>
                   <div className="text-[10px] text-slate-500 uppercase tracking-wider">Duration</div>
                 </div>
                 <div className="h-6 w-px bg-slate-200" />
                 <div className="text-center">
-                  <div className="text-base font-bold text-slate-900">{assessment.questions.length}</div>
+                  <div className="text-base font-bold text-slate-900">{assessment.questions?.length || 0}</div>
                   <div className="text-[10px] text-slate-500 uppercase tracking-wider">Questions</div>
                 </div>
                 <div className="h-6 w-px bg-slate-200" />
                 <div className="text-center">
-                  <div className="text-base font-bold text-emerald-600">{assessment.passingPercentage}%</div>
+                  <div className="text-base font-bold text-emerald-600">{assessment.passingPercentage || 80}%</div>
                   <div className="text-[10px] text-slate-500 uppercase tracking-wider">Passing Score</div>
                 </div>
               </div>
@@ -187,7 +202,7 @@ export default function FinalAssessmentPage() {
             <div className="space-y-3">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Examination Protocol</h3>
               <div className="space-y-2">
-                {assessment.instructions.map((inst, i) => (
+                {assessment.instructions?.map((inst, i) => (
                   <div key={i} className="flex items-start gap-2.5 text-xs text-slate-600">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>{inst}</span>
@@ -200,7 +215,7 @@ export default function FinalAssessmentPage() {
             <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-200 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div className="text-xs text-blue-900 leading-relaxed">
-                <span className="font-bold">Credential Protocol:</span> Passing this assessment satisfies the course evaluation requirements. Sample certificate displays demonstration data during prototype phase.
+                <span className="font-bold">Credential Protocol:</span> Passing this assessment certifies domain mastery and issues a cryptographically verifiable completion certificate recorded on your profile.
               </div>
             </div>
 
@@ -233,7 +248,7 @@ export default function FinalAssessmentPage() {
               </h2>
 
               <div className="space-y-3 pt-3">
-                {currentQ.options.map((option, idx) => {
+                {currentQ.options?.map((option, idx) => {
                   const isSelected = answers[currentQ.id] === option;
                   return (
                     <button
@@ -279,10 +294,11 @@ export default function FinalAssessmentPage() {
                 <Button
                   variant="primary"
                   size="sm"
+                  disabled={submitting}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => setIsSubmitDialogOpen(true)}
                 >
-                  Finalize & Submit Exam
+                  {submitting ? 'Submitting...' : 'Finalize & Submit Exam'}
                 </Button>
               )}
             </div>
@@ -309,50 +325,59 @@ export default function FinalAssessmentPage() {
               </p>
             </div>
 
-            {/* Certificate Preview Card */}
-            {isCertified ? (
+            {/* Certificate Card */}
+            {isCertified && certificateData ? (
               <div className="p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl max-w-xl mx-auto shadow-xl space-y-4 text-left border border-slate-700">
                 <div className="flex items-center justify-between border-b border-slate-700 pb-3">
                   <div className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                    Sample Certificate Preview (Demo Data)
+                    Verified Course Credential
                   </div>
-                  <Badge variant="primary" className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
-                    Prototype
+                  <Badge variant="primary" className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                    Official Credential
                   </Badge>
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-[11px] text-slate-400 uppercase tracking-wider">Awarded To</div>
-                  <div className="text-lg font-bold text-white">Alex Rivera</div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-[11px] text-slate-400 uppercase tracking-wider">For Successfully Completing</div>
+                  <div className="text-[11px] text-slate-400 uppercase tracking-wider">Certified Program</div>
                   <div className="text-base font-semibold text-amber-200">{course.title}</div>
                 </div>
 
                 <div className="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-700/80">
-                  <span>Issued by Skillority Academic Council</span>
-                  <span className="font-mono text-amber-300">Sample Demo ID: SKL-2026-CERT-DEMO</span>
+                  <span>Issued by Skillority Academic Board</span>
+                  <span className="font-mono text-amber-300">ID: {certificateData.credentialId}</span>
                 </div>
+              </div>
+            ) : isCertified ? (
+              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 max-w-md mx-auto text-xs text-emerald-800">
+                Assessment passed! Your official credential is being generated and linked to your profile.
               </div>
             ) : (
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 max-w-md mx-auto text-xs text-slate-600">
-                You did not reach the 80% passing threshold. You may review the course chapters and re-attempt the assessment anytime.
+                You did not reach the {assessment.passingPercentage || 80}% passing threshold. You may review the course chapters and re-attempt the assessment anytime.
               </div>
             )}
 
             <div className="pt-6 border-t border-border flex flex-wrap justify-center gap-3">
-              {isCertified ? (
+              {isCertified && certificateData ? (
                 <>
-                  <Button variant="primary" size="md">
-                    <Download className="w-4 h-4 mr-2" /> Download Certificate
-                  </Button>
-                  <Button variant="outline" size="md">
-                    <Share2 className="w-4 h-4 mr-2" /> Share to Profile
+                  <Link href={`/certificates/${certificateData.credentialId}`}>
+                    <Button variant="primary" size="md">
+                      <Download className="w-4 h-4 mr-2" /> View Certificate
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => {
+                      if (navigator?.clipboard) {
+                        navigator.clipboard.writeText(`${window.location.origin}/certificates/${certificateData.credentialId}`);
+                      }
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" /> Copy Credential Link
                   </Button>
                 </>
-              ) : (
+              ) : !isCertified ? (
                 <Button
                   variant="outline"
                   size="md"
@@ -361,11 +386,13 @@ export default function FinalAssessmentPage() {
                     setIsCompleted(false);
                     setHasStarted(false);
                     setCurrentIdx(0);
+                    setBackendResult(null);
+                    setSubmitError(null);
                   }}
                 >
                   <RotateCcw className="w-4 h-4 mr-2" /> Retake Assessment
                 </Button>
-              )}
+              ) : null}
 
               <Link href="/student/dashboard">
                 <Button variant="secondary" size="md">
@@ -390,4 +417,3 @@ export default function FinalAssessmentPage() {
     </DashboardShell>
   );
 }
-

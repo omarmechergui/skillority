@@ -10,7 +10,12 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
+    "seed": "node --env-file=.env prisma/seed.js",
+    "test:db": "node --env-file=.env prisma/validate-database.js",
     "lint": "eslint src/"
+  },
+  "prisma": {
+    "seed": "node --env-file=.env prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
